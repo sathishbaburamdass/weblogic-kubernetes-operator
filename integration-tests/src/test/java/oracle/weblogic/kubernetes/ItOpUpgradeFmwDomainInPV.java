@@ -41,7 +41,6 @@ import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -123,9 +122,6 @@ public class ItOpUpgradeFmwDomainInPV {
   private final String rcuSecretName = domainUid + "-rcu-credentials";
   private static final int replicaCount = 2;
 
-  //private static final String pvName = domainUid + "-pv";
-  //private static final String pvcName = domainUid + "-pvc";
-
   private static String latestOperatorImageName;
 
   /**
@@ -206,31 +202,6 @@ public class ItOpUpgradeFmwDomainInPV {
           .withParams(new CommandParams()
               .command("kubectl delete crd domains.weblogic.oracle --ignore-not-found"))
           .execute();
-
-      /*
-      new Command()
-          .withParams(new CommandParams()
-              .command("kubectl patch pvc " + pvcName + " -n " + domainNamespace
-                  + " -p ’{\"metadata\":{\"finalizers\":null}}’"))
-          .execute();
-
-      new Command()
-          .withParams(new CommandParams()
-              .command("kubectl patch pv " + pvName + " -n " + domainNamespace
-                  + " -p ’{\"metadata\":{\"finalizers\":null}}’"))
-          .execute();
-
-      new Command()
-          .withParams(new CommandParams()
-              .command("kubectl delete pvc " + pvcName + " -n " + domainNamespace
-                  + " --grace-period=0 --force --ignore-not-found"))
-          .execute();
-
-      new Command()
-          .withParams(new CommandParams()
-              .command("kubectl delete pv " + pvName + " -n " + domainNamespace
-                  + " --grace-period=0 --force --ignore-not-found"))
-          .execute();*/
     }
   }
 
@@ -280,7 +251,6 @@ public class ItOpUpgradeFmwDomainInPV {
    * accessed while the operator is upgraded and after the upgrade.
    * Upgrade operator with latest Operator image and verify CRD version and image are updated.
    */
-  @Disabled
   @Test
   @DisplayName("Upgrade Operator from 3.0.2 to latest")
   public void testOperatorUpgradeFrom3_0_2(@Namespaces(3) List<String> namespaces) {
@@ -295,7 +265,6 @@ public class ItOpUpgradeFmwDomainInPV {
    * accessed while the operator is upgraded and after the upgrade.
    * Upgrade operator with latest Operator image and verify CRD version and image are updated.
    */
-  @Disabled
   @Test
   @DisplayName("Upgrade Operator from 3.0.3 to latest")
   public void testOperatorUpgradeFrom3_0_3(@Namespaces(3) List<String> namespaces) {
@@ -310,7 +279,6 @@ public class ItOpUpgradeFmwDomainInPV {
    * accessed while the operator is upgraded and after the upgrade.
    * Upgrade operator with latest Operator image and verify CRD version and image are updated.
    */
-  @Disabled
   @Test
   @DisplayName("Upgrade Operator from 3.0.4 to latest")
   public void testOperatorUpgradeFrom3_0_4(@Namespaces(3) List<String> namespaces) {
