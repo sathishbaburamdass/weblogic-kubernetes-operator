@@ -466,8 +466,8 @@ public class ItOpUpgradeFmwDomainInPV {
   }
 
   private void createFmwDomainAndVerify(String domainVersion) {
-    final String pvName = domainUid + "_" + domainNamespace + "-pv";
-    final String pvcName = domainUid + "_" + domainNamespace + "-pvc";
+    final String pvName = domainUid + "-" + domainNamespace + "-pv";
+    final String pvcName = domainUid + "-" + domainNamespace + "-pvc";
     final int t3ChannelPort = getNextFreePort(30000, 32767);
 
     // create pull secrets for domainNamespace when running in non Kind Kubernetes cluster
