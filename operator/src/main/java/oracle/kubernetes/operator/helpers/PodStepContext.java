@@ -36,6 +36,7 @@ import io.kubernetes.client.openapi.models.V1Probe;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.util.Yaml;
 import jakarta.json.Json;
 import jakarta.json.JsonPatchBuilder;
 import oracle.kubernetes.operator.DomainSourceType;
@@ -475,6 +476,10 @@ public abstract class PodStepContext extends BasePodStepContext {
           MessageKeys.POD_DUMP,
           AnnotationHelper.getDebugString(currentPod),
           AnnotationHelper.getDebugString(getPodModel()));
+    }
+
+    if (!useCurrent) {
+      LOGGER.warning("Rolling pod " + Yaml.dump(currentPod) + "\n in favor of:\n" + Yaml.dump(getPodModel()));
     }
 
     return useCurrent;
