@@ -471,7 +471,7 @@ public abstract class PodStepContext extends BasePodStepContext {
     boolean useCurrent = hasCorrectPodHash(currentPod) && canUseNewDomainZip(currentPod);
 
     if (!useCurrent && AnnotationHelper.getDebugString(currentPod).length() > 0) {
-      LOGGER.fine(
+      LOGGER.info(
           MessageKeys.POD_DUMP,
           AnnotationHelper.getDebugString(currentPod),
           AnnotationHelper.getDebugString(getPodModel()));

@@ -17,7 +17,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 /** Annotates pods, services with details about the Domain instance and checks these annotations. */
 public class AnnotationHelper {
   static final String SHA256_ANNOTATION = "weblogic.sha256";
-  private static final boolean DEBUG = false;
+  private static final boolean DEBUG = true;
   private static final String HASHED_STRING = "hashedString";
   @SuppressWarnings({"FieldMayBeFinal", "CanBeFinal"})
   private static Function<Object, String> HASH_FUNCTION = o -> DigestUtils.sha256Hex(Yaml.dump(o));
