@@ -478,13 +478,17 @@ public abstract class PodStepContext extends BasePodStepContext {
     try {
       hasCorrectPodHash = hasCorrectPodHash(currentPod);
       canUseNewDomainZip = canUseNewDomainZip(currentPod);
+      LOGGER.info("REG-> In canUseCurrentPod, found hash correct = " + hasCorrectPodHash
+            + "; can use domain zip = " + canUseNewDomainZip);
       useCurrent = hasCorrectPodHash && canUseNewDomainZip;
+
     } catch (Throwable e) {
+      LOGGER.info("REG-> In canUseCurrentPod, caught exception " + e);
       StringWriter sw = new StringWriter();
       final PrintWriter pw = new PrintWriter(sw);
       e.printStackTrace(pw);
       pw.close();
-      LOGGER.info("REG-> In canUseCurrentPod, caught exception " + sw.toString());
+      LOGGER.info("REG-> In canUseCurrentPod, have stack trace " + sw.toString());
     }
 
     if (!useCurrent && AnnotationHelper.getDebugString(currentPod).length() > 0) {
