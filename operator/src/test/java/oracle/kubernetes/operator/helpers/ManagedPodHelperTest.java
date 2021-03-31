@@ -1309,7 +1309,12 @@ public class ManagedPodHelperTest extends PodHelperTestBase {
   }
 
   @Override
-  String getReferenceMiiPodYaml() {
+  String getReferenceMiiPodYaml_3_0() {
+    return ReferenceObjects.MANAGED_MII_POD_3_0;
+  }
+
+  @Override
+  String getReferenceMiiPodYaml_3_1() {
     return ReferenceObjects.MANAGED_MII_POD_3_1;
   }
 

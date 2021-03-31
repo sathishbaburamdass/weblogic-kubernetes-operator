@@ -370,8 +370,11 @@ public abstract class PodHelperTestBase extends DomainValidationBaseTest {
   // Returns the YAML for a 3.1 domain-in-image pod with the SSL port enabled.
   abstract String getReferenceSslPortPodYaml_3_1();
 
+  // Returns the YAML for a 3.0 Mii Pod.
+  abstract String getReferenceMiiPodYaml_3_0();
+
   // Returns the YAML for a 3.1 Mii Pod.
-  abstract String getReferenceMiiPodYaml();
+  abstract String getReferenceMiiPodYaml_3_1();
 
   @Test
   public void afterUpgradingPlainPortPodFrom30_patchIt() {
@@ -428,12 +431,26 @@ public abstract class PodHelperTestBase extends DomainValidationBaseTest {
   }
 
   @Test
+  public void afterUpgradingMiiPodFrom30_patchIt() {
+    useProductionHash();
+    testSupport.addToPacket(DOMAINZIP_HASH, "originalSecret");
+    disableAutoIntrospectOnNewMiiPods();
+    initializeExistingPod(loadPodModel(getReferenceMiiPodYaml_3_0()));
+
+    verifyPodPatched();
+
+    V1Pod patchedPod = domainPresenceInfo.getServerPod(getServerName());
+    assertThat(patchedPod.getMetadata().getLabels().get(OPERATOR_VERSION), equalTo(TEST_PRODUCT_VERSION));
+    assertThat(AnnotationHelper.getHash(patchedPod), equalTo(AnnotationHelper.getHash(createPodModel())));
+  }
+
+  @Test
   public void afterUpgradingMiiPodFrom31_patchIt() {
     useProductionHash();
     testSupport.addToPacket(SECRETS_MD_5, "originalSecret");
     testSupport.addToPacket(DOMAINZIP_HASH, "originalSecret");
     disableAutoIntrospectOnNewMiiPods();
-    initializeExistingPod(loadPodModel(getReferenceMiiPodYaml()));
+    initializeExistingPod(loadPodModel(getReferenceMiiPodYaml_3_1()));
 
     verifyPodPatched();
 
