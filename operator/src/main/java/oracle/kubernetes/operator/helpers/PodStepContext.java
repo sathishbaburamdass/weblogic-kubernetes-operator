@@ -470,7 +470,7 @@ public abstract class PodStepContext extends BasePodStepContext {
   }
 
   private boolean canUseCurrentPod(V1Pod currentPod) {
-    LOGGER.info("REG-> In canUseCurrentPod, trying to figure things out");
+    LOGGER.info("REG-> In " + getServerName() + " canUseCurrentPod, trying to figure things out");
 
     final boolean hasCorrectPodHash;
     final boolean canUseNewDomainZip;
@@ -478,7 +478,8 @@ public abstract class PodStepContext extends BasePodStepContext {
     try {
       hasCorrectPodHash = hasCorrectPodHash(currentPod);
       canUseNewDomainZip = canUseNewDomainZip(currentPod);
-      LOGGER.info("REG-> In canUseCurrentPod, found hash correct = " + hasCorrectPodHash
+      LOGGER.info("REG-> " + getServerName() + " In canUseCurrentPod, found hash correct = " + hasCorrectPodHash
+
             + "; can use domain zip = " + canUseNewDomainZip);
       useCurrent = hasCorrectPodHash && canUseNewDomainZip;
 
