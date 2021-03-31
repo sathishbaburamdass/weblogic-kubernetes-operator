@@ -470,7 +470,11 @@ public abstract class PodStepContext extends BasePodStepContext {
   private boolean canUseCurrentPod(V1Pod currentPod) {
     LOGGER.info("REG-> In canUseCurrentPod, trying to figure things out");
 
-    boolean useCurrent = hasCorrectPodHash(currentPod) && canUseNewDomainZip(currentPod);
+    final boolean hasCorrectPodHash = hasCorrectPodHash(currentPod);
+    final boolean canUseNewDomainZip = canUseNewDomainZip(currentPod);
+    boolean useCurrent = hasCorrectPodHash && canUseNewDomainZip;
+    LOGGER.info("REG-> In canUseCurrentPod, found hash correct = " + hasCorrectPodHash
+          + "; can use domain zip = " + canUseNewDomainZip);
 
     if (!useCurrent && AnnotationHelper.getDebugString(currentPod).length() > 0) {
       LOGGER.info(
