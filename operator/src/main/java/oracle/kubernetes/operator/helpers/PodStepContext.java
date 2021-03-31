@@ -4,6 +4,8 @@
 package oracle.kubernetes.operator.helpers;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -470,11 +472,20 @@ public abstract class PodStepContext extends BasePodStepContext {
   private boolean canUseCurrentPod(V1Pod currentPod) {
     LOGGER.info("REG-> In canUseCurrentPod, trying to figure things out");
 
-    final boolean hasCorrectPodHash = hasCorrectPodHash(currentPod);
-    final boolean canUseNewDomainZip = canUseNewDomainZip(currentPod);
-    boolean useCurrent = hasCorrectPodHash && canUseNewDomainZip;
-    LOGGER.info("REG-> In canUseCurrentPod, found hash correct = " + hasCorrectPodHash
-          + "; can use domain zip = " + canUseNewDomainZip);
+    final boolean hasCorrectPodHash;
+    final boolean canUseNewDomainZip;
+    boolean useCurrent = false;
+    try {
+      hasCorrectPodHash = hasCorrectPodHash(currentPod);
+      canUseNewDomainZip = canUseNewDomainZip(currentPod);
+      useCurrent = hasCorrectPodHash && canUseNewDomainZip;
+    } catch (Throwable e) {
+      StringWriter sw = new StringWriter();
+      final PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      pw.close();
+      LOGGER.info("REG-> In canUseCurrentPod, caught exception " + sw.toString());
+    }
 
     if (!useCurrent && AnnotationHelper.getDebugString(currentPod).length() > 0) {
       LOGGER.info(
