@@ -467,6 +467,11 @@ public class WlsServerConfig {
         .toString();
   }
 
+  /**
+   * Whether the given port is on a secure channel.
+   *
+   * @return True if the port matches one of the secure channels configured on this server
+   */
   public boolean isPortSecure(Integer port) {
     boolean portSecure = false;
     boolean found = false;
