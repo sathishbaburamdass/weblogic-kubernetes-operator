@@ -119,7 +119,8 @@ public class ReadHealthStep extends Step {
 
     protected PortDetails getPortDetails() {
       Integer port = getPort();
-      return new PortDetails(port, !port.equals(getWlsServerConfig().getListenPort()));
+      return new PortDetails(port, getWlsServerConfig().isPortSecure(port));
+      //return new PortDetails(port, !port.equals(getWlsServerConfig().getListenPort()));
     }
 
     private Integer getPort() {
@@ -131,6 +132,7 @@ public class ReadHealthStep extends Step {
 
     private V1ServicePort getServicePort(V1ServiceSpec spec) {
       return getAdminProtocolPort(spec).orElse(getFirstPort(spec));
+
     }
 
     private Optional<V1ServicePort> getAdminProtocolPort(V1ServiceSpec spec) {
@@ -142,7 +144,10 @@ public class ReadHealthStep extends Step {
     }
 
     private boolean isAdminProtocolPort(V1ServicePort port) {
-      return Optional.ofNullable(getAdminProtocolChannelName()).map(n -> n.equals(port.getName())).orElse(false);
+      return Optional.ofNullable(getAdminProtocolPort()).map(p -> p.equals(port.getPort())).orElse(false);
+
+      //return Optional.ofNullable(getAdminProtocolChannelName()).map(n -> n.equals(port.getName())).orElse(false);
+
     }
 
     private V1ServicePort getFirstPort(V1ServiceSpec spec) {
@@ -153,6 +158,9 @@ public class ReadHealthStep extends Step {
       return getWlsServerConfig().getAdminProtocolChannelName();
     }
 
+    private Integer getAdminProtocolPort() {
+      return getWlsServerConfig().getLocalAdminProtocolChannelPort();
+    }
 
     private WlsServerConfig getWlsServerConfig() {
       // standalone server that does not belong to any cluster

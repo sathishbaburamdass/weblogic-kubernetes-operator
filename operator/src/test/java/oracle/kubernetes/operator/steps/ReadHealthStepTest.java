@@ -159,7 +159,7 @@ public class ReadHealthStepTest {
 
   private HttpRequest createExpectedRequest(String url) {
     return HttpRequest.newBuilder()
-          .uri(URI.create("https://" + url + "/management/weblogic/latest/serverRuntime/search"))
+          .uri(URI.create("http://" + url + "/management/weblogic/latest/serverRuntime/search"))
           .POST(HttpRequest.BodyPublishers.noBody())
           .build();
   }

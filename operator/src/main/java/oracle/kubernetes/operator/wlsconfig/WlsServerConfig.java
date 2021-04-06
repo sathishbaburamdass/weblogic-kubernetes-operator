@@ -467,4 +467,29 @@ public class WlsServerConfig {
         .toString();
   }
 
+  public boolean isPortSecure(Integer port) {
+    boolean portSecure = false;
+    boolean found = false;
+    if (networkAccessPoints != null) {
+      for (NetworkAccessPoint nap : networkAccessPoints) {
+        if ((port.equals(nap.getListenPort()) || port.equals(nap.getPublicPort()))) {
+          if (nap.isAdminProtocol()) {
+            portSecure = true;
+          }
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      if (port.equals(adminPort)) {
+        portSecure = true;
+      } else if (port.equals(sslListenPort)) {
+        portSecure = true;
+      } else if (port.equals(listenPort)) {
+        portSecure = false;
+      }
+    }
+    return portSecure;
+  }
 }
