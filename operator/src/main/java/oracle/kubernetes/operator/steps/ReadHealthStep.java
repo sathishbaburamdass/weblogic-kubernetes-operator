@@ -131,8 +131,14 @@ public class ReadHealthStep extends Step {
     }
 
     private V1ServicePort getServicePort(V1ServiceSpec spec) {
-      return getAdminProtocolPort(spec).orElse(getFirstPort(spec));
+      return getAdminProtocolPort(spec).orElse(getWlsServerListenPort(spec));
 
+    }
+
+    private V1ServicePort getWlsServerListenPort(V1ServiceSpec spec) {
+      Integer port = getWlsServerConfig().getListenPort();
+      return Optional.ofNullable(spec).map(V1ServiceSpec::getPorts).stream().flatMap(Collection::stream)
+          .filter(p -> p.equals(port)).findFirst().orElse(getFirstPort(spec));
     }
 
     private Optional<V1ServicePort> getAdminProtocolPort(V1ServiceSpec spec) {
@@ -144,7 +150,7 @@ public class ReadHealthStep extends Step {
     }
 
     private boolean isAdminProtocolPort(V1ServicePort port) {
-      return Optional.ofNullable(getAdminProtocolPort()).map(p -> p.equals(port.getPort())).orElse(false);
+      return Optional.ofNullable(getWlsServerAdminProtocolPort()).map(p -> p.equals(port.getPort())).orElse(false);
 
       //return Optional.ofNullable(getAdminProtocolChannelName()).map(n -> n.equals(port.getName())).orElse(false);
 
@@ -158,7 +164,7 @@ public class ReadHealthStep extends Step {
       return getWlsServerConfig().getAdminProtocolChannelName();
     }
 
-    private Integer getAdminProtocolPort() {
+    private Integer getWlsServerAdminProtocolPort() {
       return getWlsServerConfig().getLocalAdminProtocolChannelPort();
     }
 
