@@ -589,18 +589,19 @@ public class ItKubernetesEvents {
   public void testK8SEventsStartWatchingNSWithLabelSelector() {
     OffsetDateTime timestamp = now();
     logger.info("Adding a new domain namespace in the operator watch list");
-    // Helm upgrade parameters
-    opParams = opParams
-        .domainNamespaceSelectionStrategy("LabelSelector")
-        .domainNamespaceLabelSelector("weblogic-operator=enabled");
-
-    upgradeAndVerifyOperator(opNamespace, opParams);
 
     // label domainNamespace3
     new Command()
         .withParams(new CommandParams()
             .command("kubectl label ns " + domainNamespace3 + " weblogic-operator=enabled"))
         .execute();
+
+    // Helm upgrade parameters
+    opParams = opParams
+        .domainNamespaceSelectionStrategy("LabelSelector")
+        .domainNamespaceLabelSelector("weblogic-operator=enabled");
+
+    upgradeAndVerifyOperator(opNamespace, opParams);
 
     logger.info("verify NamespaceWatchingStarted event is logged in " + domainNamespace3);
     checkEvent(opNamespace, domainNamespace3, null, NAMESPACE_WATCHING_STARTED, "Normal", timestamp);
