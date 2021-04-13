@@ -241,7 +241,7 @@ class DomainRecheck {
     private Step addNSWatchingStartingEventsStep() {
       return Step.chain(
           EventHelper.createEventStep(
-              new EventData(NAMESPACE_WATCHING_STARTED).namespace(ns).resourceName(ns)),
+              domainNamespaces, new EventData(NAMESPACE_WATCHING_STARTED).namespace(ns).resourceName(ns), null),
           EventHelper.createEventStep(
               new EventData(EventHelper.EventItem.START_MANAGING_NAMESPACE)
                   .namespace(getOperatorNamespace()).resourceName(ns)),
