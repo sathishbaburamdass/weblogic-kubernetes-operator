@@ -740,8 +740,8 @@ public class ItKubernetesEvents {
     checkEvent(opNamespace, opNamespace, null, NAMESPACE_WATCHING_STARTED, "Normal", timestamp);
 
     // TODO: there is a bug (OWLS-88697), enable the check once the bug is fixed
-    //logger.info("verify NamespaceWatchingStopped event is logged in " + domainNamespace4);
-    //checkEvent(opNamespace, domainNamespace4, null, NAMESPACE_WATCHING_STOPPED, "Normal", timestamp);
+    logger.info("verify NamespaceWatchingStopped event is logged in " + domainNamespace4);
+    checkEvent(opNamespace, domainNamespace4, null, NAMESPACE_WATCHING_STOPPED, "Normal", timestamp);
   }
 
   /**
