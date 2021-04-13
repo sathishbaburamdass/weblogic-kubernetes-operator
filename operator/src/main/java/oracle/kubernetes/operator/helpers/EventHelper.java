@@ -195,11 +195,11 @@ public class EventHelper {
           return doNext(packet);
         }
 
-        if (isForbiddenForNamespaceWatchingStartedEvent(callResponse)) {
+        if (domainNamespaces != null && isForbiddenForNamespaceWatchingStartedEvent(callResponse)) {
           LOGGER.info(MessageKeys.CREATING_EVENT_FORBIDDEN,
               eventData.eventItem.getReason(), eventData.getNamespace());
-          domainNamespaces.markNamespaceUnstarted(eventData.getNamespace());
-          return doNext(packet);
+          domainNamespaces.markNamespaceNotStarted(eventData.getNamespace());
+          return super.onFailure(packet, callResponse);
         }
 
         return super.onFailure(packet, callResponse);

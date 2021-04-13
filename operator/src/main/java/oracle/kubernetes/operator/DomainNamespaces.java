@@ -183,7 +183,7 @@ public class DomainNamespaces {
     return getNamespaceStatus(ns).shouldStartNamespace();
   }
 
-  public void markNamespaceUnstarted(String ns) {
+  public void markNamespaceNotStarted(String ns) {
     getNamespaceStatus(ns).markNamespaceNotStarted();
   }
 
