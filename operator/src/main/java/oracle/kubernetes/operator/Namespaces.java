@@ -232,11 +232,13 @@ public class Namespaces {
       NamespaceValidationContext validationContext = new NamespaceValidationContext(packet);
       getNonNullConfiguredDomainNamespaces().forEach(validationContext::validateConfiguredNamespace);
       List<StepAndPacket> nsStopEventSteps = getCreateNSStopEventSteps(packet, validationContext);
+      LOGGER.info("XXX nsStopEventSteps = " + nsStopEventSteps);
       stopRemovedNamespaces(validationContext);
       return doNext(Step.chain(createNamespaceWatchStopEventsStep(nsStopEventSteps), getNext()), packet);
     }
 
     private List<StepAndPacket> getCreateNSStopEventSteps(Packet packet, NamespaceValidationContext validationContext) {
+      LOGGER.info("XXX getCreateNSStopEventSteps namespaces = " + domainNamespaces.getNamespaces());
       return domainNamespaces.getNamespaces().stream()
           .filter(validationContext::isNoLongerActiveDomainNamespace)
           .map(n -> createNSStopEventDetails(packet, n)).collect(Collectors.toList());
@@ -297,6 +299,7 @@ public class Namespaces {
 
     NamespaceValidationContext(Packet packet) {
       allDomainNamespaces = Optional.ofNullable(getFoundDomainNamespaces(packet)).orElse(Collections.emptyList());
+      LOGGER.info("XXX NamespaceValidationContext: allDomainNamespaces = " + allDomainNamespaces);
     }
 
     private boolean isNoLongerActiveDomainNamespace(String ns) {
