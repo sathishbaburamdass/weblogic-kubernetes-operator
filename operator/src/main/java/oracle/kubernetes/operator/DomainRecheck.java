@@ -36,7 +36,6 @@ import oracle.kubernetes.operator.work.Step;
 
 import static oracle.kubernetes.operator.helpers.EventHelper.EventItem.NAMESPACE_WATCHING_STARTED;
 import static oracle.kubernetes.operator.helpers.NamespaceHelper.getOperatorNamespace;
-import static oracle.kubernetes.operator.logging.MessageKeys.BEGIN_MANAGING_NAMESPACE;
 
 class DomainRecheck {
   private static final LoggingFacade LOGGER = LoggingFactory.getLogger("Operator", "Operator");

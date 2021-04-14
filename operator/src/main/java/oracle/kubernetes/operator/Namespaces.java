@@ -296,7 +296,7 @@ public class Namespaces {
     final Collection<String> allDomainNamespaces;
 
     NamespaceValidationContext(Packet packet) {
-      allDomainNamespaces = Optional.ofNullable(getFoundDomainNamespaces(packet)).orElse(Collections.emptyList());p
+      allDomainNamespaces = Optional.ofNullable(getFoundDomainNamespaces(packet)).orElse(Collections.emptyList());
     }
 
     private boolean isNoLongerActiveDomainNamespace(String ns) {
