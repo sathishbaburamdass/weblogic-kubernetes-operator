@@ -229,7 +229,6 @@ class DomainRecheck {
     @Override
     public NextAction apply(Packet packet) {
       if (domainNamespaces.shouldStartNamespace(ns)) {
-        LOGGER.info(BEGIN_MANAGING_NAMESPACE, ns);
         return doNext(addNSWatchingStartingEventsStep(), packet);
       }
       if (fullRecheck) {
