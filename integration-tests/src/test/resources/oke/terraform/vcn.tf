@@ -84,8 +84,8 @@ resource "oci_core_default_security_list" "oke-default-security-list" {
     stateless = false
 
     tcp_options {
-      "min" = 22
-      "max" = 22
+      min = 22
+      max = 22
     }
   }
 
@@ -95,8 +95,8 @@ resource "oci_core_default_security_list" "oke-default-security-list" {
     source   = "0.0.0.0/0"
 
     icmp_options {
-      "type" = 3
-      "code" = 4
+      type = 3
+      code = 4
     }
   }
 }
