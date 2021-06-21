@@ -1291,6 +1291,7 @@ class ItMonitoringExporter {
   //download src from monitoring exporter github project and build webapp.
   private static void installMonitoringExporter() {
     Path monitoringTemp = Paths.get(RESULTS_ROOT, "monitoringexp", "srcdir");
+    monitoringExporterSrcDir = monitoringTemp.toString();
     cloneMonitoringExporter(monitoringExporterSrcDir);
     Path monitoringApp = Paths.get(RESULTS_ROOT, "monitoringexp", "apps");
     assertDoesNotThrow(() -> org.apache.commons.io.FileUtils.deleteDirectory(monitoringApp.toFile()));
