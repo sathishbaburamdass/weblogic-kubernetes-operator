@@ -71,6 +71,7 @@ import oracle.weblogic.kubernetes.actions.impl.primitive.WebLogicImageTool;
 import oracle.weblogic.kubernetes.actions.impl.primitive.WitParams;
 import oracle.weblogic.kubernetes.extensions.ImageBuilders;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
+import oracle.weblogic.kubernetes.utils.ExecCommand;
 import oracle.weblogic.kubernetes.utils.ExecResult;
 
 import static oracle.weblogic.kubernetes.actions.impl.Operator.start;
@@ -893,6 +894,28 @@ public class TestActions {
     return Service.getNamespacedService(namespace, serviceName);
   }
 
+  /**
+   * Get IP address of a namespaced service.
+   *
+   * @param namespace name of the namespace in which to get the service
+   * @param serviceName name of the service
+   * @return result of command execution
+   */
+  public static ExecResult getClusterIP(String namespace, String serviceName)
+      throws IOException, InterruptedException {
+    LoggingFacade logger = getLogger();
+    StringBuffer getClusterIPCmd = new StringBuffer("kubectl get service/");
+    getClusterIPCmd.append(serviceName)
+        .append(" -n ")
+        .append(namespace)
+        .append(" -o jsonpath='{.spec.clusterIP}'");
+
+    logger.info("Command {0} to retrieve cluster IP", new String(getClusterIPCmd));
+
+    ExecResult execResult = ExecCommand.exec(getClusterIPCmd.toString(), true);
+
+    return execResult;
+  }
 
   // ------------------------ service account  --------------------------
 
