@@ -15,6 +15,7 @@ import oracle.weblogic.kubernetes.annotations.IntegrationTest;
 import oracle.weblogic.kubernetes.annotations.Namespaces;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import oracle.weblogic.kubernetes.utils.FmwUtils;
+import oracle.weblogic.kubernetes.utils.OciDbUtils;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -25,10 +26,10 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static oracle.weblogic.kubernetes.TestConstants.DB_IMAGE_TO_USE_IN_SPEC;
+//import static oracle.weblogic.kubernetes.TestConstants.DB_IMAGE_TO_USE_IN_SPEC;
 import static oracle.weblogic.kubernetes.TestConstants.FMWINFRA_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.FMWINFRA_IMAGE_TAG;
-import static oracle.weblogic.kubernetes.TestConstants.FMWINFRA_IMAGE_TO_USE_IN_SPEC;
+//import static oracle.weblogic.kubernetes.TestConstants.FMWINFRA_IMAGE_TO_USE_IN_SPEC;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_APP_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_SECRET_NAME;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.MODEL_DIR;
@@ -44,16 +45,16 @@ import static oracle.weblogic.kubernetes.utils.CommonTestUtils.createOpsswalletp
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.createRcuAccessSecret;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.createSecretWithUsernamePassword;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.dockerLoginAndPushImageToRegistry;
-import static oracle.weblogic.kubernetes.utils.CommonTestUtils.installAndVerifyOperator;
+//import static oracle.weblogic.kubernetes.utils.CommonTestUtils.installAndVerifyOperator;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.patchServerStartPolicy;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.updateRcuAccessSecret;
-import static oracle.weblogic.kubernetes.utils.DbUtils.setupDBandRCUschema;
+//import static oracle.weblogic.kubernetes.utils.DbUtils.setupDBandRCUschema;
 import static oracle.weblogic.kubernetes.utils.DbUtils.updateRcuPassword;
 import static oracle.weblogic.kubernetes.utils.FmwUtils.verifyDomainReady;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.awaitility.Awaitility.with;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+//import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -108,7 +109,7 @@ public class ItFmwMiiDomain {
   public static void initAll(@Namespaces(3) List<String> namespaces) {
 
     logger = getLogger();
-    logger.info("Assign a unique namespace for DB and RCU");
+    /*logger.info("Assign a unique namespace for DB and RCU");
     assertNotNull(namespaces.get(0), "Namespace is null");
     dbNamespace = namespaces.get(0);
     dbUrl = ORACLEDBURLPREFIX + dbNamespace + ORACLEDBSUFFIX;
@@ -134,6 +135,14 @@ public class ItFmwMiiDomain {
 
     logger.info("For ItFmwMiiDomain using DB image: {0}, FMW image {1}",
         DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC);
+
+     */
+    logger.info("Start testing new OciDbUtils...");
+    OciDbUtils ociDb = new OciDbUtils();
+    //String pdbName = "pdb_try2";
+    String pdbName = "pdb_try8";
+    //ociDb.createPDB(pdbName);
+    ociDb.dropPDB(pdbName);
 
   }
 
@@ -224,7 +233,7 @@ public class ItFmwMiiDomain {
    * Verify EM console is accessible.
    */
   @Order(2)
-  @Test
+  //@Test
   @DisplayName("Reuse the same RCU schema to restart JRF domain")
   public void testReuseRCUschemalToRestartDomain() {
     saveAndRestoreOpssWalletfileSecret(fmwDomainNamespace, domainUid, opsswalletfileSecretName);
@@ -241,7 +250,7 @@ public class ItFmwMiiDomain {
    * Start the domain and verify domain is up and running.
    */
   @Order(3)
-  @Test
+  //@Test
   @DisplayName("Update RCU schema password")
   public void testUpdateRcuSchemaPassword() {
     shutdownDomain();
@@ -269,7 +278,7 @@ public class ItFmwMiiDomain {
    * Check the validity of new credentials by accessing WebLogic RESTful Service.
    */
   @Order(4)
-  @Test
+  //@Test
   @DisplayName("Update WebLogic Credentials after updating RCU schema password")
   public void testUpdateWebLogicCredentialAfterUpdateRcuSchemaPassword() {
     verifyUpdateWebLogicCredential(fmwDomainNamespace, domainUid, adminServerPodName,
