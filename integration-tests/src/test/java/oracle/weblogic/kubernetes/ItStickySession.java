@@ -317,6 +317,8 @@ class ItStickySession {
     assertFalse(clusterPort == 0 || clusterPort < 0, "cluster Port is an invalid number");
     logger.info("cluster port for cluster server {0} is: {1}", clusterServiceName, clusterPort);
 
+
+
     // verify that two HTTP connections are sticky to the same server
     sendHttpRequestsToTestSessionStickinessAndVerify(hostName, clusterPort, clusterIP);
   }
@@ -416,7 +418,7 @@ class ItStickySession {
             .addClustersItem(new Cluster()
                 .clusterName(clusterName)
                 .replicas(replicaCount)
-                .clusterService(myClusterService)
+                //.clusterService(myClusterService)
                 .serverStartState("RUNNING"))
             .configuration(new Configuration()
                 .model(new Model()
