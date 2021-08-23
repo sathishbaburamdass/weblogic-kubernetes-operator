@@ -173,6 +173,12 @@ public class ItMiiSampleHelper {
     String imageVer = "notset";
     String decoration = (envMap.get("DO_AI") != null && envMap.get("DO_AI").equalsIgnoreCase("true"))  ? "AI-" : "";
 
+    //Debug nightly failure
+    for (Map.Entry<String, String> entry : envMap.entrySet()) {
+      System.out.println("========>>> envMap Key = " + entry.getKey()
+          + ", envMap Value = " + entry.getValue());
+    }
+
     if (imageName.equals(MII_SAMPLE_WLS_IMAGE_NAME_V1)) {
       imageVer = "WLS-" + decoration + "v1";
     }
@@ -209,6 +215,17 @@ public class ItMiiSampleHelper {
       previousTestSuccessful = false;
 
       if (arg.equals("-check-image-and-push")) {
+        //Debug nightly failure
+        String command = "docker images mii-*";
+
+        ExecResult result = Command.withParams(
+          new CommandParams()
+            .command(command)
+            .env(envMap)
+            .redirect(true)
+        ).executeAndReturnResult();
+
+        System.out.println("========>>> Docker Imges = " + result);
         assertImageExistsAndPushIfNeeded();
 
       } else {
