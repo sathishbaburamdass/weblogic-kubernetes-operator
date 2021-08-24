@@ -216,7 +216,7 @@ public class ItMiiSampleHelper {
 
       if (arg.equals("-check-image-and-push")) {
         //Debug nightly failure
-        String command = "docker images mii-*";
+        String command = "docker images -a";
 
         ExecResult result = Command.withParams(
           new CommandParams()
@@ -270,6 +270,10 @@ public class ItMiiSampleHelper {
     previousTestSuccessful = true;
     envMap.put("MODEL_IMAGE_NAME", imageName);
 
+    System.out.println("========>>> imageName = " + imageName);
+    System.out.println("========>>> 1. envMap.get(MODEL_IMAGE_NAME) = "
+        + envMap.get("MODEL_IMAGE_NAME"));
+
     if (domainType.equals(DomainType.JRF)) {
       String dbImageName = (KIND_REPO != null
           ? KIND_REPO + DB_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : DB_IMAGE_NAME);
@@ -289,9 +293,13 @@ public class ItMiiSampleHelper {
 
       // run JRF use cases irrespective of WLS use cases fail/pass
       previousTestSuccessful = true;
+      System.out.println("========>>> 2. envMap.get(MODEL_IMAGE_NAME) = "
+          + envMap.get("MODEL_IMAGE_NAME"));
       execTestScriptAndAssertSuccess(domainType, "-db,-rcu", "DB/RCU creation failed");
     }
 
+    System.out.println("========>>> 1. envMap.get(MODEL_IMAGE_NAME) = "
+        + envMap.get("MODEL_IMAGE_NAME"));
     execTestScriptAndAssertSuccess(
         domainType,
         "-initial-image,-check-image-and-push,-initial-main",
