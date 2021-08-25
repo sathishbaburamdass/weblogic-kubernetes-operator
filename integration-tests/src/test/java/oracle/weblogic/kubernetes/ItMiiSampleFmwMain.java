@@ -48,7 +48,7 @@ class ItMiiSampleFmwMain {
   @Order(1)
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF initial use case")
-  void testFmwInitialUseCase() {
+  void testFmwMainInitialUseCase() {
     ItMiiSampleHelper.callInitialUseCase();
   }
 
@@ -61,7 +61,7 @@ class ItMiiSampleFmwMain {
   @Order(2)
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update1 use case")
-  void testFmwUpdate1UseCase() {
+  void testFmwMainUpdate1UseCase() {
     ItMiiSampleHelper.callUpdateUseCase("-update1", "Update1 use case failed");
   }
 
@@ -73,7 +73,7 @@ class ItMiiSampleFmwMain {
   @Order(3)
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update2 use case")
-  void testFmwUpdate2UseCase() {
+  void testFmwMainUpdate2UseCase() {
     ItMiiSampleHelper.callUpdateUseCase("-update2", "Update2 use case failed");
   }
 
@@ -85,7 +85,7 @@ class ItMiiSampleFmwMain {
   @Order(4)
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update3 use case")
-  void testFmwUpdate3UseCase() {
+  void testFmwMainUpdate3UseCase() {
     ItMiiSampleHelper.callUpdateUseCase("-update3-image,-check-image-and-push,-update3-main",
         "Update3 use case failed");
   }
@@ -101,7 +101,7 @@ class ItMiiSampleFmwMain {
   @Order(5)
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update4 use case")
-  void testFmwUpdate4UseCase() {
+  void testFmwMainUpdate4UseCase() {
     ItMiiSampleHelper.callUpdateUseCase("-update4", "Update4 use case failed");
   }
 

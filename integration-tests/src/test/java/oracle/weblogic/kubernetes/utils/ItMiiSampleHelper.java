@@ -96,14 +96,17 @@ public class ItMiiSampleHelper {
     logger.info("Creating unique namespace for Operator");
     assertNotNull(namespaces.get(0), "Namespace list is null");
     opNamespace = namespaces.get(0);
+    logger.info("Created unique namespace for Operator === " + opNamespace);
 
     logger.info("Creating unique namespace for Domain");
     assertNotNull(namespaces.get(1), "Namespace list is null");
     domainNamespace = namespaces.get(1);
+    logger.info("Created unique namespace for Domain === " + domainNamespace);
 
     logger.info("Creating unique namespace for Traefik");
     assertNotNull(namespaces.get(2), "Namespace list is null");
     traefikNamespace = namespaces.get(2);
+    logger.info("Created unique namespace for Traefik === " + traefikNamespace);
 
     // install and verify operator
     installAndVerifyOperator(opNamespace, domainNamespace);
@@ -313,6 +316,18 @@ public class ItMiiSampleHelper {
 
     System.out.println("========>>> 4. envMap.get(MODEL_IMAGE_NAME) = "
         + envMap.get("MODEL_IMAGE_NAME"));
+
+    String command = "kubectl get namespaces --all-namespaces";
+
+    ExecResult result = Command.withParams(
+      new CommandParams()
+        .command(command)
+        .env(envMap)
+        .redirect(true)
+    ).executeAndReturnResult();
+
+    System.out.println("========>>> kubectl get namespaces --all-namespacess = " + result);
+
     execTestScriptAndAssertSuccess(
         domainType,
         "-initial-image,-check-image-and-push,-initial-main",
