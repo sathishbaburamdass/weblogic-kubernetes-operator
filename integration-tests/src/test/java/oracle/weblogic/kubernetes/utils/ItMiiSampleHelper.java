@@ -216,6 +216,12 @@ public class ItMiiSampleHelper {
 
       if (arg.equals("-check-image-and-push")) {
         //Debug nightly failure
+        try {
+          Thread.sleep(60000);
+        } catch (Exception ex) {
+          //Ignore
+        }
+
         String command = "docker images -a";
 
         ExecResult result = Command.withParams(
@@ -296,9 +302,16 @@ public class ItMiiSampleHelper {
       System.out.println("========>>> 2. envMap.get(MODEL_IMAGE_NAME) = "
           + envMap.get("MODEL_IMAGE_NAME"));
       execTestScriptAndAssertSuccess(domainType, "-db,-rcu", "DB/RCU creation failed");
+      System.out.println("========>>> 3. envMap.get(MODEL_IMAGE_NAME) = "
+          + envMap.get("MODEL_IMAGE_NAME"));
     }
 
-    System.out.println("========>>> 1. envMap.get(MODEL_IMAGE_NAME) = "
+    if (envMap.get("MODEL_IMAGE_NAME") == null) {
+      System.out.println("========>>> envMap.get(MODEL_IMAGE_NAME) is NULL !!!!! reset it");
+      envMap.put("MODEL_IMAGE_NAME", imageName);
+    }
+
+    System.out.println("========>>> 4. envMap.get(MODEL_IMAGE_NAME) = "
         + envMap.get("MODEL_IMAGE_NAME"));
     execTestScriptAndAssertSuccess(
         domainType,
