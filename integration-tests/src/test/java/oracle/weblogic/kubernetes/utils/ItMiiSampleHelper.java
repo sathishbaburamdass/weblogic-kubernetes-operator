@@ -177,7 +177,7 @@ public class ItMiiSampleHelper {
     String decoration = (envMap.get("DO_AI") != null && envMap.get("DO_AI").equalsIgnoreCase("true"))  ? "AI-" : "";
 
     System.out.println("========>>> decoration = " + decoration);
-    System.out.println("========>>> 5. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+    System.out.println("========>>> 4. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
     System.out.println("========>>> imageType = " + imageType);
 
     //Debug nightly failure
@@ -280,6 +280,81 @@ public class ItMiiSampleHelper {
 
       previousTestSuccessful = true;
     }
+  }
+
+  /**
+   * Test MII sample WLS or JRF initial use case.
+   */
+  public static void callInitialUseCase(DomainType domainTypeParam, ImageType imageTypeParam) {
+    String imageName = (domainType.equals(DomainType.WLS))
+        ? MII_SAMPLE_WLS_IMAGE_NAME_V1 : MII_SAMPLE_JRF_IMAGE_NAME_V1;
+    previousTestSuccessful = true;
+    envMap.put("MODEL_IMAGE_NAME", imageName);
+
+    System.out.println("========<<< imageName = " + imageName + " for " + imageTypeParam);
+    System.out.println("========<<< 1.1. envMap.get(MODEL_IMAGE_NAME) = "
+        + envMap.get("MODEL_IMAGE_NAME") + " for " + imageTypeParam);
+
+    if (domainType.equals(DomainType.JRF)) {
+      String dbImageName = (KIND_REPO != null
+          ? KIND_REPO + DB_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : DB_IMAGE_NAME);
+      String jrfBaseImageName = (KIND_REPO != null
+          ? KIND_REPO + FMWINFRA_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : FMWINFRA_IMAGE_NAME);
+      String dbNamespace = envMap.get("dbNamespace");
+
+      envMap.put("DB_IMAGE_NAME", dbImageName);
+      envMap.put("DB_IMAGE_TAG", DB_IMAGE_TAG);
+      envMap.put("DB_NODE_PORT", "none");
+      envMap.put("BASE_IMAGE_NAME", jrfBaseImageName);
+      envMap.put("BASE_IMAGE_TAG", FMWINFRA_IMAGE_TAG);
+      envMap.put("POD_WAIT_TIMEOUT_SECS", "1000"); // JRF pod waits on slow machines, can take at least 650 seconds
+      envMap.put("DB_NAMESPACE", dbNamespace);
+      envMap.put("DB_IMAGE_PULL_SECRET", BASE_IMAGES_REPO_SECRET); //ocr/ocir secret
+      envMap.put("INTROSPECTOR_DEADLINE_SECONDS", "600"); // introspector needs more time for JRF
+
+      // run JRF use cases irrespective of WLS use cases fail/pass
+      previousTestSuccessful = true;
+      System.out.println("========<<< 2.1. envMap.get(MODEL_IMAGE_NAME) = "
+          + envMap.get("MODEL_IMAGE_NAME") + " for " + imageTypeParam);
+      System.out.println("========<<< 1.1. envMap.get(DO_AI) = "
+          + envMap.get("DO_AI") + " for " + imageTypeParam);
+      execTestScriptAndAssertSuccess(domainType, "-db,-rcu", "DB/RCU creation failed");
+      System.out.println("========<<< 3.1. envMap.get(MODEL_IMAGE_NAME) = "
+          + envMap.get("MODEL_IMAGE_NAME")  + " for " + imageTypeParam);
+      System.out.println("========<<< 2.1. envMap.get(DO_AI) = "
+          + envMap.get("DO_AI") + " for " + imageTypeParam);
+    }
+
+    ItMiiSampleHelper.domainType = domainTypeParam;
+    ItMiiSampleHelper.imageType = imageTypeParam;
+    envMap.put("DO_AI", String.valueOf(imageType == ImageType.AUX));
+    if (envMap.get("MODEL_IMAGE_NAME") == null) {
+      System.out.println("========<<< envMap.get(MODEL_IMAGE_NAME) is NULL !!!!! reset it");
+      envMap.put("MODEL_IMAGE_NAME", imageName);
+    }
+
+    System.out.println("========<<< 4.1. envMap.get(MODEL_IMAGE_NAME) = "
+        + envMap.get("MODEL_IMAGE_NAME") + " for " + imageTypeParam);
+    System.out.println("========<<< 3.1. envMap.get(DO_AI) = "
+        + envMap.get("DO_AI") + " for " + imageTypeParam);
+
+    String command = "kubectl get namespaces --all-namespaces";
+
+    ExecResult result = Command.withParams(
+      new CommandParams()
+          .command(command)
+          .env(envMap)
+          .redirect(true)
+    ).executeAndReturnResult();
+
+    System.out.println("========<<< kubectl get namespaces --all-namespacess = "
+        + result + " for " + imageTypeParam);
+
+    execTestScriptAndAssertSuccess(
+        domainType,
+        "-initial-image,-check-image-and-push,-initial-main",
+        "Initial use case failed"
+    );
   }
 
   /**
