@@ -49,10 +49,8 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF initial use case")
   void testFmwMainInitialUseCase() {
-    ItMiiSampleHelper.callInitialUseCase(
-        ItMiiSampleHelper.DomainType.JRF, ItMiiSampleHelper.ImageType.MAIN);
+    ItMiiSampleHelper.callInitialUseCase();
   }
-
 
   /**
    * Test to verify JRF update1 use case.

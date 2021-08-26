@@ -88,7 +88,9 @@ public class ItMiiSampleHelper {
    * @param domainTypeParam domain type names
    * @param imageTypeParam image type names
    */
-  public static void initAll(List<String> namespaces, DomainType domainTypeParam, ImageType imageTypeParam) {
+  public static synchronized void initAll(List<String> namespaces,
+                                          DomainType domainTypeParam,
+                                          ImageType imageTypeParam) {
     logger = getLogger();
     ItMiiSampleHelper.domainType = domainTypeParam;
     ItMiiSampleHelper.imageType = imageTypeParam;
@@ -171,7 +173,7 @@ public class ItMiiSampleHelper {
   /**
    * Verify that the image exists and push it to docker registry if necessary.
    */
-  public static void assertImageExistsAndPushIfNeeded() {
+  public static synchronized void assertImageExistsAndPushIfNeeded() {
     String imageName = envMap.get("MODEL_IMAGE_NAME");
     String imageVer = "notset";
     String decoration = (envMap.get("DO_AI") != null && envMap.get("DO_AI").equalsIgnoreCase("true"))  ? "AI-" : "";
@@ -214,7 +216,7 @@ public class ItMiiSampleHelper {
    * @param args arguments to execute script
    * @param errString a string of detailed error
    */
-  public static void execTestScriptAndAssertSuccess(DomainType domainType,
+  public static synchronized void execTestScriptAndAssertSuccess(DomainType domainType,
                                                     String args,
                                                     String errString) {
     for (String arg : args.split(",")) {
@@ -282,10 +284,8 @@ public class ItMiiSampleHelper {
     }
   }
 
-  /**
-   * Test MII sample WLS or JRF initial use case.
-   */
-  public static void callInitialUseCase(DomainType domainTypeParam, ImageType imageTypeParam) {
+  /*
+  public static synchronized void callInitialUseCase(DomainType domainTypeParam, ImageType imageTypeParam) {
     String imageName = (domainType.equals(DomainType.WLS))
         ? MII_SAMPLE_WLS_IMAGE_NAME_V1 : MII_SAMPLE_JRF_IMAGE_NAME_V1;
     previousTestSuccessful = true;
@@ -355,12 +355,12 @@ public class ItMiiSampleHelper {
         "-initial-image,-check-image-and-push,-initial-main",
         "Initial use case failed"
     );
-  }
+  }*/
 
   /**
    * Test MII sample WLS or JRF initial use case.
    */
-  public static void callInitialUseCase() {
+  public static synchronized void callInitialUseCase() {
     String imageName = (domainType.equals(DomainType.WLS))
         ? MII_SAMPLE_WLS_IMAGE_NAME_V1 : MII_SAMPLE_JRF_IMAGE_NAME_V1;
     previousTestSuccessful = true;
@@ -430,7 +430,7 @@ public class ItMiiSampleHelper {
   /**
    * Test MII sample WLS or JRF update1 use case.
    */
-  public static void callUpdateUseCase(String args,
+  public static synchronized void callUpdateUseCase(String args,
                                        String errString) {
     if (args.contains("update3")) {
       String imageName = (domainType.equals(DomainType.WLS))
@@ -444,7 +444,7 @@ public class ItMiiSampleHelper {
   /**
    * Test MII sample WLS or JRF update1 use case.
    */
-  public static void callCheckMiiSampleSource(String args,
+  public static synchronized void callCheckMiiSampleSource(String args,
                                               String errString) {
     /*
     final String baseImageNameKey = "BASE_IMAGE_NAME";
@@ -465,7 +465,7 @@ public class ItMiiSampleHelper {
   /**
    * Delete DB deployment for FMW test cases and Uninstall traefik.
    */
-  public static void tearDownAll() {
+  public static synchronized void tearDownAll() {
     logger = getLogger();
     // uninstall traefik
     if (traefikNamespace != null) {
