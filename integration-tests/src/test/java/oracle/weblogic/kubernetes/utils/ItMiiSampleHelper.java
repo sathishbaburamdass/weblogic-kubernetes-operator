@@ -176,6 +176,10 @@ public class ItMiiSampleHelper {
     String imageVer = "notset";
     String decoration = (envMap.get("DO_AI") != null && envMap.get("DO_AI").equalsIgnoreCase("true"))  ? "AI-" : "";
 
+    System.out.println("========>>> decoration = " + decoration);
+    System.out.println("========>>> 5. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+    System.out.println("========>>> imageType = " + imageType);
+
     //Debug nightly failure
     for (Map.Entry<String, String> entry : envMap.entrySet()) {
       System.out.println("========>>> envMap Key = " + entry.getKey()
@@ -263,6 +267,14 @@ public class ItMiiSampleHelper {
         outStr += ", stderr=\n{\n" + (result != null ? result.stderr() : "") + "\n}\n";
         outStr += ", stdout=\n{\n" + (result != null ? result.stdout() : "") + "\n}\n";
 
+        String outStr2 = "===========>> ";
+        outStr2 += ", domainType=" + domainType + "\n";
+        outStr2 += ", imageType=" + imageType + "\n";
+        outStr2 += ", command=\n{\n" + command + "\n}\n";
+        outStr2 += ", stderr=\n{\n" + (result != null ? result.stderr() : "") + "\n}\n";
+        outStr2 += ", stdout=\n{\n" + (result != null ? result.stdout() : "") + "\n}\n";
+
+        System.out.println("=======>>> outStr2 ==" + outStr2 + ", for ns: " + domainNamespace);
         assertTrue(success, outStr);
       }
 
@@ -304,9 +316,11 @@ public class ItMiiSampleHelper {
       previousTestSuccessful = true;
       System.out.println("========>>> 2. envMap.get(MODEL_IMAGE_NAME) = "
           + envMap.get("MODEL_IMAGE_NAME"));
+      System.out.println("========>>> 1. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
       execTestScriptAndAssertSuccess(domainType, "-db,-rcu", "DB/RCU creation failed");
       System.out.println("========>>> 3. envMap.get(MODEL_IMAGE_NAME) = "
           + envMap.get("MODEL_IMAGE_NAME"));
+      System.out.println("========>>> 2. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
     }
 
     if (envMap.get("MODEL_IMAGE_NAME") == null) {
@@ -316,7 +330,10 @@ public class ItMiiSampleHelper {
 
     System.out.println("========>>> 4. envMap.get(MODEL_IMAGE_NAME) = "
         + envMap.get("MODEL_IMAGE_NAME"));
+    System.out.println("========>>> 3. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
 
+    envMap.put("DO_AI", String.valueOf(imageType == ImageType.AUX));
+    System.out.println("=========>>> 4. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
     String command = "kubectl get namespaces --all-namespaces";
 
     ExecResult result = Command.withParams(
