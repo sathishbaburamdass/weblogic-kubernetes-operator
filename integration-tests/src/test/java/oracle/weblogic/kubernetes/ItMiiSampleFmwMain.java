@@ -73,7 +73,7 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update2 use case")
   void testFmwMainUpdate2UseCase() {
-    ItMiiSampleHelper.callUpdateUseCase("-update2", "Update2 use case failed");
+    ItMiiSampleHelper.callUpdate2UseCase("-update2", "Update2 use case failed");
   }
 
   /**
