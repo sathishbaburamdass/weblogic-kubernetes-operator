@@ -215,6 +215,22 @@ public class ItMiiSampleHelper {
       previousTestSuccessful = false;
 
       if (arg.equals("-check-image-and-push")) {
+        //Debug nightly failure
+        try {
+          Thread.sleep(60000);
+        } catch (Exception ex) {
+          //Ignore
+        }
+
+        String command = "docker images -a";
+        ExecResult result = Command.withParams(
+          new CommandParams()
+            .command(command)
+            .env(envMap)
+            .redirect(true)
+        ).executeAndReturnResult();
+        System.out.println("========>>> Docker Imges = " + result);
+
         assertImageExistsAndPushIfNeeded();
 
       } else {
