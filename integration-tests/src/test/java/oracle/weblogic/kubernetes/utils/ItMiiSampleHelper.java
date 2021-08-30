@@ -226,6 +226,15 @@ public class ItMiiSampleHelper {
       Assumptions.assumeTrue(previousTestSuccessful);
       previousTestSuccessful = false;
 
+      String outStr1 = " Calling " + MII_SAMPLES_SCRIPT + " with params: ";
+      outStr1 += ", domainType=" + domainType + "\n";
+      outStr1 += ", imageType=" + imageType + "\n";
+      outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+      outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+      outStr1 += ", arg=" + arg + "\n";
+
+      System.out.println("========>>> Calling sample script: " + outStr1);
+
       if (arg.equals("-check-image-and-push")) {
         //Debug nightly failure
         try {
@@ -275,6 +284,8 @@ public class ItMiiSampleHelper {
         String outStr2 = "===========>> ";
         outStr2 += ", domainType=" + domainType + "\n";
         outStr2 += ", imageType=" + imageType + "\n";
+        outStr2 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+        outStr2 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
         outStr2 += ", command=\n{\n" + command + "\n}\n";
         outStr2 += ", stderr=\n{\n" + (result != null ? result.stderr() : "") + "\n}\n";
         outStr2 += ", stdout=\n{\n" + (result != null ? result.stdout() : "") + "\n}\n";
