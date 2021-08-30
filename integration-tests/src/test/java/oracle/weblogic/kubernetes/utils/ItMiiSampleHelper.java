@@ -92,23 +92,35 @@ public class ItMiiSampleHelper {
                                           DomainType domainTypeParam,
                                           ImageType imageTypeParam) {
     logger = getLogger();
-    ItMiiSampleHelper.domainType = domainTypeParam;
-    ItMiiSampleHelper.imageType = imageTypeParam;
+    //ItMiiSampleHelper.domainType = domainTypeParam;
+    //ItMiiSampleHelper.imageType = imageTypeParam;
+    domainType = domainTypeParam;
+    imageType = imageTypeParam;
+
+    System.out.println("========>>> 1. domainType = " + domainType + " in initAll");
+    System.out.println("========>>> 1. imageType = " + imageType + " in initAll");
+
     // get a new unique opNamespace
     logger.info("Creating unique namespace for Operator");
     assertNotNull(namespaces.get(0), "Namespace list is null");
     opNamespace = namespaces.get(0);
-    logger.info("Created unique namespace for Operator === " + opNamespace);
+    logger.info("Created unique namespace for Operator === " + opNamespace
+        + " domainType === " + ItMiiSampleHelper.domainType
+        + " imageType === " + ItMiiSampleHelper.imageType);
 
     logger.info("Creating unique namespace for Domain");
     assertNotNull(namespaces.get(1), "Namespace list is null");
     domainNamespace = namespaces.get(1);
-    logger.info("Created unique namespace for Domain === " + domainNamespace);
+    logger.info("Created unique namespace for Domain === " + domainNamespace
+        + " domainType === " + ItMiiSampleHelper.domainType
+        + " imageType === " + ItMiiSampleHelper.imageType);
 
     logger.info("Creating unique namespace for Traefik");
     assertNotNull(namespaces.get(2), "Namespace list is null");
     traefikNamespace = namespaces.get(2);
-    logger.info("Created unique namespace for Traefik === " + traefikNamespace);
+    logger.info("Created unique namespace for Traefik === " + traefikNamespace
+        + " domainType === " + ItMiiSampleHelper.domainType
+        + " imageType === " + ItMiiSampleHelper.imageType);
 
     // install and verify operator
     installAndVerifyOperator(opNamespace, domainNamespace);
@@ -161,7 +173,9 @@ public class ItMiiSampleHelper {
       assertNotNull(namespaces.get(3), "Namespace list is null");
       dbNamespace = namespaces.get(3);
 
-      logger.info("Created unique namespace for dbNamespace === " + dbNamespace);
+      logger.info("Created unique namespace for dbNamespace === " + dbNamespace
+          + " domainType === " + ItMiiSampleHelper.domainType
+          + " imageType === " + ItMiiSampleHelper.imageType);
 
       envMap.put("dbNamespace", dbNamespace);
 
@@ -171,6 +185,9 @@ public class ItMiiSampleHelper {
       logger.info("Docker registry secret {0} created successfully in namespace {1}",
           BASE_IMAGES_REPO_SECRET, dbNamespace);
     }
+
+    System.out.println("========>>> 2. domainType = " + domainType + " in initAll");
+    System.out.println("========>>> 2. imageType = " + imageType + " in initAll");
   }
 
   /**
@@ -226,7 +243,7 @@ public class ItMiiSampleHelper {
       Assumptions.assumeTrue(previousTestSuccessful);
       previousTestSuccessful = false;
 
-      String outStr1 = " Calling " + MII_SAMPLES_SCRIPT + " with params: ";
+      String outStr1 = " Calling " + MII_SAMPLES_SCRIPT + " with params: " + "\n";
       outStr1 += ", domainType=" + domainType + "\n";
       outStr1 += ", imageType=" + imageType + "\n";
       outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
@@ -284,6 +301,8 @@ public class ItMiiSampleHelper {
         String outStr2 = "===========>> ";
         outStr2 += ", domainType=" + domainType + "\n";
         outStr2 += ", imageType=" + imageType + "\n";
+        outStr2 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+        outStr2 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
         outStr2 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
         outStr2 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
         outStr2 += ", command=\n{\n" + command + "\n}\n";
