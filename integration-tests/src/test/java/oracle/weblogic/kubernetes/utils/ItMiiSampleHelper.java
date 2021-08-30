@@ -97,8 +97,8 @@ public class ItMiiSampleHelper {
     domainType = domainTypeParam;
     imageType = imageTypeParam;
 
-    System.out.println("========>>> 1. domainType = " + domainType + " in initAll");
-    System.out.println("========>>> 1. imageType = " + imageType + " in initAll");
+    logger.info("========>>> 1. domainType = " + domainType + " in initAll");
+    logger.info("========>>> 1. imageType = " + imageType + " in initAll");
 
     // get a new unique opNamespace
     logger.info("Creating unique namespace for Operator");
@@ -186,8 +186,8 @@ public class ItMiiSampleHelper {
           BASE_IMAGES_REPO_SECRET, dbNamespace);
     }
 
-    System.out.println("========>>> 2. domainType = " + domainType + " in initAll");
-    System.out.println("========>>> 2. imageType = " + imageType + " in initAll");
+    logger.info("========>>> 2. domainType = " + domainType + " in initAll");
+    logger.info("========>>> 2. imageType = " + imageType + " in initAll");
   }
 
   /**
@@ -198,14 +198,13 @@ public class ItMiiSampleHelper {
     String imageVer = "notset";
     String decoration = (envMap.get("DO_AI") != null && envMap.get("DO_AI").equalsIgnoreCase("true"))  ? "AI-" : "";
 
-    System.out.println("========>>> decoration = " + decoration);
-    System.out.println("========>>> 4. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
-    System.out.println("========>>> imageType = " + imageType);
+    logger.info("========>>> decoration = " + decoration);
+    logger.info("========>>> 4. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+    logger.info("========>>> imageType = " + imageType);
 
     //Debug nightly failure
     for (Map.Entry<String, String> entry : envMap.entrySet()) {
-      System.out.println("========>>> envMap Key = " + entry.getKey()
-          + ", envMap Value = " + entry.getValue());
+      logger.info("========>>> envMap Key = " + entry.getKey() + ", envMap Value = " + entry.getValue());
     }
 
     if (imageName.equals(MII_SAMPLE_WLS_IMAGE_NAME_V1)) {
@@ -250,7 +249,7 @@ public class ItMiiSampleHelper {
       outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
       outStr1 += ", arg=" + arg + "\n";
 
-      System.out.println("========>>> Calling sample script: " + outStr1);
+      logger.info("========>>> Calling sample script: " + outStr1);
 
       if (arg.equals("-check-image-and-push")) {
         //Debug nightly failure
@@ -269,7 +268,7 @@ public class ItMiiSampleHelper {
             .redirect(true)
         ).executeAndReturnResult();
 
-        System.out.println("========>>> Docker Imges = " + result);
+        logger.info("========>>> Docker Imges = " + result);
         assertImageExistsAndPushIfNeeded();
 
       } else {
@@ -309,7 +308,7 @@ public class ItMiiSampleHelper {
         outStr2 += ", stderr=\n{\n" + (result != null ? result.stderr() : "") + "\n}\n";
         outStr2 += ", stdout=\n{\n" + (result != null ? result.stdout() : "") + "\n}\n";
 
-        System.out.println("=======>>> outStr2 ==" + outStr2 + ", for ns: " + domainNamespace);
+        logger.info("=======>>> outStr2 ==" + outStr2 + ", for ns: " + domainNamespace);
         assertTrue(success, outStr);
       }
 
@@ -326,8 +325,8 @@ public class ItMiiSampleHelper {
     previousTestSuccessful = true;
     envMap.put("MODEL_IMAGE_NAME", imageName);
 
-    System.out.println("========>>> imageName = " + imageName);
-    System.out.println("========>>> 1. envMap.get(MODEL_IMAGE_NAME) = "
+    logger.info("========>>> imageName = " + imageName);
+    logger.info("========>>> 1. envMap.get(MODEL_IMAGE_NAME) = "
         + envMap.get("MODEL_IMAGE_NAME"));
 
     if (domainType.equals(DomainType.JRF)) {
@@ -349,26 +348,28 @@ public class ItMiiSampleHelper {
 
       // run JRF use cases irrespective of WLS use cases fail/pass
       previousTestSuccessful = true;
-      System.out.println("========>>> 2. envMap.get(MODEL_IMAGE_NAME) = "
+      logger.info("========>>> 2. envMap.get(MODEL_IMAGE_NAME) = "
           + envMap.get("MODEL_IMAGE_NAME"));
-      System.out.println("========>>> 1. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+      logger.info("========>>> 1. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+
       execTestScriptAndAssertSuccess(domainType, "-db,-rcu", "DB/RCU creation failed");
-      System.out.println("========>>> 3. envMap.get(MODEL_IMAGE_NAME) = "
+
+      logger.info("========>>> 3. envMap.get(MODEL_IMAGE_NAME) = "
           + envMap.get("MODEL_IMAGE_NAME"));
-      System.out.println("========>>> 2. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+      logger.info("========>>> 2. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
     }
 
     if (envMap.get("MODEL_IMAGE_NAME") == null) {
-      System.out.println("========>>> envMap.get(MODEL_IMAGE_NAME) is NULL !!!!! reset it");
+      logger.info("========>>> envMap.get(MODEL_IMAGE_NAME) is NULL !!!!! reset it");
       envMap.put("MODEL_IMAGE_NAME", imageName);
     }
 
-    System.out.println("========>>> 4. envMap.get(MODEL_IMAGE_NAME) = "
+    logger.info("========>>> 4. envMap.get(MODEL_IMAGE_NAME) = "
         + envMap.get("MODEL_IMAGE_NAME"));
-    System.out.println("========>>> 3. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+    logger.info("========>>> 3. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
 
     envMap.put("DO_AI", String.valueOf(imageType == ImageType.AUX));
-    System.out.println("=========>>> 4. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+    logger.info("=========>>> 4. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
     String command = "kubectl get namespaces --all-namespaces";
 
     ExecResult result = Command.withParams(
@@ -378,7 +379,7 @@ public class ItMiiSampleHelper {
         .redirect(true)
     ).executeAndReturnResult();
 
-    System.out.println("========>>> kubectl get namespaces --all-namespacess = " + result);
+    logger.info("========>>> kubectl get namespaces --all-namespacess = " + result);
 
     execTestScriptAndAssertSuccess(
         domainType,
