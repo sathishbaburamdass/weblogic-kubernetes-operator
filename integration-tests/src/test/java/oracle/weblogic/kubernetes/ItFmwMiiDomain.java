@@ -49,13 +49,11 @@ import static oracle.weblogic.kubernetes.utils.ImageUtils.createMiiImageAndVerif
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createOcirRepoSecret;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.dockerLoginAndPushImageToRegistry;
 import static oracle.weblogic.kubernetes.utils.JobUtils.getIntrospectJobName;
-import static oracle.weblogic.kubernetes.utils.OKDUtils.createRouteForOKD;
 import static oracle.weblogic.kubernetes.utils.OperatorUtils.installAndVerifyOperator;
 import static oracle.weblogic.kubernetes.utils.OperatorUtils.restartOperator;
 import static oracle.weblogic.kubernetes.utils.PatchDomainUtils.patchDomainResourceServerStartPolicy;
 import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodDeleted;
 import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodExists;
-import static oracle.weblogic.kubernetes.utils.PodUtils.getExternalServicePodName;
 import static oracle.weblogic.kubernetes.utils.SecretUtils.createOpsswalletpasswordSecret;
 import static oracle.weblogic.kubernetes.utils.SecretUtils.createSecretWithUsernamePassword;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
@@ -97,7 +95,7 @@ class ItFmwMiiDomain {
   private String rcuaccessSecretName = domainUid + "-rcu-access";
   private String opsswalletpassSecretName = domainUid + "-opss-wallet-password-secret";
   private String opsswalletfileSecretName = domainUid + "opss-wallet-file-secret";
-  String adminSvcExtHost = null;
+  //TODO remove String adminSvcExtHost = null;
 
   // create standard, reusable retry/backoff policy
   private static final ConditionFactory withStandardRetryPolicy
@@ -254,8 +252,10 @@ class ItFmwMiiDomain {
     assertEquals(introspectVersion1, introspectVersion2, "introspectVersion changes after operator restart");
 
     // Expose the admin service external node port as  a route for OKD
-    adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), fmwDomainNamespace);
-    verifyDomainReady(fmwDomainNamespace, domainUid, adminSvcExtHost, replicaCount);
+    //adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), fmwDomainNamespace);
+    //verifyDomainReady(fmwDomainNamespace, domainUid, adminSvcExtHost, replicaCount);
+    verifyDomainReady(fmwDomainNamespace, domainUid, replicaCount);
+
   }
 
   /**
@@ -274,7 +274,7 @@ class ItFmwMiiDomain {
     shutdownDomain();
     patchDomainWithWalletFileSecret(opsswalletfileSecretName);
     startupDomain();
-    verifyDomainReady(fmwDomainNamespace, domainUid, adminSvcExtHost, replicaCount);
+    verifyDomainReady(fmwDomainNamespace, domainUid, replicaCount);
   }
 
   /**
@@ -302,7 +302,7 @@ class ItFmwMiiDomain {
         String.format("update Secret failed for %s with new schema password %s", rcuaccessSecretName,
             RCUSCHEMAPASSWORDNEW));
     startupDomain();
-    verifyDomainReady(fmwDomainNamespace, domainUid, adminSvcExtHost, replicaCount);
+    verifyDomainReady(fmwDomainNamespace, domainUid, replicaCount);
   }
 
   /**

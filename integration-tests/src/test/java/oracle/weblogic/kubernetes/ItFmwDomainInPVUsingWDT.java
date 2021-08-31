@@ -197,7 +197,7 @@ class ItFmwDomainInPVUsingWDT {
     createDomainAndVerify(domain, domainNamespace);
 
     // verify that all servers are ready and EM console is accessible
-    verifyDomainReady(domainNamespace, domainUid, null,replicaCount, "nosuffix");
+    verifyDomainReady(domainNamespace, domainUid, replicaCount, "nosuffix");
   }
 
   private void createDomainJobOnPv(Path domainCreationScriptFile,
