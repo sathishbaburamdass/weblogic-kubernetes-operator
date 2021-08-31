@@ -177,7 +177,8 @@ public class ItMiiSampleHelper {
           + " domainType === " + ItMiiSampleHelper.domainType
           + " imageType === " + ItMiiSampleHelper.imageType);
 
-      envMap.put("dbNamespace", dbNamespace);
+      envMap.put("DB_NAMESPACE", dbNamespace);
+      logger.info("========>>> 1. dbNamespace = " + dbNamespace + " in initAll");
 
       // create ocr/ocir docker registry secret to pull the db images
       // this secret is used only for non-kind cluster
@@ -188,6 +189,7 @@ public class ItMiiSampleHelper {
 
     logger.info("========>>> 2. domainType = " + domainType + " in initAll");
     logger.info("========>>> 2. imageType = " + imageType + " in initAll");
+    logger.info("========>>> 2. dbNamespace = " + dbNamespace + " in initAll");
   }
 
   /**
@@ -235,14 +237,22 @@ public class ItMiiSampleHelper {
    * @param args arguments to execute script
    * @param errString a string of detailed error
    */
-  public static synchronized void execTestScriptAndAssertSuccess(DomainType domainType,
+  public static void execTestScriptAndAssertSuccess(DomainType domainType,
                                                     String args,
                                                     String errString) {
+    String outStr1 = "=========>> 1. In execTestScriptAndAssertSuccess with params: " + "\n";
+    outStr1 += ", domainType=" + domainType + "\n";
+    outStr1 += ", imageType=" + imageType + "\n";
+    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+    outStr1 += ", arg=" + args + "\n";
+    logger.info("========>>> 2. Calling sample script: " + outStr1);
+
     for (String arg : args.split(",")) {
       Assumptions.assumeTrue(previousTestSuccessful);
       previousTestSuccessful = false;
 
-      String outStr1 = " Calling " + MII_SAMPLES_SCRIPT + " with params: " + "\n";
+      outStr1 = " Calling " + MII_SAMPLES_SCRIPT + " with params: " + "\n";
       outStr1 += ", domainType=" + domainType + "\n";
       outStr1 += ", imageType=" + imageType + "\n";
       outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
@@ -302,8 +312,6 @@ public class ItMiiSampleHelper {
         outStr2 += ", imageType=" + imageType + "\n";
         outStr2 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
         outStr2 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
-        outStr2 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
-        outStr2 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
         outStr2 += ", command=\n{\n" + command + "\n}\n";
         outStr2 += ", stderr=\n{\n" + (result != null ? result.stderr() : "") + "\n}\n";
         outStr2 += ", stdout=\n{\n" + (result != null ? result.stdout() : "") + "\n}\n";
@@ -311,6 +319,14 @@ public class ItMiiSampleHelper {
         logger.info("=======>>> outStr2 ==" + outStr2 + ", for ns: " + domainNamespace);
         assertTrue(success, outStr);
       }
+
+      outStr1 = "=========>> 2. In execTestScriptAndAssertSuccess with params: " + "\n";
+      outStr1 += ", domainType=" + domainType + "\n";
+      outStr1 += ", imageType=" + imageType + "\n";
+      outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+      outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+      outStr1 += ", arg=" + args + "\n";
+      logger.info("========>>> 2. Calling sample script: " + outStr1);
 
       previousTestSuccessful = true;
     }
@@ -325,16 +341,25 @@ public class ItMiiSampleHelper {
     previousTestSuccessful = true;
     envMap.put("MODEL_IMAGE_NAME", imageName);
 
-    logger.info("========>>> imageName = " + imageName);
-    logger.info("========>>> 1. envMap.get(MODEL_IMAGE_NAME) = "
-        + envMap.get("MODEL_IMAGE_NAME"));
+    String outStr1 = "=========>> 1. In callInitialUseCase with params: " + "\n";
+    outStr1 += ", domainType=" + domainType + "\n";
+    outStr1 += ", imageType=" + imageType + "\n";
+    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+    logger.info("========>>> 1. Calling sample script: " + outStr1);
+
+    envMap.put("DB_NAMESPACE", envMap.get("DB_NAMESPACE"));
 
     if (domainType.equals(DomainType.JRF)) {
       String dbImageName = (KIND_REPO != null
           ? KIND_REPO + DB_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : DB_IMAGE_NAME);
       String jrfBaseImageName = (KIND_REPO != null
           ? KIND_REPO + FMWINFRA_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : FMWINFRA_IMAGE_NAME);
-      String dbNamespace = envMap.get("dbNamespace");
+
+      logger.info("========>>> 2. dbNamespace=" + dbNamespace + "\n");
+      logger.info("========>>> 2. DB_NAMESPACE= " + envMap.get("DB_NAMESPACE")
+          + " in callInitialUseCase");
 
       envMap.put("DB_IMAGE_NAME", dbImageName);
       envMap.put("DB_IMAGE_TAG", DB_IMAGE_TAG);
@@ -342,7 +367,7 @@ public class ItMiiSampleHelper {
       envMap.put("BASE_IMAGE_NAME", jrfBaseImageName);
       envMap.put("BASE_IMAGE_TAG", FMWINFRA_IMAGE_TAG);
       envMap.put("POD_WAIT_TIMEOUT_SECS", "1000"); // JRF pod waits on slow machines, can take at least 650 seconds
-      envMap.put("DB_NAMESPACE", dbNamespace);
+      envMap.put("DB_NAMESPACE", envMap.get("DB_NAMESPACE"));
       envMap.put("DB_IMAGE_PULL_SECRET", BASE_IMAGES_REPO_SECRET); //ocr/ocir secret
       envMap.put("INTROSPECTOR_DEADLINE_SECONDS", "600"); // introspector needs more time for JRF
 
@@ -352,11 +377,27 @@ public class ItMiiSampleHelper {
           + envMap.get("MODEL_IMAGE_NAME"));
       logger.info("========>>> 1. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
 
+      outStr1 = "=========>> 2. In callInitialUseCase with params: " + "\n";
+      outStr1 += ", domainType=" + domainType + "\n";
+      outStr1 += ", imageType=" + imageType + "\n";
+      outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+      outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+      outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+      logger.info("========>>> 2. Calling sample script: " + outStr1);
+
       execTestScriptAndAssertSuccess(domainType, "-db,-rcu", "DB/RCU creation failed");
 
       logger.info("========>>> 3. envMap.get(MODEL_IMAGE_NAME) = "
           + envMap.get("MODEL_IMAGE_NAME"));
       logger.info("========>>> 2. envMap.get(DO_AI) = " + envMap.get("DO_AI"));
+
+      outStr1 = "=========>> 3. In callInitialUseCase with params: " + "\n";
+      outStr1 += ", domainType=" + domainType + "\n";
+      outStr1 += ", imageType=" + imageType + "\n";
+      outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+      outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+      outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+      logger.info("========>>> 3. Calling sample script: " + outStr1);
     }
 
     if (envMap.get("MODEL_IMAGE_NAME") == null) {
@@ -381,17 +422,43 @@ public class ItMiiSampleHelper {
 
     logger.info("========>>> kubectl get namespaces --all-namespacess = " + result);
 
+    outStr1 = "=========>> 4. In callInitialUseCase with params: " + "\n";
+    outStr1 += ", domainType=" + domainType + "\n";
+    outStr1 += ", imageType=" + imageType + "\n";
+    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+    logger.info("========>>> 4. Calling sample script: " + outStr1);
+
     execTestScriptAndAssertSuccess(
         domainType,
         "-initial-image,-check-image-and-push,-initial-main",
         "Initial use case failed"
     );
+
+    outStr1 = "=========>> 5. In callInitialUseCase with params: " + "\n";
+    outStr1 += ", domainType=" + domainType + "\n";
+    outStr1 += ", imageType=" + imageType + "\n";
+    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+    logger.info("========>>> 5. Calling sample script: " + outStr1);
   }
 
   /**
    * Test MII sample WLS or JRF update1 use case.
    */
   public static synchronized void callUpdateUseCase(String args, String errString) {
+
+    String outStr1 = "=========>> 1. In callUpdateUseCase with params: " + "\n";
+    outStr1 += ", domainType=" + domainType + "\n";
+    outStr1 += ", imageType=" + imageType + "\n";
+    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+    outStr1 += ", args=" + args + "\n";
+    logger.info("========>>> 1. Calling sample script: " + outStr1);
+
     if (args.contains("update3")) {
       String imageName = (domainType.equals(DomainType.WLS))
           ? MII_SAMPLE_WLS_IMAGE_NAME_V2 : MII_SAMPLE_JRF_IMAGE_NAME_V2;
@@ -399,6 +466,15 @@ public class ItMiiSampleHelper {
     }
 
     execTestScriptAndAssertSuccess(domainType, args, errString);
+
+    outStr1 = "=========>> 2. In callUpdateUseCase with params: " + "\n";
+    outStr1 += ", domainType=" + domainType + "\n";
+    outStr1 += ", imageType=" + imageType + "\n";
+    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
+    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
+    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
+    outStr1 += ", args=" + args + "\n";
+    logger.info("========>>> 2. Calling sample script: " + outStr1);
   }
 
   /**
