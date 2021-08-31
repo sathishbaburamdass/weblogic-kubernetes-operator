@@ -237,7 +237,7 @@ public class ItMiiSampleHelper {
    * @param args arguments to execute script
    * @param errString a string of detailed error
    */
-  public static void execTestScriptAndAssertSuccess(DomainType domainType,
+  public static synchronized void execTestScriptAndAssertSuccess(DomainType domainType,
                                                     String args,
                                                     String errString) {
     String outStr1 = "=========>> 1. In execTestScriptAndAssertSuccess with params: " + "\n";
