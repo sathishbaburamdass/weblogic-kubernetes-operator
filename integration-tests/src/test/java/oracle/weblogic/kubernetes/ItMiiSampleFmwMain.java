@@ -25,6 +25,8 @@ import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 @IntegrationTest
 class ItMiiSampleFmwMain {
 
+  private static ItMiiSampleHelper myItMiiSampleHelper = null;
+
   /**
    * Install Operator.
    * @param namespaces list of namespaces created by the IntegrationTestWatcher by the
@@ -32,7 +34,8 @@ class ItMiiSampleFmwMain {
    */
   @BeforeAll
   public static void init(@Namespaces(4) List<String> namespaces) {
-    ItMiiSampleHelper.initAll(namespaces, ItMiiSampleHelper.DomainType.JRF, ItMiiSampleHelper.ImageType.MAIN);
+    myItMiiSampleHelper = new ItMiiSampleHelper();
+    myItMiiSampleHelper.initAll(namespaces, ItMiiSampleHelper.DomainType.JRF, ItMiiSampleHelper.ImageType.MAIN);
   }
 
   /**
@@ -49,7 +52,7 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF initial use case")
   void testFmwMainInitialUseCase() {
-    ItMiiSampleHelper.callInitialUseCase();
+    myItMiiSampleHelper.callInitialUseCase();
   }
 
   /**
@@ -61,7 +64,7 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update1 use case")
   void testFmwMainUpdate1UseCase() {
-    ItMiiSampleHelper.callUpdateUseCase("-update1", "Update1 use case failed");
+    myItMiiSampleHelper.callUpdateUseCase("-update1", "Update1 use case failed");
   }
 
   /**
@@ -73,7 +76,7 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update2 use case")
   void testFmwMainUpdate2UseCase() {
-    ItMiiSampleHelper.callUpdateUseCase("-update2", "Update2 use case failed");
+    myItMiiSampleHelper.callUpdateUseCase("-update2", "Update2 use case failed");
   }
 
   /**
@@ -85,7 +88,7 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update3 use case")
   void testFmwMainUpdate3UseCase() {
-    ItMiiSampleHelper.callUpdateUseCase("-update3-image,-check-image-and-push,-update3-main",
+    myItMiiSampleHelper.callUpdateUseCase("-update3-image,-check-image-and-push,-update3-main",
         "Update3 use case failed");
   }
 
@@ -101,7 +104,7 @@ class ItMiiSampleFmwMain {
   @DisabledIfEnvironmentVariable(named = "SKIP_JRF_SAMPLES", matches = "true")
   @DisplayName("Test to verify MII sample JRF update4 use case")
   void testFmwMainUpdate4UseCase() {
-    ItMiiSampleHelper.callUpdateUseCase("-update4", "Update4 use case failed");
+    myItMiiSampleHelper.callUpdateUseCase("-update4", "Update4 use case failed");
   }
 
   /**
@@ -110,6 +113,6 @@ class ItMiiSampleFmwMain {
   @AfterAll
   public void tearDownAll() {
     // db cleanup or deletion and uninstall traefik
-    ItMiiSampleHelper.tearDownAll();
+    myItMiiSampleHelper.tearDownAll();
   }
 }
