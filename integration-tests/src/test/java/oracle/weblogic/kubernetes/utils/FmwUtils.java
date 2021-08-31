@@ -27,10 +27,11 @@ import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import static oracle.weblogic.kubernetes.TestConstants.BASE_IMAGES_REPO_SECRET;
 import static oracle.weblogic.kubernetes.TestConstants.DOMAIN_API_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.FMWINFRA_IMAGE_TO_USE_IN_SPEC;
-import static oracle.weblogic.kubernetes.TestConstants.K8S_NODEPORT_HOST;
+//import static oracle.weblogic.kubernetes.TestConstants.K8S_NODEPORT_HOST;
 import static oracle.weblogic.kubernetes.actions.TestActions.getServiceNodePort;
 import static oracle.weblogic.kubernetes.utils.ApplicationUtils.callWebAppAndWaitTillReady;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
+import static oracle.weblogic.kubernetes.utils.CommonTestUtils.getHostAndPort;
 import static oracle.weblogic.kubernetes.utils.PodUtils.getExternalServicePodName;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -187,11 +188,13 @@ public class FmwUtils {
    * Verify EM console is accessible.
    * @param domainUid unique Uid of the domain
    * @param domainNamespace  namespace where the domain exists
+   * @param adminSvcExtHost admin service external node port as a route for OKD, null for otherwise
    * @param replicaCount number of running managed servers
    * @param args arguments to determine append -c1 to managed server name or not.
    *             append -c1 if it's not set. Otherwise not appending -c1
    */
-  public static void verifyDomainReady(String domainNamespace, String domainUid, int replicaCount, String... args) {
+  public static void verifyDomainReady(String domainNamespace, String domainUid, String adminSvcExtHost,
+                                       int replicaCount, String... args) {
     LoggingFacade logger = getLogger();
     String adminServerPodName = domainUid + "-admin-server";
     String managedServerPrefix = domainUid + "-managed-server";
@@ -211,8 +214,13 @@ public class FmwUtils {
     assertTrue(nodePort != -1,
         "Could not get the default external service node port");
     logger.info("Found the default service nodePort {0}", nodePort);
-    String curlCmd1 = "curl -s -L --show-error --noproxy '*' "
+
+    String hostAndPort = getHostAndPort(adminSvcExtHost, nodePort);
+    /*String curlCmd1 = "curl -s -L --show-error --noproxy '*' "
         + " http://" + K8S_NODEPORT_HOST + ":" + nodePort
+        + "/em --write-out %{http_code} -o /dev/null";*/
+    String curlCmd1 = "curl -s -L --show-error --noproxy '*' "
+        + " http://" + hostAndPort 
         + "/em --write-out %{http_code} -o /dev/null";
     logger.info("Executing default nodeport curl command {0}", curlCmd1);
     assertTrue(callWebAppAndWaitTillReady(curlCmd1, 5), "Calling web app failed");

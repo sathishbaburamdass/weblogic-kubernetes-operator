@@ -245,7 +245,7 @@ class ItFmwBigCMMiiDomain {
         jrfMii1Image);
 
     createDomainAndVerify(domain, jrfDomainNamespace);
-    verifyDomainReady(jrfDomainNamespace, domainUid, replicaCount);
+    verifyDomainReady(jrfDomainNamespace, domainUid, null, replicaCount);
     // check if multiple configmaps are created
     try {
       if (!Kubernetes.listConfigMaps(jrfDomainNamespace).getItems().isEmpty()) {
