@@ -86,39 +86,22 @@ public class ItMiiSampleHelper {
    * @param domainTypeParam domain type names
    * @param imageTypeParam image type names
    */
-  public void initAll(List<String> namespaces,
-                                          DomainType domainTypeParam,
-                                          ImageType imageTypeParam) {
+  public void initAll(List<String> namespaces, DomainType domainTypeParam, ImageType imageTypeParam) {
     logger = getLogger();
-    //ItMiiSampleHelper.domainType = domainTypeParam;
-    //ItMiiSampleHelper.imageType = imageTypeParam;
     domainType = domainTypeParam;
     imageType = imageTypeParam;
-
-    logger.info("========>>> 1. domainType = " + domainType + " in initAll");
-    logger.info("========>>> 1. imageType = " + imageType + " in initAll");
-
     // get a new unique opNamespace
     logger.info("Creating unique namespace for Operator");
     assertNotNull(namespaces.get(0), "Namespace list is null");
     opNamespace = namespaces.get(0);
-    logger.info("Created unique namespace for Operator === " + opNamespace
-        + " domainType === " + domainType
-        + " imageType === " + imageType);
 
     logger.info("Creating unique namespace for Domain");
     assertNotNull(namespaces.get(1), "Namespace list is null");
     domainNamespace = namespaces.get(1);
-    logger.info("Created unique namespace for Domain === " + domainNamespace
-        + " domainType === " + domainType
-        + " imageType === " + imageType);
 
     logger.info("Creating unique namespace for Traefik");
     assertNotNull(namespaces.get(2), "Namespace list is null");
     traefikNamespace = namespaces.get(2);
-    logger.info("Created unique namespace for Traefik === " + traefikNamespace
-        + " domainType === " + domainType
-        + " imageType === " + imageType);
 
     // install and verify operator
     installAndVerifyOperator(opNamespace, domainNamespace);
@@ -127,7 +110,6 @@ public class ItMiiSampleHelper {
     envMap = new HashMap<String, String>();
     envMap.put("DOMAIN_NAMESPACE", domainNamespace);
     envMap.put("TRAEFIK_NAMESPACE", traefikNamespace);
-    envMap.put("TRAEFIK_NAME", "traefik-operator-" + traefikNamespace);
     envMap.put("TRAEFIK_HTTP_NODEPORT", "0"); // 0-->dynamically choose the np
     envMap.put("TRAEFIK_HTTPS_NODEPORT", "0"); // 0-->dynamically choose the np
     envMap.put("WORKDIR", miiSampleWorkDir);
@@ -171,12 +153,7 @@ public class ItMiiSampleHelper {
       assertNotNull(namespaces.get(3), "Namespace list is null");
       dbNamespace = namespaces.get(3);
 
-      logger.info("Created unique namespace for dbNamespace === " + dbNamespace
-          + " domainType === " + domainType
-          + " imageType === " + imageType);
-
-      envMap.put("DB_NAMESPACE", dbNamespace);
-      logger.info("========>>> 1. dbNamespace = " + dbNamespace + " in initAll");
+      envMap.put("dbNamespace", dbNamespace);
 
       // create ocr/ocir docker registry secret to pull the db images
       // this secret is used only for non-kind cluster
@@ -184,10 +161,6 @@ public class ItMiiSampleHelper {
       logger.info("Docker registry secret {0} created successfully in namespace {1}",
           BASE_IMAGES_REPO_SECRET, dbNamespace);
     }
-
-    logger.info("========>>> 2. domainType = " + domainType + " in initAll");
-    logger.info("========>>> 2. imageType = " + imageType + " in initAll");
-    logger.info("========>>> 2. dbNamespace = " + dbNamespace + " in initAll");
   }
 
   /**
