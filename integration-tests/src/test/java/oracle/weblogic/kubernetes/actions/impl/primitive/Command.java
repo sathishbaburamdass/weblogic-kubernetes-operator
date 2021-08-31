@@ -4,6 +4,7 @@
 package oracle.weblogic.kubernetes.actions.impl.primitive;
 
 import java.io.IOException;
+import java.util.Map;
 
 import oracle.weblogic.kubernetes.utils.ExecCommand;
 import oracle.weblogic.kubernetes.utils.ExecResult;
@@ -122,6 +123,15 @@ public class Command {
     if (params.verbose()) {
       getLogger().info("Executing command {0}", params.command());
     }
+
+    Map<String, String> envVars = params.env();
+
+    for (Map.Entry<String, String> item : envVars.entrySet()) {
+      String key = item.getKey();
+      String value = item.getValue();
+      getLogger().info("envVars, key === {0}, value === {1}", key, value);
+    }
+
     ExecResult result = null;
     try {
       result = ExecCommand.exec(
