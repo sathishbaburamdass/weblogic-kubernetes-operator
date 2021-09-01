@@ -34,6 +34,7 @@ class ItMiiSampleWlsAux {
    */
   @BeforeAll
   public static void init(@Namespaces(3) List<String> namespaces) {
+    myItMiiSampleHelper = new ItMiiSampleHelper();
     myItMiiSampleHelper.initAll(namespaces, ItMiiSampleHelper.DomainType.WLS, ItMiiSampleHelper.ImageType.AUX);
   }
 

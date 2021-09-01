@@ -34,6 +34,7 @@ class ItMiiSampleFmwMain {
    */
   @BeforeAll
   public static void init(@Namespaces(4) List<String> namespaces) {
+    myItMiiSampleHelper = new ItMiiSampleHelper();
     myItMiiSampleHelper.initAll(namespaces, ItMiiSampleHelper.DomainType.JRF, ItMiiSampleHelper.ImageType.MAIN);
   }
 
