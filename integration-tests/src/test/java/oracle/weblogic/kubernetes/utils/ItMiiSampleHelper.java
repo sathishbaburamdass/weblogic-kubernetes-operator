@@ -161,6 +161,8 @@ public class ItMiiSampleHelper {
       logger.info("Docker registry secret {0} created successfully in namespace {1}",
           BASE_IMAGES_REPO_SECRET, dbNamespace);
     }
+
+    logger.info(" ===================>>> Ending InitAll!!!");
   }
 
   /**
@@ -202,46 +204,24 @@ public class ItMiiSampleHelper {
   public void execTestScriptAndAssertSuccess(DomainType domainType,
                                                     String args,
                                                     String errString) {
-
-    String outStr1 = "=========>> 1. In execTestScriptAndAssertSuccess with params: " + "\n";
-    outStr1 += ", domainType=" + domainType + "\n";
-    outStr1 += ", imageType=" + imageType + "\n";
-    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
-    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
-    outStr1 += ", arg=" + args + "\n";
-    logger.info("========>>> 1. calling execTestScriptAndAssertSuccess: " + outStr1);
-
     for (String arg : args.split(",")) {
       Assumptions.assumeTrue(previousTestSuccessful);
       previousTestSuccessful = false;
 
       if (arg.equals("-check-image-and-push")) {
-        //Debug nightly failure
-        try {
-          Thread.sleep(60000);
-        } catch (Exception ex) {
-          //Ignore
-        }
-
         assertImageExistsAndPushIfNeeded();
 
       } else {
-
-        //Debug nightly failure
-        for (Map.Entry<String, String> entry : envMap.entrySet()) {
-          logger.info("========>>> envMap Key = " + entry.getKey() + ", envMap Value = " + entry.getValue());
-        }
-
         String command = miiSampleScript
             + " "
             + arg
             + (domainType == DomainType.JRF ? " -jrf " : "");
 
         ExecResult result = Command.withParams(
-          new CommandParams()
-              .command(command)
-              .env(envMap)
-              .redirect(true)
+            new CommandParams()
+                .command(command)
+                .env(envMap)
+                .redirect(true)
         ).executeAndReturnResult();
 
         boolean success =
@@ -261,14 +241,6 @@ public class ItMiiSampleHelper {
       }
 
       previousTestSuccessful = true;
-
-      outStr1 = "=========>> 2. In execTestScriptAndAssertSuccess with params: " + "\n";
-      outStr1 += ", domainType=" + domainType + "\n";
-      outStr1 += ", imageType=" + imageType + "\n";
-      outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
-      outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
-      outStr1 += ", arg=" + args + "\n";
-      logger.info("========>>> 2. calling execTestScriptAndAssertSuccess: " + outStr1);
     }
   }
 
@@ -281,19 +253,12 @@ public class ItMiiSampleHelper {
     previousTestSuccessful = true;
     envMap.put("MODEL_IMAGE_NAME", imageName);
 
-    String outStr1 = "=========>> 1. In callUpdateUseCase with params: " + "\n";
-    outStr1 += ", domainType=" + domainType + "\n";
-    outStr1 += ", imageType=" + imageType + "\n";
-    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
-    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
-    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
-    logger.info("========>>> 1. Calling sample script: " + outStr1);
-
     if (domainType.equals(DomainType.JRF)) {
       String dbImageName = (KIND_REPO != null
           ? KIND_REPO + DB_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : DB_IMAGE_NAME);
       String jrfBaseImageName = (KIND_REPO != null
           ? KIND_REPO + FMWINFRA_IMAGE_NAME.substring(BASE_IMAGES_REPO.length() + 1) : FMWINFRA_IMAGE_NAME);
+      String dbNamespace = envMap.get("dbNamespace");
 
       envMap.put("DB_IMAGE_NAME", dbImageName);
       envMap.put("DB_IMAGE_TAG", DB_IMAGE_TAG);
@@ -301,7 +266,7 @@ public class ItMiiSampleHelper {
       envMap.put("BASE_IMAGE_NAME", jrfBaseImageName);
       envMap.put("BASE_IMAGE_TAG", FMWINFRA_IMAGE_TAG);
       envMap.put("POD_WAIT_TIMEOUT_SECS", "1000"); // JRF pod waits on slow machines, can take at least 650 seconds
-      envMap.put("DB_NAMESPACE", envMap.get("DB_NAMESPACE"));
+      envMap.put("DB_NAMESPACE", dbNamespace);
       envMap.put("DB_IMAGE_PULL_SECRET", BASE_IMAGES_REPO_SECRET); //ocr/ocir secret
       envMap.put("INTROSPECTOR_DEADLINE_SECONDS", "600"); // introspector needs more time for JRF
 
@@ -320,17 +285,8 @@ public class ItMiiSampleHelper {
   /**
    * Test MII sample WLS or JRF update1 use case.
    */
-  public void callUpdateUseCase(String args, String errString) {
-
-    String outStr1 = "=========>> 1. In callUpdateUseCase with params: " + "\n";
-    outStr1 += ", domainType=" + domainType + "\n";
-    outStr1 += ", imageType=" + imageType + "\n";
-    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
-    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
-    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
-    outStr1 += ", args=" + args + "\n";
-    logger.info("========>>> 1. Calling sample script: " + outStr1);
-
+  public void callUpdateUseCase(String args,
+                                       String errString) {
     if (args.contains("update3")) {
       String imageName = (domainType.equals(DomainType.WLS))
           ? miiSampleWlsImageNameV2 : miiSampleJrfImageNameV2;
@@ -338,15 +294,6 @@ public class ItMiiSampleHelper {
     }
 
     execTestScriptAndAssertSuccess(domainType, args, errString);
-
-    outStr1 = "=========>> 2. In callUpdateUseCase with params: " + "\n";
-    outStr1 += ", domainType=" + domainType + "\n";
-    outStr1 += ", imageType=" + imageType + "\n";
-    outStr1 += ", dbNamespace=" + dbNamespace + "\n";
-    outStr1 += ", DB_NAMESPACE=" + envMap.get("DB_NAMESPACE") + "\n";
-    outStr1 += ", DOMAIN_NAMESPACE=" + envMap.get("DOMAIN_NAMESPACE") + "\n";
-    outStr1 += ", args=" + args + "\n";
-    logger.info("========>>> 2. Calling sample script: " + outStr1);
   }
 
   /**
@@ -354,12 +301,6 @@ public class ItMiiSampleHelper {
    */
   public void callCheckMiiSampleSource(String args,
                                               String errString) {
-    /*
-    final String baseImageNameKey = "BASE_IMAGE_NAME";
-    envMap.remove(baseImageNameKey);
-    execTestScriptAndAssertSuccess(domainType, args, errString);
-    envMap.put(baseImageNameKey, WEBLOGIC_IMAGE_NAME);*/
-
     final String baseImageNameKey = "BASE_IMAGE_NAME";
     final String origImageName = envMap.get(baseImageNameKey);
     try {
