@@ -255,10 +255,8 @@ class ItFmwMiiDomain {
     assertEquals(introspectVersion1, introspectVersion2, "introspectVersion changes after operator restart");
 
     verifyDomainReady(fmwDomainNamespace, domainUid, replicaCount);
-
     // Expose the admin service external node port as  a route for OKD
     adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), fmwDomainNamespace);
-
     verifyEMconsoleAccess(fmwDomainNamespace, domainUid, adminSvcExtHost);
 
   }

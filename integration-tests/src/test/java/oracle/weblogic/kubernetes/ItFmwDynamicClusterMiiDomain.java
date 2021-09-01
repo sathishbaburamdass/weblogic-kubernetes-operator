@@ -148,12 +148,9 @@ class ItFmwDynamicClusterMiiDomain {
   void testFmwDynamicClusterDomainInModelInImage() {
     // create FMW dynamic domain and verify
     createFmwDomainAndVerify();
-    //verifyDomainReady();
     verifyDomainReady(domainNamespace, domainUid, replicaCount, "nosuffix");
-
     // Expose the admin service external node port as  a route for OKD
     adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
-
     verifyEMconsoleAccess(domainNamespace, domainUid, adminSvcExtHost);
   }
 
@@ -288,29 +285,4 @@ class ItFmwDynamicClusterMiiDomain {
     createDomainAndVerify(domain, domainNamespace);
   }
 
-  ///**
-  // * Verify Pod is ready and service exists for both admin server and managed servers.
-  // * Verify EM console is accessible.
-  // */
-  /*private void verifyDomainReady() {
-    checkPodReadyAndServiceExists(adminServerPodName, domainUid, domainNamespace);
-    for (int i = 1; i <= replicaCount; i++) {
-      logger.info("Checking managed server service {0} is created in namespace {1}",
-          managedServerPrefix + i, domainNamespace);
-      checkPodReadyAndServiceExists(managedServerPrefix + i, domainUid, domainNamespace);
-    }
-
-    //check access to the em console: http://hostname:port/em
-    int nodePort = getServiceNodePort(
-        domainNamespace, getExternalServicePodName(adminServerPodName), "default");
-    assertTrue(nodePort != -1,
-          "Could not get the default external service node port");
-    logger.info("Found the default service nodePort {0}", nodePort);
-    String curlCmd1 = "curl -s -L --show-error --noproxy '*' "
-        + " http://" + K8S_NODEPORT_HOST + ":" + nodePort
-        + "/em --write-out %{http_code} -o /dev/null";
-    logger.info("Executing default nodeport curl command {0}", curlCmd1);
-    assertTrue(callWebAppAndWaitTillReady(curlCmd1, 5), "Calling web app failed");
-    logger.info("EM console is accessible thru default service");
-  }*/
 }
