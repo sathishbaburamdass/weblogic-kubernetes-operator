@@ -49,8 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @IntegrationTest
 public class ItMiiSampleHelper {
 
-  //private String miiSampleWorkDir = RESULTS_ROOT + "/model-in-image-sample-work-dir";
-  private String miiSampleWorkDir = "/model-in-image-sample-work-dir";
   private final String miiSampleScript = "../operator/integration-tests/model-in-image/run-test.sh";
 
   private final String currentDateTime = getDateAndTimeStamp();
@@ -107,12 +105,14 @@ public class ItMiiSampleHelper {
     // install and verify operator
     installAndVerifyOperator(opNamespace, domainNamespace);
 
-    miiSampleWorkDir = RESULTS_ROOT + "/" + domainNamespace + "/" + miiSampleWorkDir;
+    String miiSampleWorkDir =
+        RESULTS_ROOT + "/" + domainNamespace + "/model-in-image-sample-work-dir";
 
     // env variables to override default values in sample scripts
     envMap = new HashMap<String, String>();
     envMap.put("DOMAIN_NAMESPACE", domainNamespace);
     envMap.put("TRAEFIK_NAMESPACE", traefikNamespace);
+    envMap.put("TRAEFIK_NAME", "traefik-operator-" + traefikNamespace);
     envMap.put("TRAEFIK_HTTP_NODEPORT", "0"); // 0-->dynamically choose the np
     envMap.put("TRAEFIK_HTTPS_NODEPORT", "0"); // 0-->dynamically choose the np
     envMap.put("WORKDIR", miiSampleWorkDir);
