@@ -49,7 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @IntegrationTest
 public class ItMiiSampleHelper {
 
-  private String miiSampleWorkDir = RESULTS_ROOT + "/model-in-image-sample-work-dir";
+  //private String miiSampleWorkDir = RESULTS_ROOT + "/model-in-image-sample-work-dir";
+  private String miiSampleWorkDir = "/model-in-image-sample-work-dir";
   private final String miiSampleScript = "../operator/integration-tests/model-in-image/run-test.sh";
 
   private final String currentDateTime = getDateAndTimeStamp();
@@ -106,7 +107,7 @@ public class ItMiiSampleHelper {
     // install and verify operator
     installAndVerifyOperator(opNamespace, domainNamespace);
 
-    miiSampleWorkDir += "_" + domainNamespace;
+    miiSampleWorkDir = RESULTS_ROOT + "/" + domainNamespace + "/" + miiSampleWorkDir;
 
     // env variables to override default values in sample scripts
     envMap = new HashMap<String, String>();
