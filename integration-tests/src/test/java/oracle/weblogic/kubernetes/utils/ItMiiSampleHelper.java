@@ -164,8 +164,6 @@ public class ItMiiSampleHelper {
       logger.info("Docker registry secret {0} created successfully in namespace {1}",
           BASE_IMAGES_REPO_SECRET, dbNamespace);
     }
-
-    logger.info(" ===================>>> Ending InitAll!!!");
   }
 
   /**
