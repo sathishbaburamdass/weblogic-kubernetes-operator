@@ -25,7 +25,7 @@ import oracle.weblogic.kubernetes.TestConstants;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
 
 import static oracle.weblogic.kubernetes.TestConstants.BASE_IMAGES_REPO_SECRET;
-import static oracle.weblogic.kubernetes.TestConstants.OKD;
+//import static oracle.weblogic.kubernetes.TestConstants.OKD;
 import static oracle.weblogic.kubernetes.actions.TestActions.createNamespacedJob;
 import static oracle.weblogic.kubernetes.actions.TestActions.getJob;
 import static oracle.weblogic.kubernetes.actions.TestActions.getPodLog;
@@ -132,9 +132,10 @@ public class JobUtils {
         .imagePullSecrets(Arrays.asList(
             new V1LocalObjectReference()
                 .name(BASE_IMAGES_REPO_SECRET)));
-    if (!OKD) {
+    /*if (!OKD) {
       podSpec.initContainers(Arrays.asList(createfixPVCOwnerContainer(pvName, "/shared")));
-    }
+    }*/
+    podSpec.initContainers(Arrays.asList(createfixPVCOwnerContainer(pvName, "/shared")));
 
     V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec();
     if (podAnnotationsMap != null) {
