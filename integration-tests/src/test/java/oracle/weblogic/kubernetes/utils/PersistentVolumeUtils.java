@@ -154,8 +154,7 @@ public class PersistentVolumeUtils {
         pvName, domainUid, className);
     Path pvHostPath = null;
     // when tests are running in local box the PV directories need to exist
-    //if (!OKE_CLUSTER && !OKD) {
-    if (!OKE_CLUSTER) {
+    if (!OKE_CLUSTER && !OKD) {
       try {
         pvHostPath = Files.createDirectories(Paths.get(
             PV_ROOT, className, pvName));
