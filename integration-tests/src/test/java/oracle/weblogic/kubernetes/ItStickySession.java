@@ -3,10 +3,6 @@
 
 package oracle.weblogic.kubernetes;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,20 +24,17 @@ import oracle.weblogic.domain.Domain;
 import oracle.weblogic.domain.DomainSpec;
 import oracle.weblogic.domain.Model;
 import oracle.weblogic.domain.ServerPod;
-import oracle.weblogic.kubernetes.actions.ActionConstants;
 import oracle.weblogic.kubernetes.actions.impl.primitive.HelmParams;
 import oracle.weblogic.kubernetes.annotations.IntegrationTest;
 import oracle.weblogic.kubernetes.annotations.Namespaces;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import oracle.weblogic.kubernetes.utils.ExecCommand;
 import oracle.weblogic.kubernetes.utils.ExecResult;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static oracle.weblogic.kubernetes.TestConstants.DOMAIN_API_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.LOGS_DIR;
@@ -50,28 +43,20 @@ import static oracle.weblogic.kubernetes.TestConstants.OKD;
 import static oracle.weblogic.kubernetes.TestConstants.VOYAGER_CHART_NAME;
 import static oracle.weblogic.kubernetes.actions.TestActions.execCommand;
 import static oracle.weblogic.kubernetes.actions.TestActions.getServiceNodePort;
-import static oracle.weblogic.kubernetes.actions.TestActions.getServicePort;
-import static oracle.weblogic.kubernetes.actions.TestActions.uninstallTraefik;
-import static oracle.weblogic.kubernetes.actions.TestActions.uninstallVoyager;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
-import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkServiceExists;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.getHostAndPort;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.testUntil;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
-import static oracle.weblogic.kubernetes.utils.ExecCommand.exec;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createMiiImageAndVerify;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createOcirRepoSecret;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.dockerLoginAndPushImageToRegistry;
-import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.installAndVerifyTraefik;
 import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.installAndVerifyVoyager;
 import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.installVoyagerIngressAndVerify;
 import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.isVoyagerPodReady;
-import static oracle.weblogic.kubernetes.utils.OKDUtils.createRouteForOKD;
 import static oracle.weblogic.kubernetes.utils.OperatorUtils.installAndVerifyOperator;
 import static oracle.weblogic.kubernetes.utils.PodUtils.setPodAntiAffinity;
 import static oracle.weblogic.kubernetes.utils.SecretUtils.createSecretWithUsernamePassword;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -155,12 +140,6 @@ class ItStickySession {
           installAndVerifyVoyager(voyagerNamespace, cloudProvider, enableValidatingWebhook);
     }
 
-    // install and verify Traefik
-    if (!OKD) {
-      traefikHelmParams =
-          installAndVerifyTraefik(traefikNamespace, 0, 0);
-    }
-
     // install and verify operator
     installAndVerifyOperator(opNamespace, domainNamespace);
 
@@ -179,24 +158,6 @@ class ItStickySession {
     httpAttrMap.put("count", "(.*)countattribute>(.*)</countattribute(.*)");
   }
 
-  @AfterAll
-  void tearDown() {
-    // uninstall Voyager
-    if (voyagerHelmParams != null) {
-      assertThat(uninstallVoyager(voyagerHelmParams))
-          .as("Test uninstallVoyager returns true")
-          .withFailMessage("uninstallVoyager() did not return true")
-          .isTrue();
-    }
-
-    // uninstall Traefik
-    if (traefikHelmParams != null) {
-      assertThat(uninstallTraefik(traefikHelmParams))
-          .as("Test uninstallTraefik returns true")
-          .withFailMessage("uninstallTraefik() did not return true")
-          .isTrue();
-    }
-  }
 
   /**
    * Verify that using Voyager ingress controller, two HTTP requests sent to WebLogic
@@ -218,6 +179,7 @@ class ItStickySession {
     clusterNameMsPortMap.put(clusterName, managedServerPort);
 
     List<String>  hostNames = null;
+    logger.info("Creating voyager ingress");
 
     for (int i = 0; i < maxRetry; i++) {
       hostNames =
@@ -250,99 +212,6 @@ class ItStickySession {
     sendHttpRequestsToTestSessionStickinessAndVerify(hostNames.get(0), ingressServiceNodePort);
   }
 
-  /**
-   * Verify that using Traefik ingress controller, two HTTP requests sent to WebLogic
-   * are directed to same WebLogic server.
-   * The test uses a web application deployed on WebLogic cluster to track HTTP session.
-   * server-affinity is achieved by Traefik ingress controller based on HTTP session information.
-   */
-  @Test
-  @DisplayName("Create a Traefik ingress resource and verify that two HTTP connections are sticky to the same server")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
-  void testSameSessionStickinessUsingTraefik() {
-    final String ingressServiceName = traefikHelmParams.getReleaseName();
-    final String channelName = "web";
-
-    // create Traefik ingress resource
-    createTraefikIngressRoutingRules();
-
-    String hostName = new StringBuffer()
-        .append(domainUid)
-        .append(".")
-        .append(domainNamespace)
-        .append(".")
-        .append(clusterName)
-        .append(".test").toString();
-
-    // get Traefik ingress service Nodeport
-    int ingressServiceNodePort =
-        getIngressServiceNodePort(traefikNamespace, ingressServiceName, channelName);
-
-    // verify that two HTTP connections are sticky to the same server
-    sendHttpRequestsToTestSessionStickinessAndVerify(hostName, ingressServiceNodePort);
-  }
-
-  /**
-   * Verify that using OKD routes, two HTTP requests sent to WebLogic
-   * are directed to same WebLogic server.
-   * The test uses a web application deployed on WebLogic cluster to track HTTP session.
-   * server-affinity is achieved by Traefik ingress controller based on HTTP session information.
-   */
-  @Test
-  @DisplayName("Create a Traefik ingress resource and verify that two HTTP connections are sticky to the same server")
-  @EnabledIfEnvironmentVariable(named = "OKD", matches = "true")
-  void testSameSessionStickinessinOKD() {
-    final String serviceName = domainUid + "-cluster-" + clusterName;
-    //final String channelName = "web";
-
-    // create route for cluster service
-    String ingressHost = createRouteForOKD(serviceName, domainNamespace);
-
-    // Since the app seems to take a bit longer to be available,
-    // checking if the app is running by executing the curl command
-    String curlString
-        = buildCurlCommand(ingressHost, 0, SESSMIGR_APP_WAR_NAME + "/?getCounter", " -b ");
-    logger.info("Command to set HTTP request or get HTTP response {0} ", curlString);
-    testUntil(
-        assertDoesNotThrow(()
-            -> () -> exec(curlString, true).stdout().contains("managed-server")),
-        logger,
-        "Checking if app is available");
-    // verify that two HTTP connections are sticky to the same server
-    sendHttpRequestsToTestSessionStickinessAndVerify(ingressHost, 0);
-  }
-
-  /**
-   * Verify that using cluster service, two HTTP requests sent to WebLogic
-   * are directed to same WebLogic server.
-   * The test uses a web application deployed on WebLogic cluster to track HTTP session.
-   * server-affinity is achieved by cluster service based on HTTP session information.
-   */
-  @Test
-  @DisplayName("Verify that two HTTP connections are sticky to the same server using cluster service")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
-  void testSameSessionStickinessUsingClusterService() {
-    //build cluster hostname
-    String hostName = new StringBuffer()
-        .append(domainUid)
-        .append(".")
-        .append(domainNamespace)
-        .append(".")
-        .append(clusterName)
-        .append(".test").toString();
-
-    //build cluster address
-    final String clusterAddress = domainUid + "-cluster-" + clusterName;
-    //get cluster port
-    int clusterPort = assertDoesNotThrow(()
-        -> getServicePort(domainNamespace, clusterAddress, "default"),
-        "Getting admin server default port failed");
-    assertFalse(clusterPort == 0 || clusterPort < 0, "cluster Port is an invalid number");
-    logger.info("cluster port for cluster server {0} is: {1}", clusterAddress, clusterPort);
-
-    // verify that two HTTP connections are sticky to the same server
-    sendHttpRequestsToTestSessionStickinessAndVerify(hostName, clusterPort, clusterAddress);
-  }
 
   private static String createAndVerifyDomainImage() {
     // create image with model files
@@ -445,7 +314,7 @@ class ItStickySession {
                 .model(new Model()
                     .domainType("WLS")
                     .runtimeEncryptionSecret(encryptionSecretName))
-                .introspectorJobActiveDeadlineSeconds(300L)));
+                .introspectorJobActiveDeadlineSeconds(600L)));
 
     setPodAntiAffinity(domain);
     // create domain using model in image
@@ -594,47 +463,6 @@ class ItStickySession {
     return httpAttribute;
   }
 
-  private boolean createTraefikIngressRoutingRules() {
-    logger.info("Creating ingress resource");
-
-    // prepare Traefik ingress resource file
-    final String ingressResourceFileName = "traefik/traefik-ingress-rules-stickysession.yaml";
-    Path srcFile =
-        Paths.get(ActionConstants.RESOURCE_DIR, ingressResourceFileName);
-    Path dstFile =
-        Paths.get(TestConstants.RESULTS_ROOT, ingressResourceFileName);
-    assertDoesNotThrow(() -> {
-      Files.deleteIfExists(dstFile);
-      Files.createDirectories(dstFile.getParent());
-      Files.write(dstFile, Files.readString(srcFile).replaceAll("@NS@", domainNamespace)
-          .replaceAll("@domain1uid@", domainUid)
-          .getBytes(StandardCharsets.UTF_8));
-    });
-
-    // create Traefik ingress resource
-    String createIngressCmd = "kubectl create -f " + dstFile;
-    logger.info("Command to create Traefik ingress routing rules " + createIngressCmd);
-    ExecResult result = assertDoesNotThrow(() -> ExecCommand.exec(createIngressCmd, true),
-        String.format("Failed to create Traefik ingress routing rules %s", createIngressCmd));
-    assertEquals(0, result.exitValue(),
-        String.format("Failed to create Traefik ingress routing rules. Error is %s ", result.stderr()));
-
-    // get Traefik ingress service name
-    String  getServiceName = "kubectl get services -n " + traefikNamespace + " -o name";
-    logger.info("Command to get Traefik ingress service name " + getServiceName);
-    result = assertDoesNotThrow(() -> ExecCommand.exec(getServiceName, true),
-        String.format("Failed to get Traefik ingress service name %s", getServiceName));
-    assertEquals(0, result.exitValue(),
-        String.format("Failed to Traefik ingress service name . Error is %s ", result.stderr()));
-    String traefikServiceName = result.stdout().trim().split("/")[1];
-
-    // check that Traefik service exists in the Traefik namespace
-    logger.info("Checking that Traefik service {0} exists in namespace {1}",
-        traefikServiceName, traefikNamespace);
-    checkServiceExists(traefikServiceName, traefikNamespace);
-
-    return true;
-  }
 
   private int getIngressServiceNodePort(String nameSpace, String ingressServiceName, String channelName) {
     // get ingress service Nodeport

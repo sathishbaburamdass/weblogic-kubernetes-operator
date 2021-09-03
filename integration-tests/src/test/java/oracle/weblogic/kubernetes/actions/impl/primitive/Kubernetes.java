@@ -77,6 +77,7 @@ import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.PatchUtils;
 import io.kubernetes.client.util.Streams;
+import io.kubernetes.client.util.Yaml;
 import io.kubernetes.client.util.exception.CopyNotSupportedException;
 import io.kubernetes.client.util.generic.GenericKubernetesApi;
 import io.kubernetes.client.util.generic.KubernetesApiResponse;
@@ -2016,7 +2017,7 @@ public class Kubernetes {
    */
   public static int getServiceNodePort(String namespace, String serviceName, String channelName) {
     LoggingFacade logger = getLogger();
-    logger.info("Retrieving Service NodePort for service [{0}] in namespace [{1}] for channel [{2}]", 
+    logger.info("Retrieving Service NodePort for service [{0}] in namespace [{1}] for channel [{2}]",
         serviceName, namespace, channelName);
     V1Service service = getNamespacedService(namespace, serviceName);
     if (service != null) {
@@ -2781,7 +2782,9 @@ public class Kubernetes {
   public static NetworkingV1beta1Ingress createIngress(String namespace, NetworkingV1beta1Ingress ingressBody)
       throws ApiException {
     NetworkingV1beta1Ingress ingress;
+    LoggingFacade logger = getLogger();
     try {
+      logger.info(Yaml.dump(ingressBody));
       NetworkingV1beta1Api apiInstance = new NetworkingV1beta1Api(apiClient);
       ingress = apiInstance.createNamespacedIngress(
           namespace, //namespace
