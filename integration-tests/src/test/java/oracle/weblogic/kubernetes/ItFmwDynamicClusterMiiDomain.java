@@ -26,6 +26,7 @@ import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -63,6 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Test to creat a FMW dynamic domain in model in image.
  */
 @DisplayName("Test to Create a FMW Dynamic Domain with Dynamic Cluster using model in image")
+@Tag("okdenv")
 @IntegrationTest
 class ItFmwDynamicClusterMiiDomain {
 
