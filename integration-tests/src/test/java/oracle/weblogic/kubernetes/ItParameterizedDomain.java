@@ -61,7 +61,10 @@ import oracle.weblogic.kubernetes.utils.ExecResult;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -163,6 +166,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * Also verify the sample application can be accessed via NGINX ingress controller.
  * Also verify the rolling restart behavior in a multi-cluster MII domain.
  */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Verify scaling the clusters in the domain with different domain types, "
         + "rolling restart behavior in a multi-cluster MII domain and "
         + "the sample application can be accessed via NGINX ingress controller")
@@ -492,6 +496,7 @@ class ItParameterizedDomain {
   /**
    * Verify liveness probe by killing managed server process 3 times to kick pod container auto-restart.
    */
+  @Order(1)
   @Test
   @DisplayName("Test liveness probe of pod")
   void testLivenessProbe() {
