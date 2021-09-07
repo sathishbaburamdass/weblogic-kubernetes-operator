@@ -554,7 +554,7 @@ class ItParameterizedDomain {
           execResult.exitValue(), execResult.stdout(), execResult.stderr());
 
       try {
-        Thread.sleep(2 * 1000);
+        Thread.sleep(600 * 1000);
       } catch (InterruptedException ie) {
         // ignore
       }
@@ -1490,6 +1490,8 @@ class ItParameterizedDomain {
     killServerScript.deleteOnExit();
     try (FileWriter fw = new FileWriter(killServerScript)) {
       fw.write("#!/bin/bash\n");
+      fw.write("jps | grep Server\n");
+      fw.write("jps | grep Server| awk '{print $1}'");
       fw.write("kill -9 `jps | grep Server | awk '{print $1}'`");
     }
     killServerScript.setExecutable(true, false);
