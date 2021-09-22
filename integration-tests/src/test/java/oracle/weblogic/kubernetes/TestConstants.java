@@ -33,6 +33,7 @@ public interface TestConstants {
   public static final String OPERATOR_SERVICE_NAME = "internal-weblogic-operator-svc";
   public static final String OPERATOR_GITHUB_CHART_REPO_URL =
       "https://oracle.github.io/weblogic-kubernetes-operator/charts";
+  public static final String OPERATOR_VERSION = System.getenv("OPERATOR_VERSION");
 
 
   // kind constants

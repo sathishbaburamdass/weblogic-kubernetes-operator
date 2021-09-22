@@ -20,7 +20,9 @@ import static oracle.weblogic.kubernetes.TestConstants.JAVA_LOGGING_LEVEL_VALUE;
 import static oracle.weblogic.kubernetes.TestConstants.LOGSTASH_IMAGE;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_SECRET_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_CHART_DIR;
+import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_GITHUB_CHART_REPO_URL;
 import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_RELEASE_NAME;
+import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_VERSION;
 import static oracle.weblogic.kubernetes.actions.TestActions.createServiceAccount;
 import static oracle.weblogic.kubernetes.actions.TestActions.getOperatorImageName;
 import static oracle.weblogic.kubernetes.actions.TestActions.getOperatorPodName;
@@ -54,8 +56,15 @@ public class OperatorUtils {
                                                         String... domainNamespace) {
     HelmParams opHelmParams =
         new HelmParams().releaseName(OPERATOR_RELEASE_NAME)
-            .namespace(opNamespace)
-            .chartDir(OPERATOR_CHART_DIR);
+            .namespace(opNamespace);
+    if (OPERATOR_VERSION != null && !OPERATOR_VERSION.equals("N/A")) {
+      opHelmParams.repoUrl(OPERATOR_GITHUB_CHART_REPO_URL)
+          .repoName("weblogic-operator")
+          .chartName("weblogic-operator")
+          .chartVersion(OPERATOR_VERSION);
+    } else {
+      opHelmParams.chartDir(OPERATOR_CHART_DIR);
+    }
     return installAndVerifyOperator(opNamespace, opNamespace + "-sa", false,
         0, opHelmParams, domainNamespace);
   }
@@ -75,8 +84,15 @@ public class OperatorUtils {
                                                         String... domainNamespace) {
     HelmParams opHelmParams =
         new HelmParams().releaseName(OPERATOR_RELEASE_NAME)
-            .namespace(opNamespace)
-            .chartDir(OPERATOR_CHART_DIR);
+            .namespace(opNamespace);
+    if (OPERATOR_VERSION != null && !OPERATOR_VERSION.equals("N/A")) {
+      opHelmParams.repoUrl(OPERATOR_GITHUB_CHART_REPO_URL)
+          .repoName("weblogic-operator")
+          .chartName("weblogic-operator")
+          .chartVersion(OPERATOR_VERSION);
+    } else {
+      opHelmParams.chartDir(OPERATOR_CHART_DIR);
+    }
     return installAndVerifyOperator(opNamespace, opNamespace + "-sa", false, 0, opHelmParams, false, null, null,
         false, domainPresenceFailureRetryMaxCount, domainPresenceFailureRetrySeconds, domainNamespace);
 

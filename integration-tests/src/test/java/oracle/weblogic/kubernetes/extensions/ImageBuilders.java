@@ -55,6 +55,7 @@ import static oracle.weblogic.kubernetes.TestConstants.OCR_PASSWORD;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_REGISTRY;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_USERNAME;
 import static oracle.weblogic.kubernetes.TestConstants.OKD;
+import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.REPO_DUMMY_VALUE;
 import static oracle.weblogic.kubernetes.TestConstants.RESULTS_ROOT;
 import static oracle.weblogic.kubernetes.TestConstants.WDT_BASIC_APP_NAME;
@@ -140,10 +141,14 @@ public class ImageBuilders implements BeforeAllCallback, ExtensionContext.Store.
         context.getRoot().getStore(GLOBAL).put("BuildSetup", this);
 
         // build operator image
-        operatorImage = Operator.getImageName();
-        logger.info("Operator image name {0}", operatorImage);
-        assertFalse(operatorImage.isEmpty(), "Image name can not be empty");
-        assertTrue(Operator.buildImage(operatorImage), "docker build failed for Operator");
+        if (OPERATOR_VERSION != null && !OPERATOR_VERSION.equals("N/A")) {
+          logger.info("Skip building Operator image");
+        } else {
+          operatorImage = Operator.getImageName();
+          logger.info("Operator image name {0}", operatorImage);
+          assertFalse(operatorImage.isEmpty(), "Image name can not be empty");
+          assertTrue(Operator.buildImage(operatorImage), "docker build failed for Operator");
+        }
 
         // docker login to OCR or OCIR if OCR_USERNAME and OCR_PASSWORD is provided in env var
         if (BASE_IMAGES_REPO.equals(OCR_REGISTRY)) {
@@ -235,7 +240,10 @@ public class ImageBuilders implements BeforeAllCallback, ExtensionContext.Store.
         if (!DOMAIN_IMAGES_REPO.isEmpty()) {
 
           List<String> images = new ArrayList<>();
-          images.add(operatorImage);
+          if (OPERATOR_VERSION == null
+              || (OPERATOR_VERSION != null && OPERATOR_VERSION.equals("N/A"))) {
+            images.add(operatorImage);
+          }
           // add images only if SKIP_BASIC_IMAGE_BUILD is not set
           if (System.getenv("SKIP_BASIC_IMAGE_BUILD") == null) {
             images.add(miiBasicImage);
