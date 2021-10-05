@@ -53,9 +53,12 @@ import static oracle.weblogic.kubernetes.actions.TestActions.listServices;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.podReady;
 import static oracle.weblogic.kubernetes.assertions.impl.Kubernetes.getPod;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.addSccToDBSvcAccount;
+import static oracle.weblogic.kubernetes.utils.CommonTestUtils.getHostAndPort;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.testUntil;
 import static oracle.weblogic.kubernetes.utils.FileUtils.copyFileToPod;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createSecretForBaseImages;
+import static oracle.weblogic.kubernetes.utils.OKDUtils.createRouteForOKD;
+import static oracle.weblogic.kubernetes.utils.PodUtils.getExternalServicePodName;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -76,6 +79,7 @@ public class DbUtils {
   private static V1Deployment oracleDbDepl = null;
   private static int suffixCount = 0;
   private static Map<String, String> dbMap = new HashMap<>();
+  private static String dbSvcExtHost = null;
 
   /**
    * Start Oracle DB instance, create rcu pod and load database schema in the specified namespace.
@@ -250,6 +254,7 @@ public class DbUtils {
     checkDbReady(msg, dbPodName, dbNamespace);
 
     dbMap.put(dbNamespace, dbPodName);
+
   }
 
   /**
@@ -701,6 +706,27 @@ public class DbUtils {
     assertTrue(Kubernetes.deleteSecret(secretName, namespace),
         String.format("create secret failed for %s", secretName));
     createRcuAccessSecret(secretName, namespace, rcuPrefix, password, rcuDbConnString);
+
+  }
+
+  /**
+   * create hostAndPort for OKD.
+   * @param dbNamespace namespace where database exists
+   * @param nodePort nodePort of DB service
+   * @return hostAndPort
+   */
+  public static String createDbHostAndPort(String dbNamespace, int nodePort) {
+    //get dbPodName for the specified dbNamespace
+    String dbPodName = dbMap.containsKey(dbNamespace) ? dbMap.get(dbNamespace) : null;
+    assertNotNull(dbPodName, "Failed to get dbPodName");
+
+    String hostAndPort = null;
+    if (OKD) {
+      dbSvcExtHost = createRouteForOKD(getExternalServicePodName(dbPodName), dbNamespace);
+      hostAndPort = getHostAndPort(dbSvcExtHost, nodePort);
+    }
+
+    return hostAndPort;
 
   }
 
