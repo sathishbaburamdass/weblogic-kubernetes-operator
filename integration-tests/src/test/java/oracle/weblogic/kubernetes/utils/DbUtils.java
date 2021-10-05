@@ -58,7 +58,6 @@ import static oracle.weblogic.kubernetes.utils.CommonTestUtils.testUntil;
 import static oracle.weblogic.kubernetes.utils.FileUtils.copyFileToPod;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createSecretForBaseImages;
 import static oracle.weblogic.kubernetes.utils.OKDUtils.createRouteForOKD;
-import static oracle.weblogic.kubernetes.utils.PodUtils.getExternalServicePodName;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -716,13 +715,10 @@ public class DbUtils {
    * @return hostAndPort
    */
   public static String createDbHostAndPort(String dbNamespace, int nodePort) {
-    //get dbPodName for the specified dbNamespace
-    String dbPodName = dbMap.containsKey(dbNamespace) ? dbMap.get(dbNamespace) : null;
-    assertNotNull(dbPodName, "Failed to get dbPodName");
 
     String hostAndPort = null;
     if (OKD) {
-      dbSvcExtHost = createRouteForOKD(getExternalServicePodName(dbPodName), dbNamespace);
+      dbSvcExtHost = createRouteForOKD("oracledb", dbNamespace);
       hostAndPort = getHostAndPort(dbSvcExtHost, nodePort);
     }
 
