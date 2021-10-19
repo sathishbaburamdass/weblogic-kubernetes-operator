@@ -1111,12 +1111,18 @@ class ItIntrospectVersion {
     logger.info("Initiate introspection with non numeric string (vX.Y)");
     String introspectVersion = "vX.Y";
     String extraParam = " -i " + introspectVersion;
-    assertDoesNotThrow(() -> executeLifecycleScript(INTROSPECT_DOMAIN_SCRIPT, extraParam),
+    assertDoesNotThrow(() -> {
+      String result = executeLifecycleScript(INTROSPECT_DOMAIN_SCRIPT, extraParam);
+      logger.info("Result from update version to X.Y " + result);
+    },
         String.format("Failed to run %s", INTROSPECT_DOMAIN_SCRIPT));
 
     //verify the introspector pod is created and runs
     String introspectPodNameBase = getIntrospectJobName(domainUid);
+    logger.info("check introspect pod exists " + introspectPodNameBase);
     checkPodExists(introspectPodNameBase, domainUid, introDomainNamespace);
+
+    logger.info("check introspect pod does not exist " + introspectPodNameBase);
     checkPodDoesNotExist(introspectPodNameBase, domainUid, introDomainNamespace);
 
     // get introspectVersion after running introspectDomain.sh
