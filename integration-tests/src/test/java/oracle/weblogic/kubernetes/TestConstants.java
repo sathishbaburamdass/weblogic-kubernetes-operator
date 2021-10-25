@@ -275,6 +275,8 @@ public interface TestConstants {
         Optional.ofNullable(System.getenv("ISTIO_VERSION")).orElse("1.7.3");
 
   //MySQL database constants
+  public static final String MYSQL_IMAGE = BASE_IMAGES_REPO.equals(OCIR_DEFAULT)
+      ? OCIR_DEFAULT + "/weblogick8s/test-images/database/mysql" : "mysql";
   public static final String MYSQL_VERSION = "5.6";
 
   //OKE constants
