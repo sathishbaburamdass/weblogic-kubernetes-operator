@@ -31,6 +31,7 @@ import static oracle.weblogic.kubernetes.assertions.TestAssertions.podExists;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.podInitializing;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.podReady;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.testUntil;
+import static oracle.weblogic.kubernetes.utils.CommonTestUtils.withTenMinsRetryPolicy;
 import static oracle.weblogic.kubernetes.utils.JobUtils.getIntrospectJobName;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -136,6 +137,7 @@ public class PodUtils {
   ) {
     LoggingFacade logger = getLogger();
     testUntil(
+        withTenMinsRetryPolicy,
         assertDoesNotThrow(() -> isPodRestarted(podName, domNamespace, lastCreationTime),
           String.format(
             "pod %s has not been restarted in namespace %s", podName, domNamespace)),
@@ -311,4 +313,5 @@ public class PodUtils {
       return "";
     }
   }
+
 }

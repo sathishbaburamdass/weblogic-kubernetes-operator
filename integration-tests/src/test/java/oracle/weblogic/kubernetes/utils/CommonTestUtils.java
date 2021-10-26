@@ -83,6 +83,7 @@ public class CommonTestUtils {
   }
 
   public static ConditionFactory withStandardRetryPolicy = createStandardRetryPolicyWithAtMost(5);
+  public static ConditionFactory withTenMinsRetryPolicy = createStandardRetryPolicyWithAtMost(10);
   public static ConditionFactory withLongRetryPolicy = createStandardRetryPolicyWithAtMost(15);
 
   /**
