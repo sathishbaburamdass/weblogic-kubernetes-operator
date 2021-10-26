@@ -118,6 +118,12 @@ public interface TestConstants {
   public static final String DB_IMAGE_TAG = Optional.ofNullable(System.getenv("DB_IMAGE_TAG"))
       .orElse(BASE_IMAGES_REPO.equals(OCR_REGISTRY) ? OCR_DB_IMAGE_TAG : OCIR_DB_IMAGE_TAG);
 
+  //MySQL database constants
+  // If base images repo is OCIR(default) use mysql image from OCIR , if not use mysql image from docker hub
+  public static final String MYSQL_IMAGE = BASE_IMAGES_REPO.equals(OCIR_DEFAULT)
+      ? OCIR_DEFAULT + "/weblogick8s/test-images/database/mysql" : "mysql";
+  public static final String MYSQL_VERSION = "5.6";
+
   // For kind, replace repo name in image name with KIND_REPO, otherwise use the actual image name
   // For example, image container-registry.oracle.com/middleware/weblogic:12.2.1.4 will be pushed/used as
   // localhost:5000/middleware/weblogic:12.2.1.4 in kind and in non-kind cluster it will be used as is.
@@ -130,6 +136,9 @@ public interface TestConstants {
   public static final String DB_IMAGE_TO_USE_IN_SPEC = KIND_REPO != null ? KIND_REPO
       + (DB_IMAGE_NAME + ":" + DB_IMAGE_TAG).substring(TestConstants.BASE_IMAGES_REPO.length() + 1)
       : DB_IMAGE_NAME + ":" + DB_IMAGE_TAG;
+  public static final String MYSQL_IMAGE_TO_USE_IN_SPEC = KIND_REPO != null ? KIND_REPO
+      + (MYSQL_IMAGE + ":" + MYSQL_VERSION).substring(TestConstants.BASE_IMAGES_REPO.length() + 1)
+      : MYSQL_IMAGE + ":" + MYSQL_VERSION;
 
   // ----------------------------- base images constants - end -------------------
 
@@ -273,11 +282,6 @@ public interface TestConstants {
   // Default ISTIO version is 1.7.3
   public static final String ISTIO_VERSION =
         Optional.ofNullable(System.getenv("ISTIO_VERSION")).orElse("1.7.3");
-
-  //MySQL database constants
-  public static final String MYSQL_IMAGE = BASE_IMAGES_REPO.equals(OCIR_DEFAULT)
-      ? OCIR_DEFAULT + "/weblogick8s/test-images/database/mysql" : "mysql";
-  public static final String MYSQL_VERSION = "5.6";
 
   //OKE constants
   public static final boolean OKE_CLUSTER = Boolean.parseBoolean(Optional.ofNullable(System.getenv("OKE_CLUSTER"))

@@ -48,6 +48,8 @@ import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_DOMAINTYP
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_TAG;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_WDT_MODEL_FILE;
+import static oracle.weblogic.kubernetes.TestConstants.MYSQL_IMAGE;
+import static oracle.weblogic.kubernetes.TestConstants.MYSQL_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_PASSWORD;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_REGISTRY;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_USERNAME;
@@ -178,6 +180,7 @@ public class ImageBuilders implements BeforeAllCallback, ExtensionContext.Store.
           images.add(WEBLOGIC_IMAGE_NAME + ":" + WEBLOGIC_IMAGE_TAG);
           images.add(FMWINFRA_IMAGE_NAME + ":" + FMWINFRA_IMAGE_TAG);
           images.add(DB_IMAGE_NAME + ":" + DB_IMAGE_TAG);
+          images.add(MYSQL_IMAGE + ":" + MYSQL_VERSION);
 
           for (String image : images) {
             testUntil(
