@@ -56,6 +56,7 @@ import static oracle.weblogic.kubernetes.assertions.TestAssertions.appAccessible
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.appNotAccessibleInPod;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.testUntil;
+import static oracle.weblogic.kubernetes.utils.CommonTestUtils.withTenMinsRetryPolicy;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createMiiImageAndVerify;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createOcirRepoSecret;
@@ -683,6 +684,7 @@ class ItLivenessProbeCustomization {
 
     // check that the application is NOT running inside of a server pod
     testUntil(
+        withTenMinsRetryPolicy,
         () -> appAccessibleInPod(
           namespace,
           podName,
@@ -704,6 +706,7 @@ class ItLivenessProbeCustomization {
 
     // check that the application is NOT running inside of a server pod
     testUntil(
+        withTenMinsRetryPolicy,
         () -> appNotAccessibleInPod(
           namespace,
           podName,
