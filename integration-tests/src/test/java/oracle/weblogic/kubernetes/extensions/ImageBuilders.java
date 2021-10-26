@@ -48,8 +48,9 @@ import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_DOMAINTYP
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_TAG;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_WDT_MODEL_FILE;
-import static oracle.weblogic.kubernetes.TestConstants.MYSQL_IMAGE;
+import static oracle.weblogic.kubernetes.TestConstants.MYSQL_IMAGE_FULLNAME;
 import static oracle.weblogic.kubernetes.TestConstants.MYSQL_VERSION;
+import static oracle.weblogic.kubernetes.TestConstants.OCIR_DEFAULT;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_PASSWORD;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_REGISTRY;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_USERNAME;
@@ -175,14 +176,16 @@ public class ImageBuilders implements BeforeAllCallback, ExtensionContext.Store.
           //   3. docker tag with the KIND_REPO value
           //   4. docker push this new image name
           //   5. use this image name to create the domain resource
-          Collection<String> images = new ArrayList<>();
+          Collection<String> imagesFromOcrOrOcir = new ArrayList<>();
 
-          images.add(WEBLOGIC_IMAGE_NAME + ":" + WEBLOGIC_IMAGE_TAG);
-          images.add(FMWINFRA_IMAGE_NAME + ":" + FMWINFRA_IMAGE_TAG);
-          images.add(DB_IMAGE_NAME + ":" + DB_IMAGE_TAG);
-          images.add(MYSQL_IMAGE + ":" + MYSQL_VERSION);
+          imagesFromOcrOrOcir.add(WEBLOGIC_IMAGE_NAME + ":" + WEBLOGIC_IMAGE_TAG);
+          imagesFromOcrOrOcir.add(FMWINFRA_IMAGE_NAME + ":" + FMWINFRA_IMAGE_TAG);
+          imagesFromOcrOrOcir.add(DB_IMAGE_NAME + ":" + DB_IMAGE_TAG);
+          if (BASE_IMAGES_REPO.equals(OCIR_DEFAULT)) {
+            imagesFromOcrOrOcir.add(MYSQL_IMAGE_FULLNAME + ":" + MYSQL_VERSION);
+          }
 
-          for (String image : images) {
+          for (String image : imagesFromOcrOrOcir) {
             testUntil(
                 withVeryLongRetryPolicy,
                 pullImageFromOcrOrOcirAndPushToKind(image),
@@ -191,6 +194,8 @@ public class ImageBuilders implements BeforeAllCallback, ExtensionContext.Store.
                 image);
           }
         }
+
+
 
         if (System.getenv("SKIP_BASIC_IMAGE_BUILD") == null) {
           // build MII basic image

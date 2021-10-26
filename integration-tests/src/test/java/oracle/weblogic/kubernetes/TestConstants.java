@@ -120,8 +120,9 @@ public interface TestConstants {
 
   //MySQL database constants
   // If base images repo is OCIR(default) use mysql image from OCIR , if not use mysql image from docker hub
-  public static final String MYSQL_IMAGE = BASE_IMAGES_REPO.equals(OCIR_DEFAULT)
-      ? OCIR_DEFAULT + "/weblogick8s/test-images/database/mysql" : "mysql";
+  public static final String MYSQL_IMAGE = "mysql";
+  public static final String MYSQL_IMAGE_FULLNAME = BASE_IMAGES_REPO.equals(OCIR_DEFAULT)
+      ? OCIR_DEFAULT + "/weblogick8s/test-images/database/" + MYSQL_IMAGE : MYSQL_IMAGE;
   public static final String MYSQL_VERSION = "5.6";
 
   // For kind, replace repo name in image name with KIND_REPO, otherwise use the actual image name
@@ -136,9 +137,12 @@ public interface TestConstants {
   public static final String DB_IMAGE_TO_USE_IN_SPEC = KIND_REPO != null ? KIND_REPO
       + (DB_IMAGE_NAME + ":" + DB_IMAGE_TAG).substring(TestConstants.BASE_IMAGES_REPO.length() + 1)
       : DB_IMAGE_NAME + ":" + DB_IMAGE_TAG;
-  public static final String MYSQL_IMAGE_TO_USE_IN_SPEC = KIND_REPO != null ? KIND_REPO
-      + (MYSQL_IMAGE + ":" + MYSQL_VERSION).substring(TestConstants.BASE_IMAGES_REPO.length() + 1)
-      : MYSQL_IMAGE + ":" + MYSQL_VERSION;
+  // use KIND_REPO for mysql only if base images repo is OCIR, if not use mysql image from docker hub
+  public static final String MYSQL_IMAGE_TO_USE_IN_SPEC = KIND_REPO != null
+      ? (BASE_IMAGES_REPO.equals(OCIR_DEFAULT) ? KIND_REPO
+      + (MYSQL_IMAGE_FULLNAME + ":" + MYSQL_VERSION).substring(TestConstants.BASE_IMAGES_REPO.length() + 1)
+      :  MYSQL_IMAGE + ":" + MYSQL_VERSION)
+      :  MYSQL_IMAGE + ":" + MYSQL_VERSION;
 
   // ----------------------------- base images constants - end -------------------
 
