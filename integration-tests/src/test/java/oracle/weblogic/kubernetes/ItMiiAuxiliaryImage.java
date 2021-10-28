@@ -34,6 +34,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static oracle.weblogic.kubernetes.TestConstants.ADMIN_PASSWORD_DEFAULT;
 import static oracle.weblogic.kubernetes.TestConstants.ADMIN_USERNAME_DEFAULT;
 import static oracle.weblogic.kubernetes.TestConstants.DOMAIN_IMAGES_REPO;
+import static oracle.weblogic.kubernetes.TestConstants.DOMAIN_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.KIND_REPO;
 import static oracle.weblogic.kubernetes.TestConstants.MII_AUXILIARY_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_APP_NAME;
@@ -64,6 +65,7 @@ import static oracle.weblogic.kubernetes.actions.TestActions.now;
 import static oracle.weblogic.kubernetes.actions.TestActions.patchDomainCustomResource;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.secretExists;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.verifyRollingRestartOccurred;
+import static oracle.weblogic.kubernetes.assertions.impl.Domain.doesDomainExist;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createDomainResource;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.verifyPodsNotRolled;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
@@ -524,7 +526,9 @@ class ItMiiAuxiliaryImage {
   @DisplayName("Negative Test to create domain without WDT binary")
   void testErrorPathDomainMissingWDTBinary() {
     //delete the previous created domain that is in the same namespace
-    deleteDomainResource(errorpathDomainNamespace, domainUid);
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -610,7 +614,10 @@ class ItMiiAuxiliaryImage {
   void testErrorPathDomainMissingDomainConfig() {
 
     //delete the previous created domain that is in the same namespace
-    deleteDomainResource(errorpathDomainNamespace, domainUid);
+    //delete the previous created domain that is in the same namespace
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -702,7 +709,9 @@ class ItMiiAuxiliaryImage {
   void testErrorPathDomainWithFailCustomMountCommand() {
 
     //delete the previous created domain that is in the same namespace
-    deleteDomainResource(errorpathDomainNamespace, domainUid);
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -794,7 +803,9 @@ class ItMiiAuxiliaryImage {
   void testErrorPathFilePermission() {
 
     //delete the previous created domain that is in the same namespace
-    deleteDomainResource(errorpathDomainNamespace, domainUid);
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -1041,7 +1052,7 @@ class ItMiiAuxiliaryImage {
         "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
         "Can't find expected URL configuration for DataSource");*/
     testUntil(
-        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        () -> checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
             "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
         logger,
@@ -1077,7 +1088,7 @@ class ItMiiAuxiliaryImage {
         "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
         "Can't find expected URL configuration for DataSource");*/
     testUntil(
-        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        () -> checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
             "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
         logger,
@@ -1255,7 +1266,7 @@ class ItMiiAuxiliaryImage {
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
         "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"), "Can't find expected URL configuration for DataSource");*/
     testUntil(
-        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        () -> checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
             "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"),
         logger,
