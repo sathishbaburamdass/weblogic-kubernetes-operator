@@ -1206,8 +1206,16 @@ class ItMiiAuxiliaryImage {
     int adminServiceNodePort
         = getServiceNodePort(domainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
-        "TestClusterJmsModule2", "200"), "JMSSystemResources not found");
+    /*assertTrue(checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "TestClusterJmsModule2", "200"), "JMSSystemResources not found");*/
+    testUntil(
+        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "TestClusterJmsModule2", "200"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} exists",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "TestClusterJmsModule2");
     logger.info("Found the JMSSystemResource configuration");
   }
 
@@ -1215,9 +1223,17 @@ class ItMiiAuxiliaryImage {
     int adminServiceNodePort
         = getServiceNodePort(domainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
+    /*assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
-        "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"), "Can't find expected URL configuration for DataSource");
+        "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"), "Can't find expected URL configuration for DataSource");*/
+    testUntil(
+        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "TestClusterJmsModule2", "200"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams");
     logger.info("Found the DataResource configuration");
   }
 
