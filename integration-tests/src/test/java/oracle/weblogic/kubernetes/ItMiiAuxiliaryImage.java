@@ -438,7 +438,7 @@ class ItMiiAuxiliaryImage {
    * Check the error message is in introspector pod log, domain events and operator pod log.
    */
   @Test
-  @Order(3)
+  @Order(4)
   @DisplayName("Negative Test to create domain with mismatch mount path in auxiliary image and auxiliaryImageVolumes")
   void testErrorPathDomainMismatchMountPath() {
 
@@ -523,6 +523,8 @@ class ItMiiAuxiliaryImage {
   @Order(4)
   @DisplayName("Negative Test to create domain without WDT binary")
   void testErrorPathDomainMissingWDTBinary() {
+    //delete the previous created domain that is in the same namespace
+    deleteDomainResource(errorpathDomainNamespace, domainUid);
 
     OffsetDateTime timestamp = now();
 
@@ -606,6 +608,9 @@ class ItMiiAuxiliaryImage {
   @Order(5)
   @DisplayName("Negative Test to create domain without domain model file, only having sparse JMS config")
   void testErrorPathDomainMissingDomainConfig() {
+
+    //delete the previous created domain that is in the same namespace
+    deleteDomainResource(errorpathDomainNamespace, domainUid);
 
     OffsetDateTime timestamp = now();
 
@@ -696,6 +701,9 @@ class ItMiiAuxiliaryImage {
   @DisplayName("Negative Test to patch domain using a custom mount command that's guaranteed to fail")
   void testErrorPathDomainWithFailCustomMountCommand() {
 
+    //delete the previous created domain that is in the same namespace
+    deleteDomainResource(errorpathDomainNamespace, domainUid);
+
     OffsetDateTime timestamp = now();
 
     // get the creation time of the admin server pod before patching
@@ -784,6 +792,9 @@ class ItMiiAuxiliaryImage {
   @Order(7)
   @DisplayName("Negative Test to create domain with file in auxiliary image not accessible by oracle user")
   void testErrorPathFilePermission() {
+
+    //delete the previous created domain that is in the same namespace
+    deleteDomainResource(errorpathDomainNamespace, domainUid);
 
     OffsetDateTime timestamp = now();
 
@@ -1025,14 +1036,21 @@ class ItMiiAuxiliaryImage {
     int adminServiceNodePort
         = getServiceNodePort(wdtDomainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
+    /*assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
         "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
-        "Can't find expected URL configuration for DataSource");
-
+        "Can't find expected URL configuration for DataSource");*/
+    testUntil(
+        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
+            "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams");
     logger.info("Found the DataResource configuration");
     //check WDT version in the image equals the  provided WDT_TEST_VERSION
-
     assertDoesNotThrow(() -> {
       String wdtVersion = checkWDTVersion(wdtDomainNamespace, auxiliaryImagePath);
       assertEquals("WebLogic Deploy Tooling " + WDT_TEST_VERSION, wdtVersion,
@@ -1051,13 +1069,23 @@ class ItMiiAuxiliaryImage {
         + "or wdt was not updated after patching with auxiliary image");
 
     // check configuration for DataSource in the running domain
-    adminServiceNodePort
-        = getServiceNodePort(wdtDomainNamespace, getExternalServicePodName(adminServerPodName), "default");
+    /*adminServiceNodePort
+        = getServiceNodePort(wdtDomainNamespace, getExternalServicePodName(adminServerPodName), "default");*/
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
+    /*assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
         "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
-        "Can't find expected URL configuration for DataSource");
+        "Can't find expected URL configuration for DataSource");*/
+    testUntil(
+        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
+            "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams");
+    logger.info("Found the DataResource configuration");
 
   }
 
@@ -1228,7 +1256,8 @@ class ItMiiAuxiliaryImage {
         "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"), "Can't find expected URL configuration for DataSource");*/
     testUntil(
         () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
-        "TestClusterJmsModule2", "200"),
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
+            "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"),
         logger,
           "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
         adminSvcExtHost,
