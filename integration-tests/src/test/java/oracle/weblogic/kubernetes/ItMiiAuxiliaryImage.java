@@ -30,18 +30,18 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import static oracle.weblogic.kubernetes.TestConstants.ADMIN_PASSWORD_DEFAULT;
 import static oracle.weblogic.kubernetes.TestConstants.ADMIN_USERNAME_DEFAULT;
 import static oracle.weblogic.kubernetes.TestConstants.DOMAIN_IMAGES_REPO;
-import static oracle.weblogic.kubernetes.TestConstants.K8S_NODEPORT_HOST;
+import static oracle.weblogic.kubernetes.TestConstants.DOMAIN_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.KIND_REPO;
 import static oracle.weblogic.kubernetes.TestConstants.MII_AUXILIARY_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_APP_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_IMAGE_TAG;
 import static oracle.weblogic.kubernetes.TestConstants.MII_BASIC_WDT_MODEL_FILE;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_SECRET_NAME;
-import static oracle.weblogic.kubernetes.TestConstants.OKD;
 import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_RELEASE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.RESULTS_ROOT;
 import static oracle.weblogic.kubernetes.TestConstants.WDT_TEST_VERSION;
@@ -66,15 +66,15 @@ import static oracle.weblogic.kubernetes.actions.TestActions.now;
 import static oracle.weblogic.kubernetes.actions.TestActions.patchDomainCustomResource;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.secretExists;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.verifyRollingRestartOccurred;
+import static oracle.weblogic.kubernetes.assertions.impl.Domain.doesDomainExist;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createDomainResource;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.verifyPodsNotRolled;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkServiceDoesNotExist;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkSystemResourceConfig;
+import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkSystemResourceConfiguration;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.getDateAndTimeStamp;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.testUntil;
-import static oracle.weblogic.kubernetes.utils.CommonTestUtils.verifyCommandResultContainsMsg;
-import static oracle.weblogic.kubernetes.utils.CommonTestUtils.verifySystemResourceConfiguration;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.deleteDomainResource;
 import static oracle.weblogic.kubernetes.utils.FileUtils.copyFileFromPod;
@@ -102,6 +102,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Right now in the OKD cluster introspector pod log can not be accessed
+ * for Mii auxiliary image, so all the negative tests that need to verify
+ * introspector pod log are disabled.
+ */
 
 @DisplayName("Test to create model in image domain using auxiliary image")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -283,8 +289,14 @@ class ItMiiAuxiliaryImage {
     createDomainAndVerify(domainUid, domainCR, domainNamespace,
         adminServerPodName, managedServerPrefix, replicaCount);
 
+    //create router for admin service on OKD
+    if (adminSvcExtHost == null) {
+      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
+      logger.info("admin svc host = {0}", adminSvcExtHost);
+    }
+
     // check configuration for JMS
-    checkConfiguredJMSresouce(domainNamespace, adminServerPodName);
+    checkConfiguredJMSresouce(domainNamespace, adminServerPodName, adminSvcExtHost);
 
     //checking the order of loading for the auxiliary images, expecting file with content =2
     assertDoesNotThrow(() -> FileUtils.deleteQuietly(Paths.get(RESULTS_ROOT, "/test.txt").toFile()));
@@ -332,11 +344,17 @@ class ItMiiAuxiliaryImage {
       dockerLoginAndPushImageToRegistry(miiAuxiliaryImage3);
     }
 
+    //ensure there is a router for admin service on OKD
+    if (adminSvcExtHost == null) {
+      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
+      logger.info("admin svc host = {0}", adminSvcExtHost);
+    }
+
     // check configuration for DataSource in the running domain
     int adminServiceNodePort
         = getServiceNodePort(domainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfig(adminServiceNodePort,
+    assertTrue(checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
         "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
         "Can't find expected URL configuration for DataSource");
@@ -345,7 +363,7 @@ class ItMiiAuxiliaryImage {
 
     patchDomainWithAuxiliaryImageAndVerify(miiAuxiliaryImage1, miiAuxiliaryImage3, domainUid, domainNamespace);
 
-    checkConfiguredJDBCresouce(domainNamespace, adminServerPodName);
+    checkConfiguredJDBCresouce(domainNamespace, adminServerPodName, adminSvcExtHost);
   }
 
   /**
@@ -409,10 +427,16 @@ class ItMiiAuxiliaryImage {
 
     checkPodReadyAndServiceExists(adminServerPodName, domainUid, domainNamespace);
 
+    //create router for admin service on OKD
+    if (adminSvcExtHost == null) {
+      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
+      logger.info("admin svc host = {0}", adminSvcExtHost);
+    }
+
     // check configuration for JMS
-    checkConfiguredJMSresouce(domainNamespace, adminServerPodName);
+    checkConfiguredJMSresouce(domainNamespace, adminServerPodName, adminSvcExtHost);
     //check configuration for JDBC
-    checkConfiguredJDBCresouce(domainNamespace, adminServerPodName);
+    checkConfiguredJDBCresouce(domainNamespace, adminServerPodName, adminSvcExtHost);
 
   }
 
@@ -423,8 +447,9 @@ class ItMiiAuxiliaryImage {
    * Check the error message is in introspector pod log, domain events and operator pod log.
    */
   @Test
-  @Order(3)
+  @Order(4)
   @DisplayName("Negative Test to create domain with mismatch mount path in auxiliary image and auxiliaryImageVolumes")
+  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainMismatchMountPath() {
 
     OffsetDateTime timestamp = now();
@@ -507,7 +532,12 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(4)
   @DisplayName("Negative Test to create domain without WDT binary")
+  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainMissingWDTBinary() {
+    //delete the previous created domain that is in the same namespace
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -590,7 +620,13 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(5)
   @DisplayName("Negative Test to create domain without domain model file, only having sparse JMS config")
+  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainMissingDomainConfig() {
+
+    //delete the previous created domain that is in the same namespace
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -679,7 +715,13 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(6)
   @DisplayName("Negative Test to patch domain using a custom mount command that's guaranteed to fail")
+  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainWithFailCustomMountCommand() {
+
+    //delete the previous created domain that is in the same namespace
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -768,7 +810,13 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(7)
   @DisplayName("Negative Test to create domain with file in auxiliary image not accessible by oracle user")
+  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathFilePermission() {
+
+    //delete the previous created domain that is in the same namespace
+    if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
+      deleteDomainResource(errorpathDomainNamespace, domainUid);
+    }
 
     OffsetDateTime timestamp = now();
 
@@ -1000,18 +1048,27 @@ class ItMiiAuxiliaryImage {
     createDomainAndVerify(domainUid, domainCR, wdtDomainNamespace,
         adminServerPodName, managedServerPrefix, replicaCount);
 
+    //create router for admin service on OKD
+    if (adminSvcExtHost == null) {
+      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
+      logger.info("admin svc host = {0}", adminSvcExtHost);
+    }
+
     // check configuration for DataSource in the running domain
     int adminServiceNodePort
         = getServiceNodePort(wdtDomainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfig(adminServiceNodePort,
+    testUntil(
+        () -> checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
-        "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
-        "Can't find expected URL configuration for DataSource");
-
+            "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams");
     logger.info("Found the DataResource configuration");
     //check WDT version in the image equals the  provided WDT_TEST_VERSION
-
     assertDoesNotThrow(() -> {
       String wdtVersion = checkWDTVersion(wdtDomainNamespace, auxiliaryImagePath);
       assertEquals("WebLogic Deploy Tooling " + WDT_TEST_VERSION, wdtVersion,
@@ -1030,13 +1087,17 @@ class ItMiiAuxiliaryImage {
         + "or wdt was not updated after patching with auxiliary image");
 
     // check configuration for DataSource in the running domain
-    adminServiceNodePort
-        = getServiceNodePort(wdtDomainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-    assertTrue(checkSystemResourceConfig(adminServiceNodePort,
+    testUntil(
+        () -> checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
         "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
-        "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
-        "Can't find expected URL configuration for DataSource");
+            "jdbc:oracle:thin:@\\/\\/xxx.xxx.x.xxx:1521\\/ORCLCDB"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams");
+    logger.info("Found the DataResource configuration");
 
   }
 
@@ -1181,41 +1242,36 @@ class ItMiiAuxiliaryImage {
     }
   }
 
-  private void checkConfiguredJMSresouce(String domainNamespace, String adminServerPodName) {
+  private void checkConfiguredJMSresouce(String domainNamespace, String adminServerPodName, String adminSvcExtHost) {
     int adminServiceNodePort
         = getServiceNodePort(domainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-
-    // In OKD env, adminServers' external service nodeport cannot be accessed directly.
-    // We have to create a route for the admins server external service.
-    if ((adminSvcExtHost == null)) {
-      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
-    }
-
-    verifySystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
-        "TestClusterJmsModule2", "200");
+    /*assertTrue(checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "TestClusterJmsModule2", "200"), "JMSSystemResources not found");*/
+    testUntil(
+        () -> checkSystemResourceConfiguration(adminSvcExtHost, adminServiceNodePort, "JMSSystemResources",
+        "TestClusterJmsModule2", "200"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} exists",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "TestClusterJmsModule2");
     logger.info("Found the JMSSystemResource configuration");
   }
 
-  private void checkConfiguredJDBCresouce(String domainNamespace, String adminServerPodName) {
+  private void checkConfiguredJDBCresouce(String domainNamespace, String adminServerPodName, String adminSvcExtHost) {
     int adminServiceNodePort
         = getServiceNodePort(domainNamespace, getExternalServicePodName(adminServerPodName), "default");
     assertNotEquals(-1, adminServiceNodePort, "admin server default node port is not valid");
-
-    // In OKD env, adminServers' external service nodeport cannot be accessed directly.
-    // We have to create a route for the admins server external service.
-    if ((adminSvcExtHost == null)) {
-      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
-    }
-
-    String hostAndPort = (OKD) ? adminSvcExtHost : K8S_NODEPORT_HOST + ":" + adminServiceNodePort;
-    logger.info("hostAndPort = {0} ", hostAndPort);
-    StringBuffer curlString = new StringBuffer("curl --user ");
-    curlString.append(ADMIN_USERNAME_DEFAULT + ":" + ADMIN_PASSWORD_DEFAULT)
-        .append(" http://" + hostAndPort + "/management/weblogic/latest/domainConfig")
-        .append("/JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams/");
-
-    verifyCommandResultContainsMsg(new String(curlString), "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc");
+    testUntil(
+        () -> checkSystemResourceConfig(adminSvcExtHost, adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams",
+            "jdbc:oracle:thin:@\\/\\/localhost:7001\\/dbsvc"),
+        logger,
+          "Checking for adminSvcExtHost: {0} or adminServiceNodePort: {1} if resourceName: {2} has the right value",
+        adminSvcExtHost,
+        adminServiceNodePort,
+        "JDBCSystemResources/TestDataSource/JDBCResource/JDBCDriverParams");
     logger.info("Found the DataResource configuration");
   }
 
