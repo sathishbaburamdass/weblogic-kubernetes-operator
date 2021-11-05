@@ -1050,7 +1050,7 @@ class ItMiiAuxiliaryImage {
 
     //create router for admin service on OKD
     if (adminSvcExtHost == null) {
-      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
+      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), wdtDomainNamespace);
       logger.info("admin svc host = {0}", adminSvcExtHost);
     }
 
