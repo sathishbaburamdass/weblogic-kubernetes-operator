@@ -1048,11 +1048,9 @@ class ItMiiAuxiliaryImage {
     createDomainAndVerify(domainUid, domainCR, wdtDomainNamespace,
         adminServerPodName, managedServerPrefix, replicaCount);
 
-    //create router for admin service on OKD
-    if (adminSvcExtHost == null) {
-      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), wdtDomainNamespace);
-      logger.info("admin svc host = {0}", adminSvcExtHost);
-    }
+    //create router for admin service on OKD in wdtDomainNamespace
+    adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), wdtDomainNamespace);
+    logger.info("admin svc host = {0}", adminSvcExtHost);
 
     // check configuration for DataSource in the running domain
     int adminServiceNodePort
