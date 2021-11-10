@@ -38,20 +38,13 @@ import static oracle.weblogic.kubernetes.TestConstants.APACHE_RELEASE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.APACHE_SAMPLE_CHART_DIR;
 import static oracle.weblogic.kubernetes.TestConstants.APPSCODE_REPO_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.APPSCODE_REPO_URL;
-import static oracle.weblogic.kubernetes.TestConstants.BASE_IMAGES_REPO;
-import static oracle.weblogic.kubernetes.TestConstants.GCR_NGINX_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.K8S_NODEPORT_HOST;
 import static oracle.weblogic.kubernetes.TestConstants.NGINX_CHART_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.NGINX_CHART_VERSION;
-import static oracle.weblogic.kubernetes.TestConstants.NGINX_INGRESS_IMAGE_TAG;
 import static oracle.weblogic.kubernetes.TestConstants.NGINX_RELEASE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.NGINX_REPO_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.NGINX_REPO_URL;
-import static oracle.weblogic.kubernetes.TestConstants.OCIR_NGINX_IMAGE_NAME;
-import static oracle.weblogic.kubernetes.TestConstants.OCIR_PASSWORD;
-import static oracle.weblogic.kubernetes.TestConstants.OCIR_REGISTRY;
 import static oracle.weblogic.kubernetes.TestConstants.OCIR_SECRET_NAME;
-import static oracle.weblogic.kubernetes.TestConstants.OCIR_USERNAME;
 import static oracle.weblogic.kubernetes.TestConstants.RESULTS_ROOT;
 import static oracle.weblogic.kubernetes.TestConstants.TRAEFIK_CHART_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.TRAEFIK_RELEASE_NAME;
@@ -62,9 +55,6 @@ import static oracle.weblogic.kubernetes.TestConstants.VOYAGER_CHART_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.VOYAGER_RELEASE_NAME;
 import static oracle.weblogic.kubernetes.actions.TestActions.createIngress;
 import static oracle.weblogic.kubernetes.actions.TestActions.createService;
-import static oracle.weblogic.kubernetes.actions.TestActions.dockerLogin;
-import static oracle.weblogic.kubernetes.actions.TestActions.dockerPull;
-import static oracle.weblogic.kubernetes.actions.TestActions.dockerTag;
 import static oracle.weblogic.kubernetes.actions.TestActions.getPersistentVolume;
 import static oracle.weblogic.kubernetes.actions.TestActions.getPersistentVolumeClaim;
 import static oracle.weblogic.kubernetes.actions.TestActions.getServiceNodePort;
@@ -87,6 +77,7 @@ import static oracle.weblogic.kubernetes.utils.ImageUtils.createOcirRepoSecret;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -174,18 +165,6 @@ public class LoadBalancerUtils {
                                                  int nodeportshttps,
                                                  String chartVersion) {
     LoggingFacade logger = getLogger();
-    testUntil(
-          () -> dockerLogin(OCIR_REGISTRY, OCIR_USERNAME, OCIR_PASSWORD),
-          logger, "docker login to be successful");
-
-    String localNginxImage = BASE_IMAGES_REPO + "/" 
-              + OCIR_NGINX_IMAGE_NAME + ":" + NGINX_INGRESS_IMAGE_TAG;
-    testUntil(
-          pullImageFromOcirAndTag(localNginxImage),
-          logger,
-          "pullImageFromOcirAndTag for image {0} to be successful",
-          localNginxImage);
-
     // Helm install parameters
     HelmParams nginxHelmParams = new HelmParams()
         .releaseName(NGINX_RELEASE_NAME + "-" + nginxNamespace.substring(3))
@@ -217,7 +196,7 @@ public class LoadBalancerUtils {
     // verify that NGINX is installed
     logger.info("Checking NGINX release {0} status in namespace {1}",
         NGINX_RELEASE_NAME, nginxNamespace);
-    assertTrue(isHelmReleaseDeployed(NGINX_RELEASE_NAME, nginxNamespace),
+    assertFalse(isHelmReleaseDeployed(NGINX_RELEASE_NAME, nginxNamespace),
         String.format("NGINX release %s is not in deployed status in namespace %s",
             NGINX_RELEASE_NAME, nginxNamespace));
     logger.info("NGINX release {0} status is deployed in namespace {1}",
@@ -225,7 +204,7 @@ public class LoadBalancerUtils {
 
     // wait until the NGINX pod is ready.
     testUntil(
-        assertDoesNotThrow(() -> isNginxReady(nginxNamespace), "isNginxReady failed with ApiException"),
+        assertDoesNotThrow(() -> isNginxReady(nginxNamespace + "123"), "isNginxReady failed with ApiException"),
         logger,
         "NGINX to be ready in namespace {0}",
         nginxNamespace);
@@ -825,16 +804,6 @@ public class LoadBalancerUtils {
         ingressName, domainUid, domainNamespace);
 
     return ingressHostList;
-  }
-
-  private static Callable<Boolean> pullImageFromOcirAndTag(String localImage) {
-    return (() -> {
-      String nginxImage = GCR_NGINX_IMAGE_NAME + ":" + "v0.35.0";
-      LoggingFacade logger = getLogger();
-      logger.info("pulling image {0} from OCIR, tag it as image {1} ",
-          localImage, nginxImage);
-      return dockerPull(localImage) && dockerTag(localImage, nginxImage);
-    });
   }
 
   /**
