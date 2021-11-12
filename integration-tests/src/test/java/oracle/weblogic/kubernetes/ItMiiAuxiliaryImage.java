@@ -449,7 +449,7 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(4)
   @DisplayName("Negative Test to create domain with mismatch mount path in auxiliary image and auxiliaryImageVolumes")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
+  //@DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainMismatchMountPath() {
 
     OffsetDateTime timestamp = now();
@@ -532,7 +532,7 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(4)
   @DisplayName("Negative Test to create domain without WDT binary")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
+  //@DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainMissingWDTBinary() {
     //delete the previous created domain that is in the same namespace
     if (doesDomainExist(domainUid, DOMAIN_VERSION, errorpathDomainNamespace)) {
@@ -620,7 +620,7 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(5)
   @DisplayName("Negative Test to create domain without domain model file, only having sparse JMS config")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
+  //@DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainMissingDomainConfig() {
 
     //delete the previous created domain that is in the same namespace
@@ -715,7 +715,7 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(6)
   @DisplayName("Negative Test to patch domain using a custom mount command that's guaranteed to fail")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
+  //@DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathDomainWithFailCustomMountCommand() {
 
     //delete the previous created domain that is in the same namespace
@@ -810,7 +810,7 @@ class ItMiiAuxiliaryImage {
   @Test
   @Order(7)
   @DisplayName("Negative Test to create domain with file in auxiliary image not accessible by oracle user")
-  @DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
+  //@DisabledIfEnvironmentVariable(named = "OKD", matches = "true")
   void testErrorPathFilePermission() {
 
     //delete the previous created domain that is in the same namespace
