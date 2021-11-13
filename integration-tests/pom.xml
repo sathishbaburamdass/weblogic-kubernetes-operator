@@ -390,7 +390,6 @@
                 <skipITs>false</skipITs>
                 <includes-failsafe>
                   **/ItMiiAuxiliaryImage,
-                  **/ItMiiAuxiliaryImageCluster,
                   **/ItMiiDomain
                 </includes-failsafe>
             </properties>
