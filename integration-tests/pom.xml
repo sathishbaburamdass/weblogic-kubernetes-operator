@@ -339,7 +339,7 @@
                 </includes-failsafe>
             </properties>
         </profile>
-        <!--profile>
+        <profile>
             <id>wko-okd-wls-cert</id>
             <properties>
                 <skipITs>false</skipITs>
@@ -358,7 +358,6 @@
                   **/ItManagedCoherence,
                   **/ItManageNameSpace,
                   **/ItMiiAuxiliaryImage,
-                  **/ItMiiAuxiliaryImageCluster,
                   **/ItMiiCustomSslStore,
                   **/ItMiiDomain,
                   **/ItMiiDomainModelInPV,
@@ -383,8 +382,8 @@
                   **/ItUsabilityOperatorHelmChart
                 </includes-failsafe>
             </properties>
-        </profile-->
-        <profile>
+        </profile>
+        <!--profile>
             <id>wko-okd-wls-cert</id>
             <properties>
                 <skipITs>false</skipITs>
@@ -394,7 +393,7 @@
                   **/ItMiiDomain
                 </includes-failsafe>
             </properties>
-        </profile>
+        </profile-->
         <profile>
             <id>wko-okd-fmw-cert</id>
             <properties>
