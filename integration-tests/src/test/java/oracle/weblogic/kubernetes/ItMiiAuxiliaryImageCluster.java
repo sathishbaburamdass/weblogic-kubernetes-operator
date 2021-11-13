@@ -126,7 +126,7 @@ class ItMiiAuxiliaryImageCluster {
         "weblogicenc", "weblogicenc");
 
     // create stage dir for domain scope auxiliary image with auxiliaryImageDomainScopeNames
-    Path multipleAiPath1 = Paths.get(RESULTS_ROOT, "multipleauxiliaryimage1");
+    Path multipleAiPath1 = Paths.get(RESULTS_ROOT, "multipleauxiliaryimagecluster1");
     // create models dir and copy model, archive files if any for auxiliaryImageDomainScopeNames
     Path modelsPath = Paths.get(multipleAiPath1.toString(), "models");
     logger.info("Create models dir {0} and copy model file {1}",
@@ -148,7 +148,7 @@ class ItMiiAuxiliaryImageCluster {
         auxiliaryImageDomainScopeNames.get(0));
 
     // create stage and customdir dir for cluster scope auxiliary images with auxiliaryImageClusterScopeNames
-    Path multipleAiPath2 = Paths.get(RESULTS_ROOT, "multipleauxiliaryimage2");
+    Path multipleAiPath2 = Paths.get(RESULTS_ROOT, "multipleauxiliaryimagecluster2");
     Path customDirPath = Paths.get(multipleAiPath2.toString(), customDir);
     logger.info("Create a custom dir {0} and copy two text files {1} and {2}",
         customDirPath.toString(), "clusterai-1.txt", "clusterai-2.txt");
