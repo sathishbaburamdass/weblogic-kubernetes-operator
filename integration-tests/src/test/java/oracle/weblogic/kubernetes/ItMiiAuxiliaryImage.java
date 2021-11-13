@@ -119,7 +119,7 @@ class ItMiiAuxiliaryImage {
   private static String errorpathDomainNamespace = null;
   private static String wdtDomainNamespace = null;
   private static LoggingFacade logger = null;
-  private String domainUid = "domain1";
+  private String domainUid = "mii-ai";
   private static String miiAuxiliaryImage1 = MII_AUXILIARY_IMAGE_NAME + ":" + MII_BASIC_IMAGE_TAG + "1";
   private static String miiAuxiliaryImage2 = MII_AUXILIARY_IMAGE_NAME + ":" + MII_BASIC_IMAGE_TAG + "2";
   private static String miiAuxiliaryImage3 = MII_AUXILIARY_IMAGE_NAME + ":" + MII_BASIC_IMAGE_TAG + "3";

@@ -63,7 +63,7 @@ class ItMiiAuxiliaryImageCluster {
   private static String domainNamespace = null;
   private static LoggingFacade logger = null;
   private static int auxiliaryImageNumberIndex = 1;
-  private final String domainUid = "domain1";
+  private final String domainUid = "mii-ai-cluster";
   private final String adminServerPodName = domainUid + "-admin-server";
   private final String managedServerPrefix = domainUid + "-managed-server";
   private final String clusterName = "cluster-1";
