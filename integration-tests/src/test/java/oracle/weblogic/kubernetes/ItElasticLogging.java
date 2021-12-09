@@ -3,6 +3,8 @@
 
 package oracle.weblogic.kubernetes;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -349,17 +351,18 @@ class ItElasticLogging {
       miiImage = createMiiImageAndVerify(WLS_LOGGING_IMAGE_NAME, WLS_LOGGING_MODEL_FILE,
           MII_BASIC_APP_NAME, additionalBuildCommands, additionalBuildFilesVarargsBuff.toString());
     } else {
-      //List<String> appList = new ArrayList();
-      //appList.add(MII_BASIC_APP_NAME);
+      List<String> appList = new ArrayList();
+      appList.add(MII_BASIC_APP_NAME);
 
       // build the model file list
-      //final List<String> modelList = Collections.singletonList(MODEL_DIR + "/" + WLS_LOGGING_MODEL_FILE);
+      final List<String> modelList = Collections.singletonList(MODEL_DIR + "/" + WLS_LOGGING_MODEL_FILE);
 
       // create image with model files
       logger.info("Create image with model file and verify");
-      //miiImage = createMiiImageAndVerify(WLS_LOGGING_IMAGE_NAME, modelList, appList);
+      miiImage = createMiiImageAndVerify(WLS_LOGGING_IMAGE_NAME, modelList, appList);
+      /*
       miiImage = createMiiImageAndVerify(WLS_LOGGING_IMAGE_NAME,
-          MODEL_DIR + "/" + WLS_LOGGING_MODEL_FILE, MII_BASIC_APP_NAME);
+          MODEL_DIR + "/" + WLS_LOGGING_MODEL_FILE, MII_BASIC_APP_NAME);*/
     }
 
     // docker login and push image to docker registry if necessary
