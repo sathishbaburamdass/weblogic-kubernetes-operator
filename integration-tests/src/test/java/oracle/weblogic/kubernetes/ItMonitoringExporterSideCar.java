@@ -235,7 +235,7 @@ class ItMonitoringExporterSideCar {
       changeMonitoringExporterSideCarConfig(RESOURCE_DIR + "/exporter/rest_domainqualtrue.yaml",
           domain3Uid, domain3Namespace,
           "domainQualifier", "wls_servlet_executionTimeAverage%7Bapp%3D%22myear%22%7D%5B15s%5D",
-          "\"domain\":\"wls-sessmigr-domain-1\"");
+          "\"domain\":\"wls-sessmigr-domain-3\"");
 
       logger.info("replace monitoring exporter configuration with configuration file with metricsNameSnakeCase=false.");
       changeMonitoringExporterSideCarConfig(RESOURCE_DIR + "/exporter/rest_snakecasefalse.yaml",
