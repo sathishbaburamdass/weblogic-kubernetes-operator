@@ -67,6 +67,7 @@ import static oracle.weblogic.kubernetes.actions.ActionConstants.WLE_DOWNLOAD_FI
 import static oracle.weblogic.kubernetes.actions.ActionConstants.WORK_DIR;
 import static oracle.weblogic.kubernetes.actions.TestActions.execCommand;
 import static oracle.weblogic.kubernetes.actions.TestActions.getOperatorPodName;
+import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createMiiDomainAndVerify;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkServiceExists;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.withStandardRetryPolicy;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
@@ -376,7 +377,20 @@ class ItElasticLogging {
     return miiImage;
   }
 
-  private static void createAndVerifyDomain(String miiImage) {
+  private static  void createAndVerifyDomain(String miiImage) {
+    // create a domain resource
+    logger.info("Create model-in-image domain {0} in namespace {1}, and wait until it comes up",
+        domainUid, domainNamespace);
+    createMiiDomainAndVerify(
+        domainNamespace,
+        domainUid,
+        miiImage,
+        adminServerPodName,
+        managedServerPodPrefix,
+        replicaCount);
+  }
+
+  private static void createAndVerifyDomain1(String miiImage) {
     // create secret for admin credentials
     logger.info("Create secret for admin credentials");
     String adminSecretName = "weblogic-credentials";
