@@ -27,6 +27,7 @@ public abstract class DomainProcessorDelegateStub implements DomainProcessorDele
 
   private final FiberTestSupport testSupport;
   private boolean waitedForIntrospection;
+  private Step initialStep;
 
   public DomainProcessorDelegateStub(FiberTestSupport testSupport) {
     this.testSupport = testSupport;
@@ -71,14 +72,23 @@ public abstract class DomainProcessorDelegateStub implements DomainProcessorDele
     return testSupport.scheduleWithFixedDelay(command, initialDelay, delay, unit);
   }
 
-  @Override
-  public void runSteps(Step firstStep) {
-    testSupport.runSteps(firstStep);
+  /**
+   * Adds a step to be run before the specified first step. See #runSteps
+   * @param initialStep a step to run first
+   */
+  public void addInitialStep(Step initialStep) {
+    this.initialStep = initialStep;
   }
 
   @Override
+  public void runSteps(Step firstStep) {
+    testSupport.runSteps(Step.chain(initialStep, firstStep));
+  }
+
+
+  @Override
   public void runSteps(Packet packet, Step firstStep) {
-    testSupport.runSteps(packet, firstStep);
+    testSupport.runSteps(packet, Step.chain(initialStep, firstStep));
   }
 
   private static class PassthroughPodAwaiterStepFactory implements PodAwaiterStepFactory {

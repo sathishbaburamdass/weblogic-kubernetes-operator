@@ -195,8 +195,7 @@ class DomainProcessorTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    consoleHandlerMemento = TestUtils.silenceOperatorLogger()
-          .collectLogMessages(logRecords, NOT_STARTING_DOMAINUID_THREAD).withLogLevel(Level.FINE);
+    consoleHandlerMemento = TestUtils.silenceOperatorLogger();
     mementos.add(consoleHandlerMemento);
     mementos.add(testSupport.install());
     mementos.add(httpSupport.install());
@@ -229,12 +228,17 @@ class DomainProcessorTest {
   @Test
   void whenDomainSpecNotChanged_dontRunUpdateThread() {
     DomainProcessorImpl.registerDomainPresenceInfo(new DomainPresenceInfo(newDomain));
+    collectNotStartingDomainLogMessage();
 
     makeRightOperation.execute();
 
     assertThat(logRecords, containsFine(NOT_STARTING_DOMAINUID_THREAD));
     Domain updatedDomain = testSupport.getResourceWithName(DOMAIN, newDomain.getDomainUid());
     assertThat(getResourceVersion(updatedDomain), equalTo(getResourceVersion(newDomain)));
+  }
+
+  private void collectNotStartingDomainLogMessage() {
+    consoleHandlerMemento.collectLogMessages(logRecords, NOT_STARTING_DOMAINUID_THREAD).withLogLevel(Level.FINE);
   }
 
   private String getResourceVersion(Domain domain) {
@@ -284,15 +288,47 @@ class DomainProcessorTest {
 
   @Test
   void whenMakeRightRunFailsEarly_populateAvailableAndCompletedConditions() {
-    consoleHandlerMemento.ignoringLoggedExceptions(ApiException.class);
     domainConfigurator.configureCluster(CLUSTER).withReplicas(MIN_REPLICAS);
-    testSupport.failOnResource(SECRET, null, NS, KubernetesConstants.HTTP_BAD_REQUEST);
+    forceExceptionDuringProcessing();
 
     processor.createMakeRightOperation(new DomainPresenceInfo(newDomain)).execute();
 
     Domain updatedDomain = testSupport.getResourceWithName(DOMAIN, UID);
     assertThat(updatedDomain, hasCondition(Available).withStatus("False"));
     assertThat(updatedDomain, hasCondition(Completed).withStatus("False"));
+  }
+
+  private void forceExceptionDuringProcessing() {
+    consoleHandlerMemento.ignoringLoggedExceptions(ApiException.class);
+    testSupport.failOnResource(SECRET, null, NS, KubernetesConstants.HTTP_BAD_REQUEST);
+  }
+
+  @Test
+  @Disabled
+  void whenExceptionDuringProcessing_reportInDomainStatus() {
+    DomainProcessorImpl.registerDomainPresenceInfo(new DomainPresenceInfo(domain));
+    forceExceptionDuringProcessing();
+
+    processor.createMakeRightOperation(new DomainPresenceInfo(domain)).withExplicitRecheck().execute();
+    testSupport.setTime(DomainPresence.getDomainPresenceFailureRetrySeconds(), TimeUnit.SECONDS);
+
+    assertThat(domain, hasCondition(Failed).withReason(Internal));
+  }
+
+  @Test
+  void whenTooManyRetries_sendAbortedEvent() {
+    DomainProcessorImpl.registerDomainPresenceInfo(new DomainPresenceInfo(domain));
+    forceExceptionDuringProcessing();
+    processor.createMakeRightOperation(new DomainPresenceInfo(domain)).withExplicitRecheck().execute();
+    int time = 0;
+
+    for (int numRetries = 0; numRetries < DomainPresence.getDomainPresenceFailureRetryMaxCount() + 1; numRetries++) {
+      forceExceptionDuringProcessing();
+      time += DomainPresence.getDomainPresenceFailureRetrySeconds();
+      testSupport.setTime(time, TimeUnit.SECONDS);
+    }
+
+    assertThat(getEvents().stream().anyMatch(this::isDomainProcessingAbortedEvent), is(true));
   }
 
   @Test
@@ -376,6 +412,7 @@ class DomainProcessorTest {
                 PASSWORD_KEY, "password".getBytes()));
   }
 
+  @SuppressWarnings("HttpUrlsUsage")
   private void defineOKResponse(@Nonnull String serverName, int port) {
     final String url = "http://" + UID + "-" + serverName + "." + NS + ":" + port;
     httpSupport.defineResponse(createExpectedRequest(url), createStub(HttpResponseStub.class, HTTP_OK, OK_RESPONSE));
@@ -1381,6 +1418,7 @@ class DomainProcessorTest {
 
   @Test
   void whenDomainTypeIsFromModelDomainAndAdminServerModified_runIntrospectionJobFirst2() throws Exception {
+    collectNotStartingDomainLogMessage();
     establishPreviousIntrospection(this::configureForModelInImage);
     testSupport.defineResources(new V1Secret().metadata(new V1ObjectMeta().name("wdt-cm-secret").namespace(NS)));
     testSupport.doOnCreate(POD, p -> recordPodCreation((V1Pod) p));
@@ -1552,23 +1590,6 @@ class DomainProcessorTest {
   }
 
   @Test
-  @Disabled
-  void whenExceptionDuringProcessing_reportInDomainStatus() {
-    DomainProcessorImpl.registerDomainPresenceInfo(new DomainPresenceInfo(domain));
-    forceExceptionDuringProcessing();
-
-    processor.createMakeRightOperation(new DomainPresenceInfo(domain)).withExplicitRecheck().execute();
-    testSupport.setTime(DomainPresence.getDomainPresenceFailureRetrySeconds(), TimeUnit.SECONDS);
-
-    assertThat(domain, hasCondition(Failed).withReason(Internal));
-  }
-
-  private void forceExceptionDuringProcessing() {
-    consoleHandlerMemento.ignoringLoggedExceptions(NullPointerException.class);
-    domain.getSpec().withWebLogicCredentialsSecret(null);
-  }
-
-  @Test
   void whenWebLogicCredentialsSecretRemoved_NullPointerExceptionAndAbortedEventNotGenerated() {
     consoleHandlerMemento.ignoreMessage(NOT_STARTING_DOMAINUID_THREAD);
     DomainProcessorImpl.registerDomainPresenceInfo(new DomainPresenceInfo(domain));
@@ -1589,6 +1610,7 @@ class DomainProcessorTest {
   }
 
   private boolean isDomainProcessingAbortedEvent(CoreV1Event e) {
-    return DOMAIN_PROCESSING_ABORTED_EVENT.equals(e.getReason());
+    return DOMAIN_PROCESSING_ABORTED_EVENT.equals(e.getReason())
+          && e.getMessage() != null && e.getMessage().contains("Unable to start domain");
   }
 }

@@ -690,7 +690,9 @@ public final class Fiber implements Runnable, ComponentRegistry, AsyncFiber, Bre
      *
      * @param packet The packet
      */
-    void onCompletion(Packet packet);
+    default void onCompletion(Packet packet) {
+      // by default, do nothing.
+    }
 
     /**
      * Indicates that the fiber has finished its execution with a throwable. Since the processing
