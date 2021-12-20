@@ -6,6 +6,7 @@ package oracle.weblogic.kubernetes;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -43,12 +44,14 @@ import static oracle.weblogic.kubernetes.actions.ActionConstants.ITTESTS_DIR;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.MODEL_DIR;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.RESOURCE_DIR;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.WORK_DIR;
+import static oracle.weblogic.kubernetes.actions.TestActions.deletePod;
 import static oracle.weblogic.kubernetes.actions.TestActions.execCommand;
 import static oracle.weblogic.kubernetes.actions.TestActions.getServiceNodePort;
 import static oracle.weblogic.kubernetes.actions.TestActions.patchDomainCustomResource;
 import static oracle.weblogic.kubernetes.actions.TestActions.scaleCluster;
 import static oracle.weblogic.kubernetes.actions.impl.primitive.Command.defaultCommandParams;
 import static oracle.weblogic.kubernetes.assertions.TestAssertions.domainExists;
+import static oracle.weblogic.kubernetes.assertions.TestAssertions.podReady;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createDatabaseSecret;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createDomainResourceWithLogHome;
 import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createDomainSecret;
@@ -63,6 +66,7 @@ import static oracle.weblogic.kubernetes.utils.DbUtils.createOracleDBUsingOperat
 import static oracle.weblogic.kubernetes.utils.DbUtils.createRcuAccessSecret;
 import static oracle.weblogic.kubernetes.utils.DbUtils.createRcuSchema;
 import static oracle.weblogic.kubernetes.utils.DbUtils.deleteStorageclass;
+import static oracle.weblogic.kubernetes.utils.DbUtils.getDbPodName;
 import static oracle.weblogic.kubernetes.utils.DbUtils.installDBOperator;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
 import static oracle.weblogic.kubernetes.utils.ExecCommand.exec;
@@ -78,15 +82,18 @@ import static oracle.weblogic.kubernetes.utils.OperatorUtils.installAndVerifyOpe
 import static oracle.weblogic.kubernetes.utils.PatchDomainUtils.patchDomainResourceServerStartPolicy;
 import static oracle.weblogic.kubernetes.utils.PersistentVolumeUtils.createPV;
 import static oracle.weblogic.kubernetes.utils.PersistentVolumeUtils.createPVC;
+import static oracle.weblogic.kubernetes.utils.PodUtils.checkIsPodRestarted;
 import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodDeleted;
 import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodDoesNotExist;
 import static oracle.weblogic.kubernetes.utils.PodUtils.getExternalServicePodName;
+import static oracle.weblogic.kubernetes.utils.PodUtils.getPodCreationTime;
 import static oracle.weblogic.kubernetes.utils.SecretUtils.createOpsswalletpasswordSecret;
 import static oracle.weblogic.kubernetes.utils.SecretUtils.createSecretWithUsernamePassword;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+// import static org.junit.jupiter.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Test to a create FMW model in image domain and WebLogic domain using Oracle "
@@ -328,9 +335,37 @@ class ItDBOperator {
           wlsDomainNamespace);
       checkPodReadyAndServiceExists(wlsManagedServerPrefix + i, wlsDomainUid, wlsDomainNamespace);
     }
+    
+    String dbPodName = getDbPodName(dbNamespace); 
+    assertNotNull(dbPodName, "Could not find the Oracle DB pod name"); 
+    logger.info("Found the Oracle DB pod (1) {0}", dbPodName);
+
+    OffsetDateTime dbPodOriginalTimestamp = 
+           getPodCreationTime(dbNamespace, dbPodName);
 
     //Verify JMS/JTA Service migration with File(JDBC) Store
     testMiiJmsJtaServiceMigration();
+    logger.info("JMS/JTA Migration works w/o start/stop the Oracle DB pod");
+
+    logger.info("Deleting Oracle DB pod");
+    assertDoesNotThrow(() -> deletePod(getDbPodName(dbNamespace), dbNamespace),
+            "Got exception while deleting Oracle DB pod");
+
+    checkPodDeleted(dbPodName, "", dbNamespace);
+    testUntil(
+        podReady("my-oracle-sidb", null, dbNamespace),
+        logger,
+        "{0} to be ready in namespace {1}",
+        "my-oracle-sidb",
+        dbNamespace);
+
+    dbPodName = getDbPodName(dbNamespace);
+    logger.info("Found the Oracle DB pod (2) {0}", dbPodName);
+    checkIsPodRestarted(dbNamespace, dbPodName, dbPodOriginalTimestamp);
+
+    //Again Verify JMS/JTA Service migration with File(JDBC) Store
+    testMiiJmsJtaServiceMigration();
+    logger.info("JMS/JTA Migration works with start/stop the Oracle DB pod");
   }
 
   /**

@@ -68,7 +68,6 @@ import static oracle.weblogic.kubernetes.TestConstants.OCR_DB_19C_IMAGE_TAG;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_DB_IMAGE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_REGISTRY;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_SECRET_NAME;
-//import static oracle.weblogic.kubernetes.TestConstants.K8S_NODEPORT_HOST;
 import static oracle.weblogic.kubernetes.TestConstants.OKD;
 import static oracle.weblogic.kubernetes.TestConstants.SIDB_YAML_URL;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.DOWNLOAD_DIR;
@@ -1014,6 +1013,29 @@ public class DbUtils {
   public static void deleteStorageclass() throws ApiException {
     //delete storageclass
     TestActions.deleteStorageClass("dboperatorsc");
+  }
+
+  /**
+   * returns exact name of the Oracle DB Pod.
+   */
+  public static String getDbPodName(String dbNamespace) {
+    V1Pod  oraPod;
+    LoggingFacade logger = getLogger();
+    String labelSelector = String.format("app=my-oracle-sidb");
+    try {
+      oraPod = getPod(dbNamespace, labelSelector, "my-oracle-sidb");
+    } catch (ApiException apiEx) {
+      logger.severe("Got ApiException while getting Oracle DB pod: {0}", apiEx);
+      return null;
+    }
+
+    if (oraPod != null && oraPod.getMetadata() != null) {
+      String oraPodName = oraPod.getMetadata().getName();
+      logger.info("Found Oracle DB pod {0} in namespace {1}", oraPodName, dbNamespace);
+      return oraPod.getMetadata().getName();
+    } else {
+      return null;
+    }
   }
 
 }
