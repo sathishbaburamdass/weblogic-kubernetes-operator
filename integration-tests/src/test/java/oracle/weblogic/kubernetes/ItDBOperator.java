@@ -350,8 +350,8 @@ class ItDBOperator {
     logger.info("Deleting Oracle DB pod");
     assertDoesNotThrow(() -> deletePod(getDbPodName(dbNamespace), dbNamespace),
             "Got exception while deleting Oracle DB pod");
-
     checkPodDeleted(dbPodName, "", dbNamespace);
+
     testUntil(
         podReady("my-oracle-sidb", null, dbNamespace),
         logger,
@@ -359,10 +359,14 @@ class ItDBOperator {
         "my-oracle-sidb",
         dbNamespace);
 
-    dbPodName = getDbPodName(dbNamespace);
-    logger.info("Found the Oracle DB pod (2) {0}", dbPodName);
-    checkIsPodRestarted(dbNamespace, dbPodName, dbPodOriginalTimestamp);
-
+    String dbPodName2 = getDbPodName(dbNamespace);
+    logger.info("Found the Oracle DB pod (2) {0}", dbPodName2);
+    if (dbPodName2.equals(dbPodName)) {
+      assertTrue(false, "No new Oracle DB pod started");
+    }
+   
+    checkIsPodRestarted(dbNamespace, dbPodName2, dbPodOriginalTimestamp);
+ 
     //Again Verify JMS/JTA Service migration with File(JDBC) Store
     testMiiJmsJtaServiceMigration();
     logger.info("JMS/JTA Migration works with start/stop the Oracle DB pod");
