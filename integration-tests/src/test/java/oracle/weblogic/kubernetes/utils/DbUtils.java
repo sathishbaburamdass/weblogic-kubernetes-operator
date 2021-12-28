@@ -59,6 +59,7 @@ import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import org.awaitility.core.ConditionFactory;
 
 import static io.kubernetes.client.util.Yaml.dump;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static oracle.weblogic.kubernetes.TestConstants.BASE_IMAGES_REPO_SECRET;
@@ -698,7 +699,7 @@ public class DbUtils {
    * @throws IOException when fails to modify operator yaml file
    */
   public static void installDBOperator(String namespace) throws IOException {
-    String operatorYamlFile = DOWNLOAD_DIR + "/oracle-database-operator.yaml";
+    Path operatorYamlFile = Paths.get(DOWNLOAD_DIR, namespace, "oracle-database-operator.yaml");
     String certManager = CERT_MANAGER;
     CommandParams params = new CommandParams().defaults();
     params.command("kubectl apply -f " + certManager);
@@ -709,16 +710,14 @@ public class DbUtils {
 
     String operatorYamlUrl = DB_OPERATOR_YAML_URL;
 
-    Files.createDirectories(Paths.get(DOWNLOAD_DIR));
-    Files.deleteIfExists(Paths.get(DOWNLOAD_DIR, "oracle-database-operator.yaml"));
+    Files.createDirectories(operatorYamlFile.getParent());
+    Files.deleteIfExists(operatorYamlFile);
     params = new CommandParams().defaults();
     params.command("curl -fL " + operatorYamlUrl + " -o " + operatorYamlFile);
     response = Command.withParams(params).execute();
     assertTrue(response, "Failed to download Oracle operator yaml file");
-    replaceStringInFile(Paths.get(operatorYamlFile).toString(),
-        "replicas: 3", "replicas: 1");
-    replaceStringInFile(Paths.get(operatorYamlFile).toString(),
-        "oracle-database-operator-system", namespace);
+    replaceStringInFile(operatorYamlFile.toString(), "replicas: 3", "replicas: 1");
+    replaceStringInFile(operatorYamlFile.toString(), "oracle-database-operator-system", namespace);
 
     params = new CommandParams().defaults();
     params.command("kubectl apply -f " + operatorYamlFile);
@@ -743,19 +742,17 @@ public class DbUtils {
    * @param namespace namespace in which DB is operator running
    */
   public static void uninstallDBOperator(String namespace) {
-    String operatorYamlFile = DOWNLOAD_DIR + "/oracle-database-operator.yaml";
+    Path operatorYamlFile = Paths.get(DOWNLOAD_DIR, namespace, "oracle-database-operator.yaml");
     String certManager = CERT_MANAGER;
 
-    CommandParams params = new CommandParams().defaults();
-
     // delete operator
+    CommandParams params = new CommandParams().defaults();
     params.command("kubectl delete -f " + operatorYamlFile);
     boolean response = Command.withParams(params).execute();
     assertTrue(response, "Failed to uninstall Oracle database operator");
 
-    String dbOpPodName = "oracle-database-operator-controller-manager";
-
     // wait for the pod to be deleted
+    String dbOpPodName = "oracle-database-operator-controller-manager";
     getLogger().info("Wait for the database operator {0} pod to be ready in namespace {1}",
         dbOpPodName, namespace);
     PodUtils.checkPodDoesNotExist(dbOpPodName, null, namespace);
@@ -798,7 +795,8 @@ public class DbUtils {
 
     String dbYamlUrl = SIDB_YAML_URL;
 
-    Path dbYaml = Paths.get(DOWNLOAD_DIR + "/oracledb.yaml");
+    Path dbYaml = Paths.get(DOWNLOAD_DIR, namespace, "oracledb.yaml");
+    Files.createDirectories(dbYaml.getParent());
     Files.deleteIfExists(dbYaml);
     CommandParams params = new CommandParams().defaults();
     params.command("curl -fL " + dbYamlUrl + " -o " + dbYaml.toString());
@@ -850,7 +848,47 @@ public class DbUtils {
     return dbUrl;
   }
 
-  private static void createHostPathProvisioner(String namespace, String hostPath) throws ApiException {
+  /**
+   * Delete Oracle database created by operator.
+   * @param namespace namespace in which DB is running.
+   */
+  public static void deleteOracleDB(String namespace, String dbName) {
+    Path dbYaml = Paths.get(DOWNLOAD_DIR, namespace, "oracledb.yaml");
+    CommandParams params = new CommandParams().defaults();
+    params.command("kubectl delete -f " + dbYaml.toString());
+    boolean response = Command.withParams(params).execute();
+    assertTrue(response, "Failed to delete Oracle database");
+    getLogger().info("Wait for the database {0} pod to be deleted in namespace {1}",
+        dbName, namespace);
+    PodUtils.checkPodDoesNotExist(dbName, null, namespace);
+  }
+
+  private static void createHostPathProvisioner(String namespace, String hostPath) throws ApiException, IOException {
+    Path hpYamlFileTemplate = Paths.get(RESOURCE_DIR, "storageclass", "hostpath-provisioner.yaml");
+    Path hpYamlFile = Paths.get(DOWNLOAD_DIR, namespace, "hostpath-provisioner.yaml");
+    Files.copy(hpYamlFileTemplate, hpYamlFile, REPLACE_EXISTING);
+    replaceStringInFile(hpYamlFile.toString(), "@@NAMESPACE@@", namespace);
+    replaceStringInFile(hpYamlFile.toString(), "@@HOSTPATH@@", hostPath);
+    getLogger().info(Files.readString(hpYamlFile));
+    CommandParams params = new CommandParams().defaults();
+    params.command("kubectl create -f " + hpYamlFile.toString());
+    boolean response = Command.withParams(params).execute();
+    assertTrue(response, "Failed to create hostpath provisioner");
+  }
+
+  /**
+   * Delete hostpath provisioner.
+   * @param namespace namespace
+   */
+  public static void deleteHostPathProvisioner(String namespace) {
+    Path hpYamlFile = Paths.get(DOWNLOAD_DIR, namespace, "hostpath-provisioner.yaml");
+    CommandParams params = new CommandParams().defaults();
+    params.command("kubectl delete -f " + hpYamlFile.toString());
+    boolean response = Command.withParams(params).execute();
+    assertTrue(response, "Failed to delete hostpath provisioner");
+  }
+
+  private static void createHostPathProvisioner1(String namespace, String hostPath) throws ApiException {
 
     String name = "hostpath-provisioner";
     getLogger().info("Creating service account {0}", name);
