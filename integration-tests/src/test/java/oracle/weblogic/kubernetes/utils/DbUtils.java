@@ -774,10 +774,11 @@ public class DbUtils {
    * @throws IOException when fails to open database yaml file
    */
   public static String createOracleDBUsingOperator(String dbName, String sysPassword,
-      String namespace, String hostPath) throws ApiException, IOException {
+      String namespace) throws ApiException, IOException {
 
     LoggingFacade logger = getLogger();
     final String DB_IMAGE_19C = OCR_REGISTRY + "/" + OCR_DB_IMAGE_NAME + ":" + OCR_DB_19C_IMAGE_TAG;
+    String hostPath = Paths.get(WORK_DIR, namespace, "oracledatabase").toString();
     String secretName = "db-password";
     String secretKey = "password";
     Map<String, String> secretMap = new HashMap<>();
