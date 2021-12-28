@@ -768,7 +768,6 @@ public class DbUtils {
    * @param dbName name of the database
    * @param sysPassword Oracle database admin password
    * @param namespace namespace in which to create Oracle Database
-   * @param hostPath Persistent volume mount path for database files
    * @return database url
    * @throws ApiException when fails to create various database artifacts
    * @throws IOException when fails to open database yaml file
