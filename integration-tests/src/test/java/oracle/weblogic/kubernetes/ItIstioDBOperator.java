@@ -89,8 +89,10 @@ import static oracle.weblogic.kubernetes.utils.ConfigMapUtils.createConfigMapAnd
 import static oracle.weblogic.kubernetes.utils.DbUtils.createOracleDBUsingOperator;
 import static oracle.weblogic.kubernetes.utils.DbUtils.createRcuAccessSecret;
 import static oracle.weblogic.kubernetes.utils.DbUtils.createRcuSchema;
-import static oracle.weblogic.kubernetes.utils.DbUtils.deleteStorageclass;
+import static oracle.weblogic.kubernetes.utils.DbUtils.deleteHostPathProvisioner;
+import static oracle.weblogic.kubernetes.utils.DbUtils.deleteOracleDB;
 import static oracle.weblogic.kubernetes.utils.DbUtils.installDBOperator;
+import static oracle.weblogic.kubernetes.utils.DbUtils.uninstallDBOperator;
 import static oracle.weblogic.kubernetes.utils.DeployUtil.deployToClusterUsingRest;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
 import static oracle.weblogic.kubernetes.utils.ExecCommand.exec;
@@ -566,6 +568,10 @@ class ItIstioDBOperator {
     if (System.getenv("SKIP_CLEANUP") == null
         || (System.getenv("SKIP_CLEANUP") != null
         && System.getenv("SKIP_CLEANUP").equalsIgnoreCase("false"))) {
+      deleteOracleDB(dbNamespace, dbName);
+      deleteHostPathProvisioner(dbNamespace);
+      uninstallDBOperator(dbNamespace);
+
       var pvs = listPersistentVolumes();
       logger.info("Deleting persistent volumes in after all");
       logger.info(Yaml.dump(pvs.getItems()));
@@ -578,7 +584,6 @@ class ItIstioDBOperator {
           }
         }
       }
-      deleteStorageclass();
     }
   }
 

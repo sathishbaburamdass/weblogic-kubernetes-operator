@@ -68,7 +68,6 @@ import static oracle.weblogic.kubernetes.utils.DbUtils.createRcuAccessSecret;
 import static oracle.weblogic.kubernetes.utils.DbUtils.createRcuSchema;
 import static oracle.weblogic.kubernetes.utils.DbUtils.deleteHostPathProvisioner;
 import static oracle.weblogic.kubernetes.utils.DbUtils.deleteOracleDB;
-import static oracle.weblogic.kubernetes.utils.DbUtils.deleteStorageclass;
 import static oracle.weblogic.kubernetes.utils.DbUtils.installDBOperator;
 import static oracle.weblogic.kubernetes.utils.DbUtils.uninstallDBOperator;
 import static oracle.weblogic.kubernetes.utils.DomainUtils.createDomainAndVerify;
@@ -484,7 +483,6 @@ class ItDBOperator {
           }
         }
       }
-      deleteStorageclass();
     }
   }
 
