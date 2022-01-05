@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLProtocolException;
 
 import io.kubernetes.client.custom.IntOrString;
@@ -63,7 +62,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static oracle.weblogic.kubernetes.TestConstants.BASE_IMAGES_REPO_SECRET;
-import static oracle.weblogic.kubernetes.TestConstants.CERT_MANAGER;
 import static oracle.weblogic.kubernetes.TestConstants.DB_OPERATOR_YAML_URL;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_DB_19C_IMAGE_TAG;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_DB_IMAGE_NAME;
@@ -700,21 +698,13 @@ public class DbUtils {
    */
   public static void installDBOperator(String namespace) throws IOException {
     Path operatorYamlFile = Paths.get(DOWNLOAD_DIR, namespace, "oracle-database-operator.yaml");
-    String certManager = CERT_MANAGER;
-    CommandParams params = new CommandParams().defaults();
-    params.command("kubectl apply -f " + certManager);
-    boolean response = Command.withParams(params).execute();
-    assertTrue(response, "Failed to install cert manager");
-
-    assertDoesNotThrow(() -> TimeUnit.SECONDS.sleep(60));
-
     String operatorYamlUrl = DB_OPERATOR_YAML_URL;
 
     Files.createDirectories(operatorYamlFile.getParent());
     Files.deleteIfExists(operatorYamlFile);
-    params = new CommandParams().defaults();
+    CommandParams params = new CommandParams().defaults();
     params.command("curl -fL " + operatorYamlUrl + " -o " + operatorYamlFile);
-    response = Command.withParams(params).execute();
+    boolean response = Command.withParams(params).execute();
     assertTrue(response, "Failed to download Oracle operator yaml file");
     replaceStringInFile(operatorYamlFile.toString(), "replicas: 3", "replicas: 1");
     replaceStringInFile(operatorYamlFile.toString(), "oracle-database-operator-system", namespace);
@@ -743,7 +733,6 @@ public class DbUtils {
    */
   public static void uninstallDBOperator(String namespace) {
     Path operatorYamlFile = Paths.get(DOWNLOAD_DIR, namespace, "oracle-database-operator.yaml");
-    String certManager = CERT_MANAGER;
 
     // delete operator
     CommandParams params = new CommandParams().defaults();
@@ -756,11 +745,6 @@ public class DbUtils {
     getLogger().info("Wait for the database operator {0} pod to be ready in namespace {1}",
         dbOpPodName, namespace);
     PodUtils.checkPodDoesNotExist(dbOpPodName, null, namespace);
-
-    //delete the cert manager
-    params.command("kubectl delete -f " + certManager);
-    response = Command.withParams(params).execute();
-    assertTrue(response, "Failed to uninstall cert manager");
   }
 
   /**
