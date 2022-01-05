@@ -454,7 +454,7 @@ class ItStickySession {
                                          String headerOption,
                                          String... clusterAddress) {
 
-    StringBuffer curlCmd = new StringBuffer("curl --show-error");
+    StringBuffer curlCmd = new StringBuffer("curl --show-error -v");
     logger.info("Build a curl command with hostname {0} and port {1}", hostName, servicePort);
 
     if (clusterAddress.length == 0) {
@@ -479,7 +479,7 @@ class ItStickySession {
           clusterAddress[0], curlUrlPath, headerOption);
 
       int waittime = 5;
-      curlCmd.append(" --silent --connect-timeout ")
+      curlCmd.append(" --connect-timeout ")
           .append(waittime)
           .append(" --max-time ").append(waittime)
           .append(" http://")
@@ -576,12 +576,27 @@ class ItStickySession {
 
     // send a HTTP request to set http session state(count number) and save HTTP session info
     Map<String, String> httpDataInfo = getServerAndSessionInfoAndVerify(hostname,
-            servicePort, webServiceSetUrl, " -D ", clusterAddress);
+            servicePort, webServiceSetUrl, " -c ", clusterAddress);
     // get server and session info from web service deployed on the cluster
     String serverName1 = httpDataInfo.get(serverNameAttr);
     String sessionId1 = httpDataInfo.get(sessionIdAttr);
     logger.info("Got the server {0} and session ID {1} from the first HTTP connection",
         serverName1, sessionId1);
+
+    final String httpHeaderFile = "/u01/oracle/header";
+    String cmd = "cat " + httpHeaderFile;
+    logger.info("========= Command to cat 1: {0} ", cmd);
+
+    // set HTTP request and get HTTP response
+    ExecResult execResult = assertDoesNotThrow(
+        () -> execCommand(domainNamespace, adminServerPodName,
+        null, true, "/bin/sh", "-c", cmd));
+
+    if (execResult.exitValue() == 0) {
+      logger.info("========= execResult.stdout() {0} ", execResult.stdout());
+    } else {
+      logger.info("========= execResult.stderr() {0} ", execResult.stderr());
+    }
 
     // send a HTTP request again to get server and session info
     httpDataInfo = getServerAndSessionInfoAndVerify(hostname,
@@ -593,6 +608,19 @@ class ItStickySession {
     int count = Optional.ofNullable(countStr).map(Integer::valueOf).orElse(0);
     logger.info("Got the server {0}, session ID {1} and session state {2} "
         + "from the second HTTP connection", serverName2, sessionId2, count);
+
+    logger.info("========= Command to cat 2: {0} ", cmd);
+
+    // set HTTP request and get HTTP response
+    execResult = assertDoesNotThrow(
+        () -> execCommand(domainNamespace, adminServerPodName,
+        null, true, "/bin/sh", "-c", cmd));
+
+    if (execResult.exitValue() == 0) {
+      logger.info("========= execResult.stdout() {0} ", execResult.stdout());
+    } else {
+      logger.info("========= execResult.stderr() {0} ", execResult.stderr());
+    }
 
     // verify that two HTTP connections are sticky to the same server
     assertAll("Check that the sticky session is supported",
