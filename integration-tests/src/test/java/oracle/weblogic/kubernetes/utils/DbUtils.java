@@ -872,7 +872,7 @@ public class DbUtils {
     assertTrue(response, "Failed to delete hostpath provisioner");
   }
 
-  private static void createHostPathProvisioner1(String namespace, String hostPath) throws ApiException {
+  private static void createHostPathProvisionerObjects(String namespace, String hostPath) throws ApiException {
 
     String name = "hostpath-provisioner";
     getLogger().info("Creating service account {0}", name);
