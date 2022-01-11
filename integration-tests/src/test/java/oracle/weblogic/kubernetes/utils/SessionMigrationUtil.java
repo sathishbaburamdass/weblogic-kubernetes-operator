@@ -3,9 +3,6 @@
 
 package oracle.weblogic.kubernetes.utils;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -13,12 +10,8 @@ import java.util.regex.Pattern;
 
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static oracle.weblogic.kubernetes.TestConstants.RESULTS_ROOT;
-import static oracle.weblogic.kubernetes.actions.ActionConstants.MODEL_DIR;
 import static oracle.weblogic.kubernetes.actions.TestActions.execCommand;
 import static oracle.weblogic.kubernetes.actions.TestActions.shutdownManagedServerUsingServerStartPolicy;
-import static oracle.weblogic.kubernetes.utils.FileUtils.replaceStringInFile;
 import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodDoesNotExist;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -32,6 +25,17 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Utility class for session migration tests.
  */
 public class SessionMigrationUtil {
+
+  private static final String SESSMIGR_MODEL_FILE = "model.sessmigr.yaml";
+
+  /**
+   * Get original model file for session migration tests.
+   *
+   * @return - the model file name
+   */
+  public static String getOrigModelFile() {
+    return SESSMIGR_MODEL_FILE;
+  }
 
   /**
    * Patch domain to shutdown a WebLogic server by changing the value of
@@ -58,7 +62,7 @@ public class SessionMigrationUtil {
     checkPodDoesNotExist(podName, domainUid, domainNamespace);
 
     try {
-      Thread.sleep(10000);
+      Thread.sleep(20000);
     } catch (Exception ex) {
       //ignore
     }
@@ -121,38 +125,6 @@ public class SessionMigrationUtil {
     return httpDataInfo;
   }
 
-  /**
-   * Generate the model.sessmigr.yaml for a given test class
-   *
-   * @param className test class name
-   * @param domainUid unique domain identifier
-   *
-   * @return path of generated yaml file for a session migration test
-   */
-  public static String generateSessionMigrYaml(String className, String domainUid) {
-    final String SESSMIGR_MODEL_FILE = "model.sessmigr.yaml";
-    final String srcSessionMigrYamlFile =  MODEL_DIR + "/" + SESSMIGR_MODEL_FILE;
-    final String destSessionMigrYamlFile = RESULTS_ROOT + "/" + className + "/" + SESSMIGR_MODEL_FILE;
-    Path srcSessionMigrYamlPath = Paths.get(srcSessionMigrYamlFile);
-    Path destSessionMigrYamlPath = Paths.get(destSessionMigrYamlFile);
-
-    // create dest dir
-    assertDoesNotThrow(() -> Files.createDirectories(
-        Paths.get(RESULTS_ROOT + "/" + className)),
-        String.format("Could not create directory under %s", RESULTS_ROOT + "/" + className + ""));
-
-    // copy model.sessmigr.yamlto results dir
-    assertDoesNotThrow(() -> Files.copy(srcSessionMigrYamlPath, destSessionMigrYamlPath, REPLACE_EXISTING),
-        "Failed to copy " + srcSessionMigrYamlFile + " to " + destSessionMigrYamlFile);
-
-    // DOMAIN_NAME in model.sessmigr.yaml
-    assertDoesNotThrow(() -> replaceStringInFile(
-        destSessionMigrYamlFile.toString(), "DOMAIN_NAME", domainUid),
-        "Could not modify DOMAIN_NAME in " + destSessionMigrYamlFile);
-
-    return destSessionMigrYamlFile;
-  }
-
   private static Map<String, String> processHttpRequest(String domainNamespace,
                                                        String adminServerPodName,
                                                        String hostName,
@@ -196,7 +168,9 @@ public class SessionMigrationUtil {
     final String httpHeaderFile = "/u01/domains/header";
     LoggingFacade logger = getLogger();
 
-    int waittime = 5;
+    // --connect-timeout - Maximum time in seconds that you allow curl's connection to take
+    // --max-time - Maximum time in seconds that you allow the whole operation to take
+    int waittime = 10;
     String curlCommand =  new StringBuilder()
         .append("curl --silent --show-error")
         .append(" --connect-timeout ").append(waittime).append(" --max-time ").append(waittime)
