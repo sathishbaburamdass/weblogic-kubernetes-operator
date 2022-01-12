@@ -287,14 +287,14 @@ class ItParameterizedDomain {
     resourceLimit.put("memory", new Quantity("2Gi"));
 
     // create model in image domain with multiple clusters
-    miiDomain = createMiiDomainWithMultiClusters(miiDomainUid, miiDomainNamespace);
+    //miiDomain = createMiiDomainWithMultiClusters(miiDomainUid, miiDomainNamespace);
     // create domain in image
-    domainInImage = createAndVerifyDomainInImageUsingWdt(domainInImageNamespace);
+    //domainInImage = createAndVerifyDomainInImageUsingWdt(domainInImageNamespace);
     // create domain in pv
     domainOnPV = createDomainOnPvUsingWdt(domainOnPVNamespace);
 
-    domains.add(miiDomain);
-    domains.add(domainInImage);
+    //domains.add(miiDomain);
+    //domains.add(domainInImage);
     domains.add(domainOnPV);
 
     // create ingress for each domain
