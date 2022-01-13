@@ -143,7 +143,7 @@ import static oracle.weblogic.kubernetes.utils.K8sEvents.POD_TERMINATED;
 import static oracle.weblogic.kubernetes.utils.K8sEvents.checkDomainEvent;
 import static oracle.weblogic.kubernetes.utils.K8sEvents.checkPodEventLoggedOnce;
 import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.createIngressForDomainAndVerify;
-import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.installAndVerifyNginx;
+//import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.installAndVerifyNginx;
 import static oracle.weblogic.kubernetes.utils.LoggingUtil.checkPodLogContainsString;
 import static oracle.weblogic.kubernetes.utils.OKDUtils.createRouteForOKD;
 import static oracle.weblogic.kubernetes.utils.OKDUtils.getRouteHost;
@@ -227,7 +227,7 @@ class ItParameterizedDomain {
    *                   JUnit engine parameter resolution mechanism
    */
   @BeforeAll
-  public static void initAll(@Namespaces(7) List<String> namespaces) {
+  public static void initAll(@Namespaces(2) List<String> namespaces) {
     logger = getLogger();
 
     // get a unique operator namespace
@@ -236,32 +236,34 @@ class ItParameterizedDomain {
     opNamespace = namespaces.get(0);
 
     // get a unique NGINX namespace
-    logger.info("Get a unique namespace for NGINX");
+    /*logger.info("Get a unique namespace for NGINX");
     assertNotNull(namespaces.get(1), "Namespace list is null");
-    String nginxNamespace = namespaces.get(1);
+    String nginxNamespace = namespaces.get(1);*/
 
     // get unique namespaces for three different type of domains
     logger.info("Getting unique namespaces for three different type of domains");
-    assertNotNull(namespaces.get(2));
-    miiDomainNamespace = namespaces.get(2);
-    assertNotNull(namespaces.get(3));
-    String domainOnPVNamespace = namespaces.get(3);
-    assertNotNull(namespaces.get(4));
+    //assertNotNull(namespaces.get(2));
+    //miiDomainNamespace = namespaces.get(2);
+    assertNotNull(namespaces.get(1));
+    String domainOnPVNamespace = namespaces.get(1);
+    /*assertNotNull(namespaces.get(4));
     String domainInImageNamespace = namespaces.get(4);
     assertNotNull(namespaces.get(5));
     miiDomainNegativeNamespace = namespaces.get(5);
-    miiDomainNegativeNamespacePortforward = namespaces.get(6);
+    miiDomainNegativeNamespacePortforward = namespaces.get(6);*/
 
     // set the service account name for the operator
     opServiceAccount = opNamespace + "-sa";
 
     // create mii image
-    miiImage = createAndPushMiiImage();
+    //miiImage = createAndPushMiiImage();
 
     // install and verify operator with REST API
-    installAndVerifyOperator(opNamespace, opServiceAccount, true, 0,
+    /*installAndVerifyOperator(opNamespace, opServiceAccount, true, 0,
         miiDomainNamespace, domainOnPVNamespace, domainInImageNamespace,
-        miiDomainNegativeNamespace, miiDomainNegativeNamespacePortforward);
+        miiDomainNegativeNamespace, miiDomainNegativeNamespacePortforward);*/
+    installAndVerifyOperator(opNamespace, opServiceAccount, true, 0,
+        domainOnPVNamespace);
 
     externalRestHttpsPort = getServiceNodePort(opNamespace, "external-weblogic-operator-svc");
     // This test uses the operator restAPI to scale the domain. To do this in OKD cluster,
@@ -271,14 +273,14 @@ class ItParameterizedDomain {
     // Patch the route just created to set tls termination to passthrough
     setTlsTerminationForRoute("external-weblogic-operator-svc", opNamespace);
 
-    if (!OKD) {
+    /*if (!OKD) {
       // install and verify NGINX
       nginxHelmParams = installAndVerifyNginx(nginxNamespace, 0, 0);
       String nginxServiceName = nginxHelmParams.getReleaseName() + "-ingress-nginx-controller";
       logger.info("NGINX service name: {0}", nginxServiceName);
       nodeportshttp = getServiceNodePort(nginxNamespace, nginxServiceName, "http");
       logger.info("NGINX http node port: {0}", nodeportshttp);
-    }
+    }*/
 
     // set resource request and limit
     resourceRequest.put("cpu", new Quantity("250m"));
