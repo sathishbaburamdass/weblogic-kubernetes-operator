@@ -465,7 +465,7 @@ public class TestAssertions {
 
       if (domain != null && domain.getStatus() != null) {
         List<DomainCondition> domainConditionList = domain.getStatus().getConditions();
-        logger.info("XX domain UID is ", domainUid);
+        logger.info("XX domain UID is {0}", domainUid);
         logger.info(Yaml.dump(domainConditionList));
         for (DomainCondition domainCondition : domainConditionList) {
           if (domainCondition.getType().equalsIgnoreCase(conditionType)) {
