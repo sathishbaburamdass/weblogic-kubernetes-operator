@@ -221,6 +221,8 @@ public class JobHelper {
         }
 
         if (isKnownFailedJob(job) || JobWatcher.isJobTimedOut(job)) {
+          LOGGER.info("XX VerifyIntrospectorJobResponseStep: onSuccess: isTimedOut {0}",
+              JobWatcher.isJobTimedOut(job));
           return doNext(cleanUpAndReintrospect(getNext()), packet);
         } else if (job != null) {
           return doNext(processIntrospectionResults(getNext()), packet).withDebugComment(job, this::jobDescription);
@@ -619,6 +621,7 @@ public class JobHelper {
         if (jobPod == null) {
           return doContinueListOrNext(callResponse, packet, processIntrospectorPodLog(getNext()));
         } else if (hasImagePullError(jobPod) || initContainersHaveImagePullError(jobPod) || isJobPodTimedOut(jobPod)) {
+          LOGGER.info("XX PodListresponseStep: onSuccess: isTimedOut {0}", isJobPodTimedOut(jobPod));
           return doNext(cleanUpAndReintrospect(getNext()), packet);
         } else {
           recordJobPodName(packet, getName(jobPod));
