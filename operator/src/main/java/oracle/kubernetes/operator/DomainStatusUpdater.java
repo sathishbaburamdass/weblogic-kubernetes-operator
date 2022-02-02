@@ -1212,6 +1212,7 @@ public class DomainStatusUpdater {
 
     @Override
     void modifyStatus(DomainStatus s) {
+      LOGGER.info("XX adding Failed condition: reason {0} and message {1}", reason, message);
       s.addCondition(new DomainCondition(Failed).withStatus(TRUE).withReason(reason).withMessage(message));
     }
   }

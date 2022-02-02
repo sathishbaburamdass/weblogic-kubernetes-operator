@@ -20,6 +20,8 @@ import jakarta.json.JsonPatchBuilder;
 import jakarta.validation.Valid;
 import oracle.kubernetes.json.Description;
 import oracle.kubernetes.json.Range;
+import oracle.kubernetes.operator.logging.LoggingFacade;
+import oracle.kubernetes.operator.logging.LoggingFactory;
 import oracle.kubernetes.utils.SystemClock;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -188,11 +190,16 @@ public class DomainStatus {
     return conditions.stream().filter(predicate).collect(Collectors.toList());
   }
 
+  private static final LoggingFacade LOGGER = LoggingFactory.getLogger("Operator", "Operator");
+
   /**
    * Removes the specified condition from the status.
    * @param condition a condition
    */
   public void removeCondition(@Nonnull DomainCondition condition) {
+    if (condition.getType().equals("Failed")) {
+      LOGGER.info("XXX condition: {0} is removed", condition);
+    }
     conditions.remove(condition);
     setReasonAndMessage();
   }
