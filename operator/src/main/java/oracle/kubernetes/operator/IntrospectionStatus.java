@@ -5,6 +5,7 @@ package oracle.kubernetes.operator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -62,6 +63,11 @@ public class IntrospectionStatus {
     } else if (Unschedulable.isUnschedulable(pod)) {
       return new Unschedulable(pod).createStatusUpdateSteps();
     } else if (isReady(pod)) {
+      if (isStatusFailed(pod) || isConditionFailed(pod) || isJobPodTimedOut(pod)) {
+        LOGGER.info("XXX isReady true, pod is failed or timeout");
+      } else {
+        LOGGER.info("XXX isReady, pod status {0}", pod.getStatus());
+      }
       return DomainStatusUpdater.createRemoveFailuresStep();
     } else if (terminatedErrorMessage != null) {
       return new SelectedMessage(pod, terminatedErrorMessage, true).createStatusUpdateSteps();
@@ -70,8 +76,46 @@ public class IntrospectionStatus {
     } else if (initContainerWaitingMessages != null) {
       return new SelectedMessage(pod, initContainerWaitingMessages, false).createStatusUpdateSteps();
     } else {
+      if (isStatusFailed(pod) || isConditionFailed(pod) || isJobPodTimedOut(pod)) {
+        LOGGER.info("XXX else, pod pod is failed or timeout");
+      } else {
+        LOGGER.info("XXX else, pod status {0}", pod.getStatus());
+      }
       return DomainStatusUpdater.createRemoveFailuresStep();
     }
+  }
+
+  private static boolean isStatusFailed(V1Pod pod) {
+    return Optional.ofNullable(pod.getStatus()).map(V1PodStatus::getPhase)
+        .map(failed -> failed.equals("Failed")).orElse(false);
+  }
+
+  private static boolean isConditionFailed(V1Pod pod) {
+    return getPodConditions(pod).stream().anyMatch(IntrospectionStatus::isJobPodConditionFailed);
+  }
+
+  private static List<V1PodCondition> getPodConditions(@Nonnull V1Pod pod) {
+    return Optional.ofNullable(pod.getStatus()).map(V1PodStatus::getConditions).orElse(Collections.emptyList());
+  }
+
+  private static boolean isJobPodConditionFailed(V1PodCondition podCondition) {
+    return getType(podCondition).equals("Failed") && getStatus(podCondition).equals("True");
+  }
+
+  private static String getType(V1PodCondition podCondition) {
+    return Optional.ofNullable(podCondition).map(V1PodCondition::getType).orElse("");
+  }
+
+  private static String getStatus(V1PodCondition podCondition) {
+    return Optional.ofNullable(podCondition).map(V1PodCondition::getStatus).orElse("");
+  }
+
+  private static boolean isJobPodTimedOut(V1Pod jobPod) {
+    return "DeadlineExceeded".equals(getJobPodStatusReason(jobPod));
+  }
+
+  private static String getJobPodStatusReason(V1Pod jobPod) {
+    return Optional.ofNullable(jobPod.getStatus()).map(V1PodStatus::getReason).orElse(null);
   }
 
   private static String getTerminatedMessage(@Nonnull V1Pod pod) {
