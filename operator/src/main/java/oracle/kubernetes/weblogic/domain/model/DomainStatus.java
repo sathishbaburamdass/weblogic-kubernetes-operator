@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import static oracle.kubernetes.operator.EventConstants.SERVER_POD_ERROR;
 import static oracle.kubernetes.operator.WebLogicConstants.SHUTDOWN_STATE;
 import static oracle.kubernetes.weblogic.domain.model.DomainConditionType.Failed;
 import static oracle.kubernetes.weblogic.domain.model.DomainConditionType.Progressing;
@@ -197,7 +198,7 @@ public class DomainStatus {
    * @param condition a condition
    */
   public void removeCondition(@Nonnull DomainCondition condition) {
-    if (condition.getType().equals("Failed")) {
+    if (condition.getType().equals("Failed") && condition.getMessage().contains(SERVER_POD_ERROR)) {
       LOGGER.info("XXX condition: {0} is removed", condition);
     }
     conditions.remove(condition);
