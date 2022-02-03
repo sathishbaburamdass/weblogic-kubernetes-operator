@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Oracle and/or its affiliates.
+// Copyright (c) 2022, Oracle and/or its affiliates.
 // Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 package oracle.weblogic.kubernetes;
@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.models.V1EnvVar;
@@ -38,7 +37,6 @@ import oracle.weblogic.kubernetes.utils.FmwUtils;
 import oracle.weblogic.kubernetes.utils.LoggingUtil;
 import oracle.weblogic.kubernetes.utils.PodUtils;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -533,7 +531,6 @@ class ItDiagnosticsFailedCondition {
    * type: Completed, status: false
    */
   @Test
-  @Disabled
   @DisplayName("Test domain status condition with managed server boot failure.")
   void testMSBootFailureStatus() {
     boolean testPassed = false;
@@ -769,33 +766,32 @@ class ItDiagnosticsFailedCondition {
   private void checkStatus(String domainName, String completed, String available, String failed) {
 
     if (failed != null) {
-      // verify the condition type Available exists
+      // verify the condition type Failed exists
       checkDomainStatusConditionTypeExists(domainName, domainNamespace, DOMAIN_STATUS_CONDITION_FAILED_TYPE);
-      // verify the condition Available type has status False
+      // verify the condition Failed type has expected status
       checkDomainStatusConditionTypeHasExpectedStatus(domainName, domainNamespace,
           DOMAIN_STATUS_CONDITION_FAILED_TYPE, failed);
     }
 
     if (available != null) {
-      // verify the condition type Completed exists
+      // verify the condition type Available exists
       checkDomainStatusConditionTypeExists(domainName, domainNamespace, DOMAIN_STATUS_CONDITION_AVAILABLE_TYPE);
-      // verify the condition Completed type has status True
+      // verify the condition Available type has expected status
       checkDomainStatusConditionTypeHasExpectedStatus(domainName, domainNamespace,
           DOMAIN_STATUS_CONDITION_AVAILABLE_TYPE, available);
     }
 
     if (completed != null) {
-      // verify the condition type Failed exists
+      // verify the condition type Completed exists
       checkDomainStatusConditionTypeExists(domainName, domainNamespace, DOMAIN_STATUS_CONDITION_COMPLETED_TYPE);
-      // verify the condition Failed type has status True
+      // verify the condition Completed type has expected status
       checkDomainStatusConditionTypeHasExpectedStatus(domainName, domainNamespace,
           DOMAIN_STATUS_CONDITION_COMPLETED_TYPE, completed);
     }
   }
 
   private String getDomainName() {
-    Random random = new Random();
-    return domainUid + random.nextInt();
+    return domainUid + Math.random();
   }
 
 }
