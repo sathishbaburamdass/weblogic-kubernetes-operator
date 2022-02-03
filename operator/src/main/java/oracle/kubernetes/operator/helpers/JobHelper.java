@@ -447,6 +447,7 @@ public class JobHelper {
       }
 
       private NextAction handleFailure(Packet packet, V1Job domainIntrospectorJob) {
+        LOGGER.info("XX ReadPodLogResponseStep: handleFailure: severeStatus {0}", severeStatuses);
         Optional.ofNullable(domainIntrospectorJob).ifPresent(job -> logIntrospectorFailure(packet, job));
 
         if (!severeStatuses.isEmpty()) {

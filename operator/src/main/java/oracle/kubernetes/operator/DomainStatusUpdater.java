@@ -656,6 +656,9 @@ public class DomainStatusUpdater {
         if (isHasFailedPod()) {
           status.addCondition(new DomainCondition(Failed).withStatus(true).withReason(ServerPod));
         } else {
+          if (status.hasConditionWith(c -> c.hasType(Failed) && ServerPod.name().equals(c.getReason()))) {
+            LOGGER.info("XX removing failed ServerPod condition");
+          }
           status.removeConditionsMatching(c -> c.hasType(Failed) && ServerPod.name().equals(c.getReason()));
           if (newConditions.allIntendedServersReady() && !stillHasPodPendingRestart(status)) {
             status.removeConditionsWithType(ConfigChangesPendingRestart);
@@ -1101,7 +1104,14 @@ public class DomainStatusUpdater {
 
     @Override
     void modifyStatus(DomainStatus status) {
+      if (status.hasConditionWith(c -> hasFailedServerPodCondition(c))) {
+        LOGGER.info("XX removeFailureStep: remove failed conditions");
+      }
       status.removeConditionsWithType(Failed);
+    }
+
+    private boolean hasFailedServerPodCondition(DomainCondition c) {
+      return c.hasType(Failed) && ServerPod.name().equals(c.getReason());
     }
   }
 
