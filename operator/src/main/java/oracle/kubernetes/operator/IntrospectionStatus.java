@@ -75,9 +75,12 @@ public class IntrospectionStatus {
       return new SelectedMessage(pod, waitingMessage, false).createStatusUpdateSteps();
     } else if (initContainerWaitingMessages != null) {
       return new SelectedMessage(pod, initContainerWaitingMessages, false).createStatusUpdateSteps();
+    } else if (isPending(pod)) {
+      LOGGER.info("XXX isPending, pod status {0}", pod.getStatus());
+      return null;
     } else {
       if (isStatusFailed(pod) || isConditionFailed(pod) || isJobPodTimedOut(pod)) {
-        LOGGER.info("XXX else, pod pod is failed or timeout");
+        LOGGER.info("XXX else true, pod is failed or timeout");
       } else {
         LOGGER.info("XXX else, pod status {0}", pod.getStatus());
       }
@@ -116,6 +119,14 @@ public class IntrospectionStatus {
 
   private static String getJobPodStatusReason(V1Pod jobPod) {
     return Optional.ofNullable(jobPod.getStatus()).map(V1PodStatus::getReason).orElse(null);
+  }
+
+  private static String getJobPodStatusPhase(V1Pod jobPod) {
+    return Optional.ofNullable(jobPod.getStatus()).map(V1PodStatus::getPhase).orElse(null);
+  }
+
+  private static boolean isPending(V1Pod jobPod) {
+    return "Pending".equals(getJobPodStatusPhase(jobPod));
   }
 
   private static String getTerminatedMessage(@Nonnull V1Pod pod) {
