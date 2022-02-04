@@ -173,10 +173,17 @@ class PodPresenceTest {
   }
 
   @Test
-  void whenPodPhaseNotFailed_reportNotFailed() {
-    pod.status(new V1PodStatus().phase("Running"));
+  void whenPodPhaseNotFailedAndStatusReadyTrue_reportNotFailed() {
+    pod.status(new V1PodStatus().phase("Running").addConditionsItem(new V1PodCondition().type("Ready").status("True")));
 
     MatcherAssert.assertThat(PodHelper.isFailed(pod), is(false));
+  }
+
+  @Test
+  void whenPodPhaseNotFailedAndStatusReadyFalse_reportFailed() {
+    pod.status(new V1PodStatus().phase("Running"));
+
+    MatcherAssert.assertThat(PodHelper.isFailed(pod), is(true));
   }
 
   @Test

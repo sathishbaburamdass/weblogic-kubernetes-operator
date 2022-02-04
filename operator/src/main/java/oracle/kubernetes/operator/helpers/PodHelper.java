@@ -198,7 +198,7 @@ public class PodHelper {
   public static boolean isFailed(V1Pod pod) {
     V1PodStatus status = pod.getStatus();
     if (status != null) {
-      if ("Failed".equals(status.getPhase())) {
+      if ("Failed".equals(status.getPhase()) || !isReady(pod)) {
         LOGGER.severe(MessageKeys.POD_IS_FAILED, pod.getMetadata().getName());
         return true;
       }
