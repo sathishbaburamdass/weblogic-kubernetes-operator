@@ -24,6 +24,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatus;
+import oracle.kubernetes.operator.IntrospectionStatus;
 import oracle.kubernetes.operator.IntrospectorConfigMapConstants;
 import oracle.kubernetes.operator.JobWatcher;
 import oracle.kubernetes.operator.LabelConstants;
@@ -52,7 +53,6 @@ import static oracle.kubernetes.operator.DomainFailureReason.Introspection;
 import static oracle.kubernetes.operator.DomainProcessorImpl.getExistingDomainPresenceInfo;
 import static oracle.kubernetes.operator.DomainSourceType.FromModel;
 import static oracle.kubernetes.operator.DomainStatusUpdater.createIntrospectionFailureSteps;
-import static oracle.kubernetes.operator.IntrospectionStatus.isImagePullError;
 import static oracle.kubernetes.operator.LabelConstants.INTROSPECTION_DOMAIN_SPEC_GENERATION;
 import static oracle.kubernetes.operator.LabelConstants.INTROSPECTION_STATE_LABEL;
 import static oracle.kubernetes.operator.ProcessingConstants.DOMAIN_INTROSPECTOR_JOB;
@@ -626,13 +626,17 @@ public class JobHelper {
 
         if (jobPod == null) {
           return doContinueListOrNext(callResponse, packet, processIntrospectorPodLog(getNext()));
-        } else if (hasImagePullError(jobPod) || initContainersHaveImagePullError(jobPod) || isJobPodTimedOut(jobPod)) {
+        } else if (isJobFailed(jobPod)) {
           LOGGER.info("XX PodListresponseStep: onSuccess: isTimedOut {0}", isJobPodTimedOut(jobPod));
           return doNext(cleanUpAndReintrospect(getNext()), packet);
         } else {
           recordJobPodName(packet, getName(jobPod));
           return doNext(processIntrospectorPodLog(getNext()), packet);
         }
+      }
+
+      private boolean isJobFailed(V1Pod jobPod) {
+        return hasImagePullError(jobPod) || initContainersHaveImagePullError(jobPod) || isJobPodTimedOut(jobPod);
       }
 
       private boolean isJobPodTimedOut(V1Pod jobPod) {
@@ -658,7 +662,7 @@ public class JobHelper {
 
       private boolean hasImagePullError(V1Pod pod) {
         return Optional.ofNullable(getJobPodContainerWaitingReason(pod))
-              .map(reason -> isImagePullError(reason))
+              .map(IntrospectionStatus::isImagePullError)
               .orElse(false);
       }
 
@@ -675,7 +679,7 @@ public class JobHelper {
                         .map(V1ContainerStatus::getState)
                         .map(V1ContainerState::getWaiting).filter(Objects::nonNull)
                         .map(V1ContainerStateWaiting::getReason)
-                        .anyMatch(reason -> isImagePullError(reason)))
+                        .anyMatch(IntrospectionStatus::isImagePullError))
                 .orElse(false);
 
       }

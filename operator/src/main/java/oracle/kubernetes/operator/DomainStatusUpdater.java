@@ -32,6 +32,7 @@ import oracle.kubernetes.operator.helpers.CallBuilder;
 import oracle.kubernetes.operator.helpers.DomainPresenceInfo;
 import oracle.kubernetes.operator.helpers.EventHelper;
 import oracle.kubernetes.operator.helpers.EventHelper.EventData;
+import oracle.kubernetes.operator.helpers.KubernetesUtils;
 import oracle.kubernetes.operator.helpers.PodHelper;
 import oracle.kubernetes.operator.helpers.ResponseStep;
 import oracle.kubernetes.operator.logging.LoggingFacade;
@@ -67,6 +68,7 @@ import static oracle.kubernetes.operator.DomainFailureReason.Kubernetes;
 import static oracle.kubernetes.operator.DomainFailureReason.ReplicasTooHigh;
 import static oracle.kubernetes.operator.DomainFailureReason.ServerPod;
 import static oracle.kubernetes.operator.DomainFailureReason.TopologyMismatch;
+import static oracle.kubernetes.operator.DomainProcessorImpl.getExistingDomainPresenceInfo;
 import static oracle.kubernetes.operator.LabelConstants.CLUSTERNAME_LABEL;
 import static oracle.kubernetes.operator.LabelConstants.TO_BE_ROLLED_LABEL;
 import static oracle.kubernetes.operator.MIINonDynamicChangesMethod.CommitUpdateOnly;
@@ -198,7 +200,9 @@ public class DomainStatusUpdater {
    *
    */
   public static Step createAbortedFailureSteps() {
-    return createEventStep(new EventData(DOMAIN_FAILED, INTROSPECTOR_MAX_ERRORS_EXCEEDED).failureReason(Aborted));
+    String message = exceededMaxRetryCountErrorMessage();
+    return Step.chain(createFailedStep(Aborted, message),
+        createEventStep(new EventData(DOMAIN_FAILED, message).failureReason(Aborted)));
   }
 
 
@@ -225,20 +229,6 @@ public class DomainStatusUpdater {
   }
 
   /**
-   * Asynchronous steps to set Domain condition to Failed, increment the introspector failure count if needed
-   * and to generate DOMAIN_FAILED event.
-   *
-   * @param message               a fuller description of the problem
-   * @param domainIntrospectorJob Domain introspector job
-   */
-  public static Step createIntrospectionFailureSteps(String message,
-                                                     V1Job domainIntrospectorJob) {
-    return Step.chain(new FailedStep(Introspection, message),
-        createFailureCountStep(domainIntrospectorJob),
-        createEventStep(new EventData(DOMAIN_FAILED, message).failureReason(Introspection)));
-  }
-
-  /**
    * Asynchronous steps to set Domain condition to Failed, will not increment the introspector failure count
    * and to generate DOMAIN_FAILED event.
    *
@@ -249,6 +239,48 @@ public class DomainStatusUpdater {
         Step.chain(
             new FailedStep(Introspection, message),
             createEventStep(new EventData(DOMAIN_FAILED, message).failureReason(Introspection)));
+  }
+
+  /**
+   * Asynchronous steps to set Domain condition to Failed, increment the introspector failure count if needed
+   * and to generate DOMAIN_FAILED event.
+   *
+   * @param message               a fuller description of the problem
+   * @param domainIntrospectorJob Domain introspector job
+   */
+  public static Step createIntrospectionFailureSteps(String message,
+                                                     V1Job domainIntrospectorJob) {
+    if (exceededMaximumRetries(domainIntrospectorJob)) {
+      return createAbortedFailureSteps();
+    }
+    return Step.chain(new FailedStep(Introspection, message), createFailureCountStep(domainIntrospectorJob),
+        createEventStep(new EventData(DOMAIN_FAILED, message).failureReason(Introspection)));
+  }
+
+  private static boolean exceededMaximumRetries(V1Job job) {
+    if (getJobDomainUid(job) == null) {
+      return false;
+    }
+    DomainPresenceInfo existing = getExistingDomainPresenceInfo(getJobNamespace(job), getJobDomainUid(job));
+
+    return getCurrentIntrospectFailureRetryCount(existing)
+        > DomainPresence.getDomainPresenceFailureRetryMaxCount();
+  }
+
+  private static String getJobNamespace(V1Job job) {
+    return Optional.ofNullable(job).map(V1Job::getMetadata).map(V1ObjectMeta::getNamespace).orElse("");
+  }
+
+  private static String getJobDomainUid(V1Job job) {
+    return KubernetesUtils.getDomainUidLabel(Optional.ofNullable(job).map(V1Job::getMetadata).orElse(null));
+  }
+
+  private static Integer getCurrentIntrospectFailureRetryCount(DomainPresenceInfo info) {
+    return Optional.ofNullable(info)
+        .map(DomainPresenceInfo::getDomain)
+        .map(Domain::getStatus)
+        .map(DomainStatus::getIntrospectJobFailureCount)
+        .orElse(0);
   }
 
   public static Step createFailureCountStep(V1Job domainIntrospectorJob) {
@@ -304,9 +336,10 @@ public class DomainStatusUpdater {
           .map(m -> m.contains(FATAL_INTROSPECTOR_ERROR)).orElse(false);
     }
 
-    private String exceededMaxRetryCountErrorMessage() {
-      return LOGGER.formatMessage(INTROSPECTOR_MAX_ERRORS_EXCEEDED, getFailureRetryMaxCount());
-    }
+  }
+
+  private static String exceededMaxRetryCountErrorMessage() {
+    return LOGGER.formatMessage(INTROSPECTOR_MAX_ERRORS_EXCEEDED, getFailureRetryMaxCount());
   }
 
   private static int getFailureRetryMaxCount() {
@@ -1104,7 +1137,7 @@ public class DomainStatusUpdater {
 
     @Override
     void modifyStatus(DomainStatus status) {
-      if (status.hasConditionWith(c -> hasFailedServerPodCondition(c))) {
+      if (status.hasConditionWith(this::hasFailedServerPodCondition)) {
         LOGGER.info("XX removeFailureStep: remove failed conditions");
       }
       status.removeConditionsWithType(Failed);

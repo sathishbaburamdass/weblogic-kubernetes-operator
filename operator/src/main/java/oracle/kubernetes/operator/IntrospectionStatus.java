@@ -20,6 +20,7 @@ import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodCondition;
 import io.kubernetes.client.openapi.models.V1PodStatus;
+import oracle.kubernetes.operator.helpers.DomainPresenceInfo;
 import oracle.kubernetes.operator.logging.LoggingFacade;
 import oracle.kubernetes.operator.logging.LoggingFactory;
 import oracle.kubernetes.operator.logging.MessageKeys;
@@ -124,14 +125,6 @@ public class IntrospectionStatus {
     return Optional.ofNullable(jobPod.getStatus()).map(V1PodStatus::getReason).orElse(null);
   }
 
-  private static String getJobPodStatusPhase(V1Pod jobPod) {
-    return Optional.ofNullable(jobPod.getStatus()).map(V1PodStatus::getPhase).orElse(null);
-  }
-
-  private static boolean isPending(V1Pod jobPod) {
-    return "Pending".equals(getJobPodStatusPhase(jobPod));
-  }
-
   private static String getTerminatedMessage(@Nonnull V1Pod pod) {
     return Optional.ofNullable(getIntrospectorStatus(pod))
           .map(V1ContainerStatus::getState)
@@ -200,21 +193,23 @@ public class IntrospectionStatus {
     }
 
     Step createStatusUpdateSteps() {
+      return Optional.ofNullable(getErrorMessage(pod))
+          .map(m -> getCreateFailureStep(createFailureMessage(pod, m)))
+          .orElse(null);
+    }
+
+    private Step getCreateFailureStep(String m) {
       if (isIntrospectorFailure()) {
         LOGGER.info(MessageKeys.INTROSPECTOR_POD_FAILED, getPodName(pod), getPodNamespace(pod), pod.getStatus());
-        return Optional.ofNullable(getErrorMessage(pod))
-            .map(m -> createIntrospectionFailureSteps(createFailureMessage(pod, m), getIntrospectorJob()))
-            .orElse(null);
+        return createIntrospectionFailureSteps(createFailureMessage(pod, m), getIntrospectorJob());
       }
 
-      return Optional.ofNullable(getErrorMessage(pod))
-            .map(m -> DomainStatusUpdater.createServerPodFailureSteps(createFailureMessage(pod, m)))
-            .orElse(null);
+      return DomainStatusUpdater.createServerPodFailureSteps(createFailureMessage(pod, m));
     }
 
     private V1Job getIntrospectorJob() {
       return Optional.ofNullable(getExistingDomainPresenceInfo(getPodNamespace(pod), getPodDomainUid(pod)))
-          .map(j -> j.getJob())
+          .map(DomainPresenceInfo::getJob)
           .orElse(null);
     }
 

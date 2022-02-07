@@ -457,11 +457,11 @@ public class PodHelper {
     // let the pod rolling step update the pod
     Step replaceCurrentPod(V1Pod pod, Step next) {
       labelPodAsNeedingToRoll(pod);
-      deferProcessing(pod, createCyclePodStep(pod, next));
+      deferProcessing(createCyclePodStep(pod, next));
       return createDomainRollStartEventIfNeeded(pod, null);
     }
 
-    private void deferProcessing(V1Pod pod, Step deferredStep) {
+    private void deferProcessing(Step deferredStep) {
       synchronized (packet) {
         Optional.ofNullable(getServersToRoll()).ifPresent(r -> r.put(getServerName(), createRollRequest(deferredStep)));
       }
