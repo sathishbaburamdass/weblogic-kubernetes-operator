@@ -199,7 +199,8 @@ public class PodHelper {
     V1PodStatus status = pod.getStatus();
     LOGGER.info("XX status {0}", status);
     if (status != null) {
-      if ("Failed".equals(status.getPhase()) || !isReady(pod)) {
+      if ("Failed".equals(status.getPhase())) {
+        // if ("Failed".equals(status.getPhase()) || !isReady(pod)) {
         LOGGER.severe(MessageKeys.POD_IS_FAILED, pod.getMetadata().getName());
         return true;
       }

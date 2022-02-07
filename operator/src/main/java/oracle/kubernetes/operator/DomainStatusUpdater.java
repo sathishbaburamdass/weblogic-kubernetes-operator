@@ -653,7 +653,7 @@ public class DomainStatusUpdater {
         Conditions newConditions = new Conditions(status);
         newConditions.apply();
 
-        if (isHasFailedPod()) {
+        if (isHasFailedPod() || newConditions.hasIntendedServersNotReady()) {
           status.addCondition(new DomainCondition(Failed).withStatus(true).withReason(ServerPod));
         } else {
           status.removeConditionsMatching(c -> c.hasType(Failed) && ServerPod.name().equals(c.getReason()));
@@ -754,6 +754,14 @@ public class DomainStatusUpdater {
               && allNonStartedServersAreShutdown()
               && serversMarkedForRoll().isEmpty();
         }
+
+        private boolean hasIntendedServersNotReady() {
+          return haveServerData()
+              && !allStartedServersAreReady()
+              && allNonStartedServersAreShutdown()
+              && serversMarkedForRoll().isEmpty();
+        }
+
 
         private boolean sufficientServersRunning() {
           return atLeastOneApplicationServerStarted() && allNonClusteredServersRunning() && allClustersAvailable();
