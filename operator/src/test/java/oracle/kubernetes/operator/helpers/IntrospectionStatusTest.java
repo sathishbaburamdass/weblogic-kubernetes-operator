@@ -163,7 +163,7 @@ class IntrospectionStatusTest {
     final String message = getMessage();
     createPodModifiedEvent().withCondition(UNSCHEDULABLE, message).dispatch(processor);
 
-    assertThat(getDomain(), hasStatus().withReason("ServerPod").withMessageContaining(JOB_NAME, NS, message));
+    assertThat(getDomain(), hasStatus().withReason("Introspection").withMessageContaining(JOB_NAME, NS, message));
   }
 
   @Test
@@ -203,7 +203,7 @@ class IntrospectionStatusTest {
     final String message = getMessage();
     createPodModifiedEvent().withFailedPhase().withReason(DEADLINE_EXCEEDED).withMessage(message).dispatch(processor);
 
-    assertThat(getDomain(), hasStatus().withReason("ServerPod").withMessageContaining(JOB_NAME, NS, message));
+    assertThat(getDomain(), hasStatus().withReason("Introspection").withMessageContaining(JOB_NAME, NS, message));
   }
 
   @Test
@@ -220,7 +220,7 @@ class IntrospectionStatusTest {
     final String message = getMessage();
     createPodModifiedEvent().withTerminatedState(message).dispatch(processor);
 
-    assertThat(getDomain(), hasStatus().withReason("ServerPod").withMessageContaining(JOB_NAME, NS, message));
+    assertThat(getDomain(), hasStatus().withReason("Introspection").withMessageContaining(JOB_NAME, NS, message));
   }
 
   @Test
@@ -269,7 +269,7 @@ class IntrospectionStatusTest {
     createPodModifiedEvent().withFailedPhase()
           .withReason("Unknown").withMessage(newMessage).dispatch(processor);
 
-    assertThat(getDomain(), hasStatus().withReason("ServerPod").withMessageContaining(JOB_NAME, NS, newMessage));
+    assertThat(getDomain(), hasStatus().withReason("Introspection").withMessageContaining(JOB_NAME, NS, newMessage));
   }
 
   static class IntrospectorJobPodBuilder {

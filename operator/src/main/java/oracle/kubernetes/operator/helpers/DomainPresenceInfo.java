@@ -27,6 +27,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Secret;
@@ -75,6 +76,7 @@ public class DomainPresenceInfo implements PacketComponent {
 
   private final List<String> validationWarnings = Collections.synchronizedList(new ArrayList<>());
   private Map<String, Step.StepAndPacket> serversToRoll = Collections.emptyMap();
+  private V1Job introspectorJob;
 
   /**
    * Create presence for a domain.
@@ -719,6 +721,14 @@ public class DomainPresenceInfo implements PacketComponent {
 
   public void setServersToRoll(Map<String, Step.StepAndPacket> serversToRoll) {
     this.serversToRoll = serversToRoll;
+  }
+
+  public void recordJob(V1Job job) {
+    introspectorJob = job;
+  }
+
+  public V1Job getJob() {
+    return introspectorJob;
   }
 
   /** Details about a specific managed server. */

@@ -50,6 +50,7 @@ import oracle.kubernetes.weblogic.domain.model.ServerEnvVars;
 import oracle.kubernetes.weblogic.domain.model.ServerSpec;
 import org.jetbrains.annotations.Nullable;
 
+import static oracle.kubernetes.operator.DomainProcessorImpl.getExistingDomainPresenceInfo;
 import static oracle.kubernetes.operator.DomainStatusUpdater.createKubernetesFailureSteps;
 import static oracle.kubernetes.utils.OperatorUtils.emptyToNull;
 import static oracle.kubernetes.weblogic.domain.model.IntrospectorJobEnvVars.MII_USE_ONLINE_UPDATE;
@@ -742,6 +743,10 @@ public class JobStepContext extends BasePodStepContext {
       V1Job job = callResponse.getResult();
       if (job != null) {
         packet.put(ProcessingConstants.DOMAIN_INTROSPECTOR_JOB, job);
+        DomainPresenceInfo info = getExistingDomainPresenceInfo(getNamespace(), getDomainUid());
+        if (info != null) {
+          info.recordJob(job);
+        }
       }
       return doNext(packet);
     }

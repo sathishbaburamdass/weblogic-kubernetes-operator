@@ -49,6 +49,7 @@ import oracle.kubernetes.weblogic.domain.model.Server;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static oracle.kubernetes.operator.DomainFailureReason.Introspection;
+import static oracle.kubernetes.operator.DomainProcessorImpl.getExistingDomainPresenceInfo;
 import static oracle.kubernetes.operator.DomainSourceType.FromModel;
 import static oracle.kubernetes.operator.DomainStatusUpdater.createIntrospectionFailureSteps;
 import static oracle.kubernetes.operator.IntrospectionStatus.isImagePullError;
@@ -218,6 +219,10 @@ public class JobHelper {
         V1Job job = (V1Job) callResponse.getResult();
         if ((job != null) && (packet.get(DOMAIN_INTROSPECTOR_JOB) == null)) {
           packet.put(DOMAIN_INTROSPECTOR_JOB, job);
+          DomainPresenceInfo info = getExistingDomainPresenceInfo(getNamespace(), getDomainUid());
+          if (info != null) {
+            info.recordJob(job);
+          }
         }
 
         if (isKnownFailedJob(job) || JobWatcher.isJobTimedOut(job)) {
