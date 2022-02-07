@@ -757,7 +757,7 @@ public class DomainStatusUpdater {
 
         private boolean hasIntendedServersNotReady() {
           return haveServerData()
-              && !allStartedServersAreReady()
+              && hasStartedServersNotReady()
               && allNonStartedServersAreShutdown()
               && serversMarkedForRoll().isEmpty();
         }
@@ -988,6 +988,18 @@ public class DomainStatusUpdater {
 
       private boolean allStartedServersAreReady() {
         return expectedRunningServers.stream().allMatch(this::isReady);
+      }
+
+      private boolean hasStartedServersNotReady() {
+        return hasStartedServersNotRunning() && noPendingServerToRoll();
+      }
+
+      private boolean noPendingServerToRoll() {
+        return expectedRunningServers.stream().allMatch(this::isNotMarkedForRoll);
+      }
+
+      private boolean hasStartedServersNotRunning() {
+        return expectedRunningServers.stream().anyMatch(this::isNotRunning);
       }
 
       private boolean allNonStartedServersAreShutdown() {
