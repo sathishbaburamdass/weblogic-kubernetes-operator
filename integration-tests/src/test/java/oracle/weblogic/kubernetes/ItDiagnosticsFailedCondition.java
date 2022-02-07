@@ -626,7 +626,7 @@ class ItDiagnosticsFailedCondition {
 
       for (int i = 1; i <= replicaCount; i++) {
         String managedServerName = managedServerPrefix + i + "-c1";
-        logger.info("Checking managed server service {0} is created in namespace {1}",
+        logger.info("Checking managed server {0} has been shutdown in namespace {1}",
             managedServerName, domainNamespace);
         PodUtils.checkPodDoesNotExist(managedServerName, domainName, domainNamespace);
       }
