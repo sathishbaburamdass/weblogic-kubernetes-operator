@@ -1087,7 +1087,7 @@ public class DomainProcessorImpl implements DomainProcessor {
 
                   @Override
                   public void onThrowable(Packet packet, Throwable throwable) {
-                    LOGGER.info("XX startFiberIfLastFiberMatches onThrowable is called");
+                    //LOGGER.info("XX startFiberIfLastFiberMatches onThrowable is called");
                     logThrowable(throwable);
                   }
                 });
@@ -1401,7 +1401,7 @@ public class DomainProcessorImpl implements DomainProcessor {
 
       @Override
       public void onThrowable(Packet packet, Throwable throwable) {
-        LOGGER.info("XX CompletionCallbackImpl onThrowable is called");
+        //LOGGER.info("XX CompletionCallbackImpl onThrowable is called");
         logThrowable(throwable);
         loggingFilter.setFiltering(true);
       }

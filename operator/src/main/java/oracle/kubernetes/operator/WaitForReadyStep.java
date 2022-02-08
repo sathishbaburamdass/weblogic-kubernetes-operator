@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import oracle.kubernetes.operator.calls.CallResponse;
 import oracle.kubernetes.operator.helpers.CallBuilder;
@@ -179,10 +180,12 @@ abstract class WaitForReadyStep<T> extends Step {
   @Override
   public final NextAction apply(Packet packet) {
     if (shouldTerminateFiber(initialResource)) {
-      LOGGER.info("XX WaitForReadyStep should terminateFiber");
+      LOGGER.info("XX WaitForReadyStep job should terminateFiber");
       return doTerminate(createTerminationException(initialResource), packet);
     } else if (isReady(initialResource)) {
-      LOGGER.info("XX WaitForReadyStep isReady");
+      if (initialResource instanceof V1Job) {
+        LOGGER.info("XX WaitForReadyStep job isReady, next step {0}", getNext());
+      }
       return doNext(packet);
     }
 
