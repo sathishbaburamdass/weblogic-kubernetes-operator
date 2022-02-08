@@ -793,7 +793,7 @@ public class DomainStatusUpdater {
 
         private boolean allIntendedServersReady() {
           return haveServerData()
-              && allStartedServersAreReady()
+              && allStartedServersAreComplete()
               && allNonStartedServersAreShutdown()
               && serversMarkedForRoll().isEmpty();
         }
@@ -838,7 +838,7 @@ public class DomainStatusUpdater {
         }
 
         boolean isAvailable() {
-          return isClusterIntentionallyShutDown() || sufficientServersRunning();
+          return isClusterIntentionallyShutDown() || sufficientServersReady();
         }
 
         boolean hasTooManyReplicas() {
@@ -853,8 +853,8 @@ public class DomainStatusUpdater {
           return startedServers.isEmpty();
         }
 
-        private boolean sufficientServersRunning() {
-          return numServersRunning() >= getSufficientServerCount();
+        private boolean sufficientServersReady() {
+          return numServersReady() >= getSufficientServerCount();
         }
 
         private long getSufficientServerCount() {
@@ -869,19 +869,14 @@ public class DomainStatusUpdater {
           return getDomain().isAllowReplicasBelowMinDynClusterSize(clusterName) ? 0 : minReplicaCount;
         }
 
-        private long numServersRunning() {
+        private long numServersReady() {
           return startedServers.stream()
-              .map(StatusUpdateContext.this::getRunningState)
-              .filter(this::isRunning)
+              .filter(StatusUpdateContext.this::isServerReady)
               .count();
         }
 
         private int maxUnavailable() {
           return getDomain().getMaxUnavailable(clusterName);
-        }
-
-        private boolean isRunning(String serverState) {
-          return RUNNING_STATE.equals(serverState);
         }
 
         private String createFailureMessage() {
@@ -1021,8 +1016,8 @@ public class DomainStatusUpdater {
             .orElse(Collections.emptyMap());
       }
 
-      private boolean allStartedServersAreReady() {
-        return expectedRunningServers.stream().allMatch(this::isReady);
+      private boolean allStartedServersAreComplete() {
+        return expectedRunningServers.stream().allMatch(this::isServerComplete);
       }
 
       private boolean allNonStartedServersAreShutdown() {
@@ -1046,7 +1041,7 @@ public class DomainStatusUpdater {
       }
 
       private boolean allNonClusteredServersRunning() {
-        return getNonClusteredServers().stream().noneMatch(this::isNotRunning);
+        return getNonClusteredServers().stream().allMatch(this::isServerReady);
       }
 
       private Set<String> serversMarkedForRoll() {
@@ -1070,9 +1065,16 @@ public class DomainStatusUpdater {
         return Optional.ofNullable(scan).map(Scan::getWlsDomainConfig);
       }
 
-      // A server is ready if it is in the running state and does not need to roll to accommodate changes to the domain.
-      private boolean isReady(@Nonnull String serverName) {
-        return RUNNING_STATE.equals(getRunningState(serverName)) && isNotMarkedForRoll(serverName);
+      // A server is complete if it is ready, is in the WLS running state and
+      // does not need to roll to accommodate changes to the domain.
+      private boolean isServerComplete(@Nonnull String serverName) {
+        return isServerReady(serverName)
+              && isNotMarkedForRoll(serverName);
+      }
+
+      private boolean isServerReady(@Nonnull String serverName) {
+        return RUNNING_STATE.equals(getRunningState(serverName))
+              && PodHelper.getReadyStatus(getInfo().getServerPod(serverName));
       }
 
       // returns true if the server pod does not have a label indicating that it needs to be rolled
@@ -1082,10 +1084,6 @@ public class DomainStatusUpdater {
               .map(V1ObjectMeta::getLabels)
               .map(Map::keySet).orElse(Collections.emptySet()).stream()
               .noneMatch(k -> k.equals(TO_BE_ROLLED_LABEL));
-      }
-
-      private boolean isNotRunning(@Nonnull String serverName) {
-        return !RUNNING_STATE.equals(getRunningState(serverName));
       }
 
       private boolean isShutDown(@Nonnull String serverName) {
