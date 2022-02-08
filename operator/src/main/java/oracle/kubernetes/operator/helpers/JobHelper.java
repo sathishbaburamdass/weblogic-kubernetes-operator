@@ -24,6 +24,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatus;
+import oracle.kubernetes.operator.DomainStatusUpdater;
 import oracle.kubernetes.operator.IntrospectionStatus;
 import oracle.kubernetes.operator.IntrospectorConfigMapConstants;
 import oracle.kubernetes.operator.JobWatcher;
@@ -480,7 +481,8 @@ public class JobHelper {
 
       @Nullable
       private Step getNextStep(Packet packet, V1Job domainIntrospectorJob) {
-        if (isRecheckIntervalExceeded(domainIntrospectorJob)) {
+        if (!DomainStatusUpdater.exceededMaximumRetries(domainIntrospectorJob)
+            && isRecheckIntervalExceeded(domainIntrospectorJob)) {
           packet.put(DOMAIN_INTROSPECT_REQUESTED, INTROSPECTION_FAILED);
           return getNext();
         } else {

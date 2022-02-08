@@ -257,7 +257,14 @@ public class DomainStatusUpdater {
         createEventStep(new EventData(DOMAIN_FAILED, message).failureReason(Introspection)));
   }
 
-  private static boolean exceededMaximumRetries(V1Job job) {
+  /**
+   * Asynchronous steps to set Domain condition to Failed, increment the introspector failure count if needed
+   * and to generate DOMAIN_FAILED event.
+   *
+   * @param job Domain introspector job
+   * @return true if the domain introspector job has exceeded its maximum failure count
+   */
+  public static boolean exceededMaximumRetries(V1Job job) {
     if (getJobDomainUid(job) == null) {
       return false;
     }

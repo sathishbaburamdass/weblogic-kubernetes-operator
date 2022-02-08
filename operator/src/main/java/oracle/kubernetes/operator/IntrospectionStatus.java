@@ -79,16 +79,16 @@ public class IntrospectionStatus {
       return new SelectedMessage(pod, waitingMessage, false).createStatusUpdateSteps();
     } else if (initContainerWaitingMessages != null) {
       return new SelectedMessage(pod, initContainerWaitingMessages, false).createStatusUpdateSteps();
-    //} else if (isPending(pod)) {
-    //  LOGGER.info("XXX isPending, pod status {0}", pod.getStatus());
-    //  return null;
-    } else {
+    } if (!isPendingPhase(pod)) {
       if (isStatusFailed(pod) || isConditionFailed(pod) || isJobPodTimedOut(pod)) {
         LOGGER.info("XXX else true, pod is failed or timeout");
       } else {
         LOGGER.info("XXX else, pod status {0}", pod.getStatus());
       }
       return DomainStatusUpdater.createRemoveFailuresStep();
+    } else {
+        LOGGER.info("XXX isPending, pod status {0}", pod.getStatus());
+        return null;
     }
   }
 
@@ -174,7 +174,14 @@ public class IntrospectionStatus {
 
   private static boolean isReady(@Nonnull V1Pod pod) {
     return Optional.of(pod).map(IntrospectionStatus::getContainerStatus).map(V1ContainerStatus::getReady).orElse(false);
+  }
 
+  private static boolean isPendingPhase(V1Pod jobPod) {
+    return "Pending".equals(getJobPodStatusPhase(jobPod));
+  }
+
+  private static String getJobPodStatusPhase(V1Pod jobPod) {
+    return Optional.ofNullable(jobPod.getStatus()).map(V1PodStatus::getPhase).orElse(null);
   }
 
   private static V1ContainerStatus getContainerStatus(@Nonnull V1Pod pod) {
