@@ -87,8 +87,8 @@ public class IntrospectionStatus {
       }
       return DomainStatusUpdater.createRemoveFailuresStep();
     } else {
-        LOGGER.info("XXX isPending, pod status {0}", pod.getStatus());
-        return null;
+      LOGGER.info("XXX isPending, pod status {0}", pod.getStatus());
+      return null;
     }
   }
 
