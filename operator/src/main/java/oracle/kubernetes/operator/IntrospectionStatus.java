@@ -72,7 +72,8 @@ public class IntrospectionStatus {
       } else {
         LOGGER.info("XXX isReady, pod status {0}", pod.getStatus());
       }
-      return DomainStatusUpdater.createRemoveFailuresStep();
+      //return DomainStatusUpdater.createRemoveFailuresStep();
+      return null;
     } else if (terminatedErrorMessage != null) {
       return new SelectedMessage(pod, terminatedErrorMessage, true).createStatusUpdateSteps();
     } else if (waitingMessage != null) {
@@ -85,7 +86,7 @@ public class IntrospectionStatus {
       } else {
         LOGGER.info("XXX else, pod status {0}", pod.getStatus());
       }
-      return DomainStatusUpdater.createRemoveFailuresStep();
+      return null;
     } else {
       LOGGER.info("XXX isPending, pod status {0}", pod.getStatus());
       return null;

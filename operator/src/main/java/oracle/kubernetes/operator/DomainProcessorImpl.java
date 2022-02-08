@@ -1063,7 +1063,9 @@ public class DomainProcessorImpl implements DomainProcessor {
 
           @Override
           public void onThrowable(Packet packet, Throwable throwable) {
+            LOGGER.info("XX runDomainPlan onThrowable is called");
             logThrowable(throwable);
+
             DomainPresenceInfo existing = getExistingDomainPresenceInfo(ns, domainUid);
             Step failureSteps = createInternalFailureSteps(throwable, packet.getValue(DOMAIN_INTROSPECTOR_JOB));
             if (existing != null) {
@@ -1085,6 +1087,7 @@ public class DomainProcessorImpl implements DomainProcessor {
 
                   @Override
                   public void onThrowable(Packet packet, Throwable throwable) {
+                    LOGGER.info("XX startFiberIfLastFiberMatches onThrowable is called");
                     logThrowable(throwable);
                   }
                 });
@@ -1398,6 +1401,7 @@ public class DomainProcessorImpl implements DomainProcessor {
 
       @Override
       public void onThrowable(Packet packet, Throwable throwable) {
+        LOGGER.info("XX CompletionCallbackImpl onThrowable is called");
         logThrowable(throwable);
         loggingFilter.setFiltering(true);
       }

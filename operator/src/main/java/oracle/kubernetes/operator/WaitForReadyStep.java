@@ -179,8 +179,10 @@ abstract class WaitForReadyStep<T> extends Step {
   @Override
   public final NextAction apply(Packet packet) {
     if (shouldTerminateFiber(initialResource)) {
+      LOGGER.info("XX WaitForReadyStep should terminateFiber");
       return doTerminate(createTerminationException(initialResource), packet);
     } else if (isReady(initialResource)) {
+      LOGGER.info("XX WaitForReadyStep isReady");
       return doNext(packet);
     }
 
@@ -324,6 +326,7 @@ abstract class WaitForReadyStep<T> extends Step {
   private void handleResourceReady(AsyncFiber fiber, Packet packet, T resource) {
     updatePacket(packet, resource);
     if (shouldTerminateFiber(resource)) {
+      LOGGER.info("XX WaitForReadyStep handleResourceReady should terminateFiber");
       fiber.terminate(createTerminationException(resource), packet);
     }
   }

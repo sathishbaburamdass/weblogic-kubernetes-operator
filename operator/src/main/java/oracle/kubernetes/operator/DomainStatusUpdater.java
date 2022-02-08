@@ -1142,7 +1142,8 @@ public class DomainStatusUpdater {
 
     @Override
     void modifyStatus(DomainStatus status) {
-      if (status.hasConditionWith(this::hasFailedServerPodCondition)) {
+      if (status.hasConditionWith(this::hasFailedServerPodCondition)
+          || status.hasConditionWith(this::hasFailedIntrospectionCondition)) {
         LOGGER.info("XX removeFailureStep: remove failed conditions");
       }
       status.removeConditionsWithType(Failed);
@@ -1150,6 +1151,10 @@ public class DomainStatusUpdater {
 
     private boolean hasFailedServerPodCondition(DomainCondition c) {
       return c.hasType(Failed) && ServerPod.name().equals(c.getReason());
+    }
+
+    private boolean hasFailedIntrospectionCondition(DomainCondition c) {
+      return c.hasType(Failed) && Introspection.name().equals(c.getReason());
     }
   }
 
