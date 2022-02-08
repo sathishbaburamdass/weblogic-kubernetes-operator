@@ -1049,6 +1049,10 @@ public class DomainStatusUpdater {
               && isNotMarkedForRoll(serverName);
       }
 
+      private boolean isNotRunning(@Nonnull String serverName) {
+        return !RUNNING_STATE.equals(getRunningState(serverName));
+      }
+
       private boolean isServerReady(@Nonnull String serverName) {
         return RUNNING_STATE.equals(getRunningState(serverName))
               && PodHelper.getReadyStatus(getInfo().getServerPod(serverName));
