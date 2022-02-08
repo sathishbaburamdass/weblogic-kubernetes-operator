@@ -79,7 +79,7 @@ public class IntrospectionStatus {
       return new SelectedMessage(pod, waitingMessage, false).createStatusUpdateSteps();
     } else if (initContainerWaitingMessages != null) {
       return new SelectedMessage(pod, initContainerWaitingMessages, false).createStatusUpdateSteps();
-    } if (!isPendingPhase(pod)) {
+    } else if (!isPendingPhase(pod)) {
       if (isStatusFailed(pod) || isConditionFailed(pod) || isJobPodTimedOut(pod)) {
         LOGGER.info("XXX else true, pod is failed or timeout");
       } else {
