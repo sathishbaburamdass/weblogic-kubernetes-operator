@@ -302,6 +302,11 @@ public class PodWatcher extends Watcher<V1Pod> implements WatchListener<V1Pod>, 
       return result != null && !PodHelper.isDeleting(result) && PodHelper.isReady(result);
     }
 
+    @Override
+    protected boolean isDone(V1Pod result) {
+      return false;
+    }
+
     // Pods should be processed if ready.
     @Override
     boolean shouldProcessCallback(V1Pod resource) {
@@ -345,6 +350,11 @@ public class PodWatcher extends Watcher<V1Pod> implements WatchListener<V1Pod>, 
     @Override
     protected boolean isReady(V1Pod result) {
       return result == null;
+    }
+
+    @Override
+    protected boolean isDone(V1Pod result) {
+      return false;
     }
 
     @Override

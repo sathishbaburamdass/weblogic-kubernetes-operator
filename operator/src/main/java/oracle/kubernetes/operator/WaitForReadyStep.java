@@ -88,6 +88,8 @@ abstract class WaitForReadyStep<T> extends Step {
    */
   abstract boolean isReady(T resource);
 
+  protected abstract boolean isDone(T initialResource);
+
   /**
    * Returns true if the cached resource is not found during periodic listing.
    * @param cachedResource cached resource to check
@@ -182,6 +184,8 @@ abstract class WaitForReadyStep<T> extends Step {
     if (shouldTerminateFiber(initialResource)) {
       LOGGER.info("XX WaitForReadyStep job should terminateFiber");
       return doTerminate(createTerminationException(initialResource), packet);
+    } else if (isDone(initialResource)) {
+      return doNext(Step.chain(createRemoveFailuresStepIfNeeded(packet), getNext()), packet);
     } else if (isReady(initialResource)) {
       if (initialResource instanceof V1Job) {
         LOGGER.info("XX WaitForReadyStep job isReady, next step {0}", getNext());
@@ -191,6 +195,10 @@ abstract class WaitForReadyStep<T> extends Step {
 
     logWaiting(getResourceName());
     return doSuspend((fiber) -> resumeWhenReady(packet, fiber));
+  }
+
+  private Step createRemoveFailuresStepIfNeeded(Packet packet) {
+    return packet.getSpi(DomainPresenceInfo.class) != null ? DomainStatusUpdater.createRemoveFailuresStep() : null;
   }
 
   // Registers a callback for updates to the specified resource and

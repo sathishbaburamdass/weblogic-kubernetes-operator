@@ -255,6 +255,12 @@ public class JobWatcher extends Watcher<V1Job> implements WatchListener<V1Job>, 
       return isComplete(job) || isFailed(job);
     }
 
+    // A job is considered done once it has successfully completed.
+    @Override
+    public boolean isDone(V1Job job) {
+      return isComplete(job);
+    }
+
     @Override
     boolean onReadNotFoundForCachedResource(V1Job cachedJob, boolean isNotFoundOnRead) {
       return false;
