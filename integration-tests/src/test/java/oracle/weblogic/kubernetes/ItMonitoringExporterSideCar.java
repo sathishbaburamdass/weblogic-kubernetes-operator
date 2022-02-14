@@ -31,7 +31,6 @@ import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import static oracle.weblogic.kubernetes.TestConstants.GRAFANA_CHART_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.K8S_NODEPORT_HOST;
-import static oracle.weblogic.kubernetes.TestConstants.OCIR_SECRET_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.OKD;
 import static oracle.weblogic.kubernetes.TestConstants.PROMETHEUS_CHART_VERSION;
 import static oracle.weblogic.kubernetes.TestConstants.RESULTS_ROOT;
@@ -46,9 +45,7 @@ import static oracle.weblogic.kubernetes.actions.impl.primitive.Kubernetes.delet
 import static oracle.weblogic.kubernetes.actions.impl.primitive.Kubernetes.getDomainCustomResource;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.generateNewModelFileWithUpdatedDomainUid;
-import static oracle.weblogic.kubernetes.utils.CommonTestUtils.getDockerExtraArgs;
 import static oracle.weblogic.kubernetes.utils.FileUtils.replaceStringInFile;
-import static oracle.weblogic.kubernetes.utils.ImageUtils.createImageAndPushToRepo;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createMiiImageAndVerify;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.dockerLoginAndPushImageToRegistry;
 import static oracle.weblogic.kubernetes.utils.LoadBalancerUtils.installAndVerifyNginx;
