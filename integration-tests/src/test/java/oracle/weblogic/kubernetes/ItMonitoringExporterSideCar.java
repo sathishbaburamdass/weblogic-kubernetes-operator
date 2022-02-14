@@ -178,9 +178,13 @@ class ItMonitoringExporterSideCar {
     installMonitoringExporter(monitoringExporterDir);
     assertDoesNotThrow(() -> replaceStringInFile(monitoringExporterEndToEndDir + "/grafana/values.yaml",
         "pvc-grafana", "pvc-" + grafanaReleaseName));
+    /*
     exporterImage = assertDoesNotThrow(() -> createImageAndPushToRepo(monitoringExporterSrcDir, "exporter",
         domain1Namespace, OCIR_SECRET_NAME, getDockerExtraArgs()),
         "Failed to create image for exporter");
+
+     */
+    exporterImage = "ghcr.io/oracle/weblogic-monitoring-exporter:2.0.4";
     if (!OKD) {
       // install and verify NGINX
       nginxHelmParams = installAndVerifyNginx(nginxNamespace, 0, 0);
