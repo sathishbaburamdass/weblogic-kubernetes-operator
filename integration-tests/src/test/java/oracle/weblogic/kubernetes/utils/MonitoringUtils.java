@@ -722,7 +722,7 @@ public class MonitoringUtils {
 
       String imagePullPolicy = "IfNotPresent";
       domain.getSpec().monitoringExporter(new MonitoringExporterSpecification()
-          .image(exporterImage)
+          //.image(exporterImage)
           .imagePullPolicy(imagePullPolicy)
           .configuration(contents));
 
