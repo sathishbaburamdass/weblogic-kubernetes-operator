@@ -1,4 +1,4 @@
-// Copyright (c) 2021, 2022, Oracle and/or its affiliates.
+// Copyright (c) 2021, Oracle and/or its affiliates.
 // Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 package oracle.weblogic.kubernetes.utils;
@@ -94,7 +94,7 @@ public class OKDUtils {
 
       String hostName = result.stdout();
       getLogger().info("route hostname = {0}", hostName);
-
+  
       return hostName;
     } else {
       return null;
@@ -142,7 +142,7 @@ public class OKDUtils {
    * @param routeName name of the route
    * @param namespace namespace where the route is created
    */
-  public static void setTlsEdgeTerminationForRoute(String routeName, String namespace,
+  public static void setTlsEdgeTerminationForRoute(String routeName, String namespace, 
                                                    Path keyFile, Path certFile) throws IOException {
     if (OKD) {
       String tlsKey = Files.readString(keyFile);
@@ -152,8 +152,8 @@ public class OKDUtils {
       // Remove the last \n from the String above
       tlsCert = tlsCert.replaceAll("[\n\r]$", "");
       String command = "oc -n " + namespace + " patch route " + routeName
-          + " --patch '{\"spec\": {\"tls\": {\"termination\": \"edge\","
-                                          + "\"key\": \"" + tlsKey + "\","
+          + " --patch '{\"spec\": {\"tls\": {\"termination\": \"edge\"," 
+                                          + "\"key\": \"" + tlsKey + "\","  
                                           + "\"certificate\": \"" + tlsCert + "\"}}}'";
 
       ExecResult result = Command.withParams(
@@ -180,9 +180,9 @@ public class OKDUtils {
     }
   }
 
-  /**
+  /** 
    * Sets the target port of the route.
-   *
+   * 
    * @param routeName  name of the route
    * @param namespace namespace where the route is created
    * @param port target port
@@ -231,9 +231,9 @@ public class OKDUtils {
     }
 
     boolean exists =
-        result != null
-         && result.exitValue() == 0
-         && result.stdout() != null
+        result != null 
+         && result.exitValue() == 0 
+         && result.stdout() != null 
          && result.stdout().contains(routeName);
 
     return exists;

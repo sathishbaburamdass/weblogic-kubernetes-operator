@@ -64,6 +64,9 @@ public class WitParams {
   // Whether the output of the command is redirected to system out
   private boolean redirect;
 
+  // Custom WDT model home
+  private String target;
+
   // Path to a file with additional build commands
   private String additionalBuildCommands;
 
@@ -238,5 +241,14 @@ public class WitParams {
 
   public String additionalBuildFiles() {
     return additionalBuildFiles;
+  }
+
+  public WitParams target(String target) {
+    this.target = target;
+    return this;
+  }
+
+  public String target() {
+    return target;
   }
 }
