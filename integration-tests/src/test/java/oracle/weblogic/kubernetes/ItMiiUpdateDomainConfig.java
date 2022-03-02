@@ -95,6 +95,7 @@ import static oracle.weblogic.kubernetes.utils.FileUtils.copyFileToPod;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createOcirRepoSecret;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createSecretForBaseImages;
 import static oracle.weblogic.kubernetes.utils.JobUtils.createJobAndWaitUntilComplete;
+import static oracle.weblogic.kubernetes.utils.OKDUtils.createRouteForOKD;
 import static oracle.weblogic.kubernetes.utils.OperatorUtils.installAndVerifyOperator;
 import static oracle.weblogic.kubernetes.utils.PersistentVolumeUtils.createPV;
 import static oracle.weblogic.kubernetes.utils.PersistentVolumeUtils.createPVC;
@@ -140,6 +141,7 @@ class ItMiiUpdateDomainConfig {
   private final String managedServerPrefix = domainUid + "-managed-server";
   private final String adminServerName = "admin-server";
   private final String clusterName = "cluster-1";
+  private String adminSvcExtHost = null;
 
   private static LoggingFacade logger = null;
 
@@ -244,6 +246,12 @@ class ItMiiUpdateDomainConfig {
       logger.info("Wait for managed server services and pods are created in namespace {0}",
           domainNamespace);
       checkPodReadyAndServiceExists(managedServerPrefix + i, domainUid, domainNamespace);
+    }
+
+    // In OKD env, adminServers' external service nodeport cannot be accessed directly.
+    // We have to create a route for the admins server external service.
+    if ((adminSvcExtHost == null)) {
+      adminSvcExtHost = createRouteForOKD(getExternalServicePodName(adminServerPodName), domainNamespace);
     }
   }
 
@@ -715,7 +723,7 @@ class ItMiiUpdateDomainConfig {
   @Order(9)
   @DisplayName("Change the WebLogic Admin credential of the domain")
   void testMiiUpdateWebLogicCredential() {
-    verifyUpdateWebLogicCredential(domainNamespace, domainUid, adminServerPodName,
+    verifyUpdateWebLogicCredential(adminSvcExtHost, domainNamespace, domainUid, adminServerPodName,
         managedServerPrefix, replicaCount);
   }
 
