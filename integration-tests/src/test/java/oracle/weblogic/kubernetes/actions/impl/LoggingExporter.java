@@ -37,6 +37,7 @@ import oracle.weblogic.kubernetes.utils.FileUtils;
 import static oracle.weblogic.kubernetes.TestConstants.COPY_WLS_LOGGING_EXPORTER_FILE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.ELASTICSEARCH_HOST;
 import static oracle.weblogic.kubernetes.TestConstants.ELASTICSEARCH_HTTP_PORT;
+import static oracle.weblogic.kubernetes.TestConstants.ELKSTACK_NAMESPACE;
 import static oracle.weblogic.kubernetes.TestConstants.KIBANA_INDEX_KEY;
 import static oracle.weblogic.kubernetes.TestConstants.OPERATOR_RELEASE_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.WLS_LOGGING_EXPORTER_YAML_FILE_NAME;
@@ -237,16 +238,16 @@ public class LoggingExporter {
    *
    * @param namespace namespace of Operator pod (for ELK Stack) or
    *                  WebLogic server pod (for WebLogic Logging Exporter)
-   * @param labelSelector string containing the labels the Operator or WebLogic server is decorated with
+   * @param elkStackNamespace namespace of ELK Stack pod
    * @param index key word used to search the index status of the logging exporter
    * @return a map containing key and value pair of logging exporter index
    */
   public static Map<String, String> verifyLoggingExporterReady(String namespace,
-                                                               String labelSelector,
+                                                               String elkStackNamespace,
                                                                String index) {
     // Get index status info
     String statusLine =
-        execLoggingExpStatusCheck(namespace, labelSelector, "*" + index + "*");
+        execLoggingExpStatusCheck(namespace, elkStackNamespace,"*" + index + "*");
     assertNotNull(statusLine);
 
     String [] parseString = statusLine.split("\\s+");
@@ -475,10 +476,16 @@ public class LoggingExporter {
     return elasticsearchService;
   }
 
-  private static String execLoggingExpStatusCheck(String namespace, String labelSelector, String indexRegex) {
+  private static String execLoggingExpStatusCheck(String opNamespace,
+                                                  String elkStackNamespace,
+                                                  String indexRegex) {
     StringBuffer k8sExecCmdPrefixBuff = new StringBuffer("curl http://");
+
+    String newElkStackSearchHost =
+        (elkStackNamespace == ELKSTACK_NAMESPACE)
+            ? ELASTICSEARCH_HOST : ELASTICSEARCH_HOST.replace("default", elkStackNamespace);
     String cmd = k8sExecCmdPrefixBuff
-        .append(ELASTICSEARCH_HOST)
+        .append(newElkStackSearchHost)
         .append(":")
         .append(ELASTICSEARCH_HTTP_PORT)
         .append("/_cat/indices/")
@@ -487,14 +494,14 @@ public class LoggingExporter {
 
     // get Operator pod name
     String operatorPodName = assertDoesNotThrow(
-        () -> getOperatorPodName(OPERATOR_RELEASE_NAME, namespace));
+        () -> getOperatorPodName(OPERATOR_RELEASE_NAME, opNamespace));
     assertTrue(operatorPodName != null && !operatorPodName.isEmpty(), "Failed to get Operator pad name");
 
     int i = 0;
     ExecResult statusLine = null;
     while (i < maxIterationsPod) {
       statusLine = assertDoesNotThrow(
-          () -> execCommand(namespace, operatorPodName, null, true,
+          () -> execCommand(opNamespace, operatorPodName, null, true,
               "/bin/sh", "-c", cmd));
       assertNotNull(statusLine, "curl command returns null");
 
