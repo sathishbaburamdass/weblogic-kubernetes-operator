@@ -22,6 +22,7 @@ import oracle.weblogic.domain.AdminServer;
 import oracle.weblogic.domain.AdminService;
 import oracle.weblogic.domain.Channel;
 import oracle.weblogic.domain.Cluster;
+import oracle.weblogic.domain.ClusterStatus;
 import oracle.weblogic.domain.Configuration;
 import oracle.weblogic.domain.Domain;
 import oracle.weblogic.domain.DomainSpec;
@@ -59,6 +60,7 @@ import static oracle.weblogic.kubernetes.actions.ActionConstants.ITTESTS_DIR;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.MODEL_DIR;
 import static oracle.weblogic.kubernetes.actions.ActionConstants.WORK_DIR;
 import static oracle.weblogic.kubernetes.actions.TestActions.createDomainCustomResource;
+import static oracle.weblogic.kubernetes.actions.TestActions.getDomainCustomResource;
 import static oracle.weblogic.kubernetes.actions.TestActions.getOperatorPodName;
 import static oracle.weblogic.kubernetes.actions.TestActions.getPodCreationTimestamp;
 import static oracle.weblogic.kubernetes.actions.TestActions.getPodLog;
@@ -69,6 +71,7 @@ import static oracle.weblogic.kubernetes.utils.CommonMiiTestUtils.createDomainSe
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkClusterReplicaCountMatches;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.checkPodReadyAndServiceExists;
 import static oracle.weblogic.kubernetes.utils.CommonTestUtils.getNextFreePort;
+import static oracle.weblogic.kubernetes.utils.CommonTestUtils.withStandardRetryPolicy;
 import static oracle.weblogic.kubernetes.utils.ConfigMapUtils.createConfigMapAndVerify;
 import static oracle.weblogic.kubernetes.utils.ExecCommand.exec;
 import static oracle.weblogic.kubernetes.utils.ImageUtils.createOcirRepoSecret;
@@ -1326,9 +1329,6 @@ class ItServerStartPolicy {
   @DisplayName("Scale the configured cluster with scaleCluster.sh script")
   void testConfigClusterScale() {
     int newReplicaCount = 2;
-    //String configServerName = "config-cluster-server" + newReplicaCount;
-    //String configServerPodName = domainUid + "-" + configServerName;
-    //String dynamicServerPodName = domainUid + "-managed-server" + newReplicaCount;
 
     String configServerPodNamePrefix = domainUid + "-config-cluster-server";
     String dynamicServerPodNamePrefix = domainUid + "-managed-server";
@@ -1379,9 +1379,6 @@ class ItServerStartPolicy {
   @DisplayName("Scale the dynamic cluster with scaleCluster.sh script")
   void testDynamicClusterScale() {
     int newReplicaCount = 2;
-    //String dynamicServerName = "managed-server" + newReplicaCount;
-    //String dynamicServerPodName = domainUid + "-" + dynamicServerName;
-    //String configServerPodName = domainUid + "-config-cluster-server" + newReplicaCount;
 
     String dynamicServerPodNamePrefix = domainUid + "-managed-server";
     String configServerPodNamePrefix = domainUid + "-config-cluster-server";
@@ -1447,6 +1444,9 @@ class ItServerStartPolicy {
     // verify that scaleCluster.sh does scale to a required replica number
     assertDoesNotThrow(() -> assertTrue(checkClusterReplicaCountMatches(clusterName,
         domainUid, domainNamespace, replicaNum)));
+
+    // check the domain status cluster ready replicas get updated as expected
+    checkDomainStatusClusterReadyReplicas(domainUid, domainNamespace, clusterName, replicaNum);
 
     // use clusterStatus.sh to verify scaling results
     String result =  assertDoesNotThrow(() ->
@@ -1663,4 +1663,31 @@ class ItServerStartPolicy {
 
     return matcher.find();
   }
+
+  private void checkDomainStatusClusterReadyReplicas(String domainUid,
+                                                     String domainNamespace,
+                                                     String clustername,
+                                                     int readyReplicas) {
+    withStandardRetryPolicy
+        .conditionEvaluationListener(
+            condition -> logger.info("Waiting for domain status cluster readyReplicas matches the expected value "
+                    + "{0}, (elapsed time {1}ms, remaining time {2}ms)",
+                readyReplicas,
+                condition.getElapsedTimeInMS(),
+                condition.getRemainingTimeInMS()))
+        .until(() -> {
+          Domain miidomain = getDomainCustomResource(domainUid, domainNamespace);
+
+          if ((miidomain != null) && (miidomain.getStatus() != null)) {
+            for (ClusterStatus clusterStatus : miidomain.getStatus().getClusters()) {
+              if (clusterStatus.clusterName().equalsIgnoreCase(clustername)
+                  && clusterStatus.getReadyReplicas().intValue() == readyReplicas) {
+                return true;
+              }
+            }
+          }
+          return false;
+        });
+  }
+
 }
