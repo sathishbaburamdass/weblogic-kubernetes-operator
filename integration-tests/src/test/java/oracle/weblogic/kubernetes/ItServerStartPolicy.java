@@ -1680,8 +1680,10 @@ class ItServerStartPolicy {
 
           if ((miidomain != null) && (miidomain.getStatus() != null)) {
             for (ClusterStatus clusterStatus : miidomain.getStatus().getClusters()) {
-              if (clusterStatus.clusterName().equalsIgnoreCase(clustername)
-                  && clusterStatus.getReadyReplicas().intValue() == readyReplicas) {
+              if (clusterStatus.clusterName() != null
+                  && clusterStatus.clusterName().equalsIgnoreCase(clustername)
+                  && clusterStatus.readyReplicas() != null
+                  && clusterStatus.readyReplicas().intValue() == readyReplicas) {
                 return true;
               }
             }
