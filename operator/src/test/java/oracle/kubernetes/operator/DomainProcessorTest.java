@@ -922,8 +922,9 @@ class DomainProcessorTest {
     establishPreviousIntrospection(null);
     jobStatus = createTimedOutStatus();
     domainConfigurator.withIntrospectVersion(NEW_INTROSPECTION_STATE);
+    processorDelegate.setMayRetry(true);
     processor.createMakeRightOperation(new DomainPresenceInfo(newDomain)).interrupt().execute();
-
+    
     executeScheduledRetry();
 
     assertThat(testSupport, hasEvent(DOMAIN_FAILED_EVENT).withMessageContaining(ABORTED_ERROR));
@@ -936,6 +937,7 @@ class DomainProcessorTest {
     establishPreviousIntrospection(null);
     jobStatus = createTimedOutStatus();
     domainConfigurator.withIntrospectVersion(NEW_INTROSPECTION_STATE);
+    processorDelegate.setMayRetry(true);
     processor.createMakeRightOperation(new DomainPresenceInfo(newDomain)).interrupt().execute();
 
     executeScheduledRetry();
