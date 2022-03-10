@@ -71,7 +71,8 @@ public class ManagedServersUpStep extends Step {
 
     if (info.getDomain().isShuttingDown()) {
       insert(steps, createAvailableHookStep());
-      factory.shutdownInfos.add(new ServerShutdownInfo(domainTopology.getAdminServerName(), null));
+      Optional.ofNullable(domainTopology).ifPresent(
+          wlsConfig -> factory.shutdownInfos.add(new ServerShutdownInfo(wlsConfig.getAdminServerName(), null)));
     }
 
     List<ServerShutdownInfo> serversToStop = getServersToStop(info, factory.shutdownInfos);
