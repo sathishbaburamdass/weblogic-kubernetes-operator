@@ -81,8 +81,8 @@ public class ServerStatusReader {
    * @return Step
    */
   @SuppressWarnings("SameParameterValue")
-  static Step createStatusStep(int timeoutSeconds, Step next) {
-    return new StatusUpdateHookStep(timeoutSeconds, next);
+  static Step createStatusStep(int timeoutSeconds) {
+    return new StatusUpdateHookStep(timeoutSeconds, null);
   }
 
   private static class DomainStatusReaderStep extends Step {

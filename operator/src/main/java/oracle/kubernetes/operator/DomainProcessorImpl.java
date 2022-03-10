@@ -1,4 +1,4 @@
-// Copyright (c) 2018, 2021, Oracle and/or its affiliates.
+// Copyright (c) 2018, 2022, Oracle and/or its affiliates.
 // Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 package oracle.kubernetes.operator;
@@ -36,7 +36,6 @@ import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1beta1PodDisruptionBudget;
 import io.kubernetes.client.openapi.models.V1beta1PodDisruptionBudgetList;
 import io.kubernetes.client.util.Watch;
-import oracle.kubernetes.operator.TuningParameters.MainTuning;
 import oracle.kubernetes.operator.calls.FailureStatusSourceException;
 import oracle.kubernetes.operator.helpers.ConfigMapHelper;
 import oracle.kubernetes.operator.helpers.DomainPresenceInfo;
@@ -77,6 +76,7 @@ import oracle.kubernetes.weblogic.domain.model.DomainSpec;
 import oracle.kubernetes.weblogic.domain.model.DomainStatus;
 import oracle.kubernetes.weblogic.domain.model.ServerHealth;
 import oracle.kubernetes.weblogic.domain.model.ServerStatus;
+import org.jetbrains.annotations.NotNull;
 
 import static oracle.kubernetes.operator.LabelConstants.INTROSPECTION_STATE_LABEL;
 import static oracle.kubernetes.operator.ProcessingConstants.DOMAIN_INTROSPECT_REQUESTED;
@@ -627,59 +627,16 @@ public class DomainProcessorImpl implements DomainProcessor {
 
   private void scheduleDomainStatusUpdating(DomainPresenceInfo info) {
     final OncePerMessageLoggingFilter loggingFilter = new OncePerMessageLoggingFilter();
+    final TuningParameters.MainTuning mainTuning = TuningParameters.getInstance().getMainTuning();
 
-    MainTuning main = TuningParameters.getInstance().getMainTuning();
     registerStatusUpdater(
         info.getNamespace(),
         info.getDomainUid(),
         delegate.scheduleWithFixedDelay(
-            () -> {
-              try {
-                Packet packet = new Packet();
-                packet
-                    .getComponents()
-                    .put(
-                        ProcessingConstants.DOMAIN_COMPONENT_NAME,
-                        Component.createFor(
-                            info, delegate.getKubernetesVersion()));
-                packet.put(LoggingFilter.LOGGING_FILTER_PACKET_KEY, loggingFilter);
-                Step strategy =
-                    ServerStatusReader.createStatusStep(main.statusUpdateTimeoutSeconds, null);
-
-                getStatusFiberGate(info.getNamespace())
-                    .startFiberIfNoCurrentFiber(
-                        info.getDomainUid(),
-                        strategy,
-                        packet,
-                        new CompletionCallback() {
-                          @Override
-                          public void onCompletion(Packet packet) {
-                            AtomicInteger serverHealthRead =
-                                packet.getValue(
-                                    ProcessingConstants.REMAINING_SERVERS_HEALTH_TO_READ);
-                            if (serverHealthRead == null || serverHealthRead.get() == 0) {
-                              loggingFilter.setFiltering(false).resetLogHistory();
-                            } else {
-                              loggingFilter.setFiltering(true);
-                            }
-                          }
-
-                          @Override
-                          public void onThrowable(Packet packet, Throwable throwable) {
-                            logThrowable(throwable);
-                            loggingFilter.setFiltering(true);
-                          }
-                        });
-              } catch (Throwable t) {
-                try (LoggingContext ignored
-                         = LoggingContext.setThreadContext()
-                    .namespace(info.getNamespace()).domainUid(info.getDomainUid())) {
-                  LOGGER.severe(MessageKeys.EXCEPTION, t);
-                }
-              }
-            },
-            main.initialShortDelay,
-            main.initialShortDelay,
+              () -> new ScheduledStatusUpdater(info.getNamespace(), info.getDomainUid(), loggingFilter)
+                    .withTimeoutSeconds(mainTuning.statusUpdateTimeoutSeconds).updateStatus(),
+            mainTuning.initialShortDelay,
+            mainTuning.initialShortDelay,
             TimeUnit.SECONDS));
   }
 
@@ -1494,4 +1451,87 @@ public class DomainProcessorImpl implements DomainProcessor {
       return toJobIntrospectorName(domainUid).equals(s.getName());
     }
   }
+
+  private class ScheduledStatusUpdater {
+    private final String namespace;
+    private final String domainUid;
+    private final OncePerMessageLoggingFilter loggingFilter;
+    private int timeoutSeconds;
+
+    ScheduledStatusUpdater withTimeoutSeconds(int timeoutSeconds) {
+      this.timeoutSeconds = timeoutSeconds;
+      return this;
+    }
+
+    public ScheduledStatusUpdater(String namespace, String domainUid, OncePerMessageLoggingFilter loggingFilter) {
+      this.namespace = namespace;
+      this.domainUid = domainUid;
+      this.loggingFilter = loggingFilter;
+    }
+
+    private void updateStatus() {
+      try {
+        Step strategy = Step.chain(new DomainPresenceInfoStep(), ServerStatusReader.createStatusStep(timeoutSeconds));
+
+        getStatusFiberGate(getNamespace())
+              .startFiberIfNoCurrentFiber(getDomainUid(), strategy, createPacket(), new CompletionCallbackImpl());
+      } catch (Throwable t) {
+        try (LoggingContext ignored
+                   = LoggingContext.setThreadContext().namespace(getNamespace()).domainUid(getDomainUid())) {
+          LOGGER.severe(MessageKeys.EXCEPTION, t);
+        }
+      }
+    }
+
+    private String getNamespace() {
+      return namespace;
+    }
+
+    private String getDomainUid() {
+      return domainUid;
+    }
+
+    @NotNull
+    private Packet createPacket() {
+      Packet packet = new Packet();
+      packet
+          .getComponents()
+          .put(
+              ProcessingConstants.DOMAIN_COMPONENT_NAME,
+              Component.createFor(delegate.getKubernetesVersion()));
+      packet.put(LoggingFilter.LOGGING_FILTER_PACKET_KEY, loggingFilter);
+      return packet;
+    }
+
+    private class DomainPresenceInfoStep extends Step {
+      @Override
+      public NextAction apply(Packet packet) {
+        Optional.ofNullable(DOMAINS.get(getNamespace()))
+            .map(n -> n.get(getDomainUid()))
+            .ifPresent(i -> i.addToPacket(packet));
+
+        return doNext(packet);
+      }
+    }
+
+    private class CompletionCallbackImpl implements CompletionCallback {
+
+      @Override
+      public void onCompletion(Packet packet) {
+        AtomicInteger serverHealthRead = packet.getValue(ProcessingConstants.REMAINING_SERVERS_HEALTH_TO_READ);
+        if (serverHealthRead == null || serverHealthRead.get() == 0) {
+          loggingFilter.setFiltering(false).resetLogHistory();
+        } else {
+          loggingFilter.setFiltering(true);
+        }
+      }
+
+      @Override
+      public void onThrowable(Packet packet, Throwable throwable) {
+        logThrowable(throwable);
+        loggingFilter.setFiltering(true);
+      }
+    }
+  }
+
 }
