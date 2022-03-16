@@ -488,7 +488,7 @@ public class DomainStatusUpdater {
 
       @Override
       void modifyStatus(DomainStatus status) {
-        if (getDomain() == null) {
+        if (getDomain() == null || status.getIntrospectJobFailureCount() > 0) {
           return;
         }
 
