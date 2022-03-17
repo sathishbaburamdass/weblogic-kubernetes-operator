@@ -55,7 +55,9 @@ import static oracle.weblogic.kubernetes.TestConstants.OCR_PASSWORD;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_REGISTRY;
 import static oracle.weblogic.kubernetes.TestConstants.OCR_USERNAME;
 import static oracle.weblogic.kubernetes.TestConstants.OKD;
+import static oracle.weblogic.kubernetes.TestConstants.PV_ROOT;
 import static oracle.weblogic.kubernetes.TestConstants.REPO_DUMMY_VALUE;
+import static oracle.weblogic.kubernetes.TestConstants.RESULTS_BASE;
 import static oracle.weblogic.kubernetes.TestConstants.RESULTS_ROOT;
 import static oracle.weblogic.kubernetes.TestConstants.WDT_BASIC_APP_NAME;
 import static oracle.weblogic.kubernetes.TestConstants.WDT_BASIC_IMAGE_DOMAINHOME;
@@ -117,7 +119,8 @@ public class ImageBuilders implements BeforeAllCallback, ExtensionContext.Store.
   @Override
   public void beforeAll(ExtensionContext context) {
     LoggingFacade logger = getLogger();
-
+    logger.info("RESULT_ROOT " + System.getenv("RESULT_ROOT"));
+    logger.info("PV_ROOT " + PV_ROOT + "default = " + RESULTS_BASE + "/pvroot");
     /* The pattern is that we have initialization code that we want to run once to completion
      * before any tests are executed. This method will be called before every test method. Therefore, the
      * very first time this method is called we will do the initialization. Since we assume that the tests

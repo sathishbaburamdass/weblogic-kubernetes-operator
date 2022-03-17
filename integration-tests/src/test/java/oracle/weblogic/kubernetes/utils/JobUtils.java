@@ -182,11 +182,11 @@ public class JobUtils {
       }
     }
 
-    try {
+    /* try {
       Thread.sleep(30 * 60 * 1000);
     } catch (Exception e) {
       logger.info("ignore exception ", e);
-    }
+    } */
   }
 
 }
