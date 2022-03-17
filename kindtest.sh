@@ -201,11 +201,14 @@ esac
 
 echo 'Create registry container unless it already exists'
 running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
-if [ "${running}" != 'true' ]; then
-  docker run \
+if [ "${running}" = 'true' ]; then
+  echo "Stopping the registry container ${registry_name}"
+  docker stop "${registry_name}"
+  docker rm --force "${registry_name}"
+fi
+docker run \
     -d --restart=always -p "127.0.0.1:${reg_port}:5000" --name "${reg_name}" \
     registry:2
-fi
 
 reg_host="${reg_name}"
 if [ "${kind_network}" = "bridge" ]; then
