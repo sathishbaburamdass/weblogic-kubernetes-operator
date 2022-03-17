@@ -184,7 +184,7 @@ public class JobUtils {
 
     try {
       Thread.sleep(30 * 60 * 1000);
-    } catch(Exception e) {
+    } catch (Exception e) {
       logger.info("ignore exception ", e);
     }
   }
