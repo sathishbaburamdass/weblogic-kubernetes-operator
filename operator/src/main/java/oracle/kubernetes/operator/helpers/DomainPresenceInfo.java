@@ -7,9 +7,11 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -67,6 +70,7 @@ public class DomainPresenceInfo {
 
   private final List<String> validationWarnings = Collections.synchronizedList(new ArrayList<>());
   private EventItem lastEventItem;
+  private String adminServerName;
 
   /**
    * Create presence for a domain.
@@ -200,6 +204,13 @@ public class DomainPresenceInfo {
     packet.getComponents().put(DOMAIN_COMPONENT_NAME, Component.createFor(this));
   }
 
+  public String getAdminServerName() {
+    return adminServerName;
+  }
+
+  public void setAdminServerName(String adminServerName) {
+    this.adminServerName = adminServerName;
+  }
 
   /**
    * Specifies the pod associated with an operator-managed server.
@@ -611,7 +622,7 @@ public class DomainPresenceInfo {
    * @return Server startup info
    */
   public Collection<ServerStartupInfo> getServerStartupInfo() {
-    return serverStartupInfo.get();
+    return Optional.ofNullable(serverStartupInfo.get()).orElse(Collections.emptyList());
   }
 
   /**
@@ -673,6 +684,20 @@ public class DomainPresenceInfo {
       return null;
     }
     return String.join(lineSeparator(), validationWarnings);
+  }
+
+  /**
+   * Returns the names of the servers which are supposed to be running.
+   */
+  public Set<String> getExpectedRunningServers() {
+    final Set<String> result = new HashSet<>(getExpectedRunningManagedServers());
+    Optional.ofNullable(adminServerName).ifPresent(result::add);
+    return result;
+  }
+
+  @Nonnull
+  private Set<String> getExpectedRunningManagedServers() {
+    return getServerStartupInfo().stream().map(ServerStartupInfo::getServerName).collect(Collectors.toSet());
   }
 
   /** Details about a specific managed server that will be started up. */

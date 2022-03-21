@@ -398,7 +398,7 @@ public class DomainStatusUpdater {
     private final DomainStatusUpdaterStep domainStatusUpdaterStep;
 
     DomainStatusUpdaterContext(Packet packet, DomainStatusUpdaterStep domainStatusUpdaterStep) {
-      info = packet.getSpi(DomainPresenceInfo.class);
+      info = DomainPresenceInfo.fromPacket(packet).orElseThrow();
       this.domainStatusUpdaterStep = domainStatusUpdaterStep;
     }
 
@@ -474,6 +474,7 @@ public class DomainStatusUpdater {
 
     static class StatusUpdateContext extends DomainStatusUpdaterContext {
       private final WlsDomainConfig config;
+      private final Set<String> expectedRunningServers;
       private final Map<String, String> serverState;
       private final Map<String, ServerHealth> serverHealth;
       private final Packet packet;
@@ -484,6 +485,7 @@ public class DomainStatusUpdater {
         config = packet.getValue(DOMAIN_TOPOLOGY);
         serverState = packet.getValue(SERVER_STATE_MAP);
         serverHealth = packet.getValue(SERVER_HEALTH_MAP);
+        expectedRunningServers = getInfo().getExpectedRunningServers();
       }
 
       @Override
@@ -501,10 +503,13 @@ public class DomainStatusUpdater {
         if (isHasFailedPod()) {
           status.addCondition(new DomainCondition(Failed).withStatus(TRUE).withReason("PodFailed"));
         } else if (allIntendedServersRunning()) {
-          status.addCondition(new DomainCondition(Available).withStatus(TRUE).withReason(SERVERS_READY_REASON));
-          if (!stillHasPodPendingRestart(status)
-              && status.hasConditionWith(c -> c.hasType(ConfigChangesPendingRestart))) {
-            status.removeConditionIf(c -> c.hasType(ConfigChangesPendingRestart));
+          if (allNonStartedServersAreShutdown()) {
+            status.addCondition(
+                new DomainCondition(Available).withStatus(TRUE).withReason(SERVERS_READY_REASON));
+            if (!stillHasPodPendingRestart(status)
+                && status.hasConditionWith(c -> c.hasType(ConfigChangesPendingRestart))) {
+              status.removeConditionIf(c -> c.hasType(ConfigChangesPendingRestart));
+            }
           }
         } else if (!status.hasConditionWith(c -> c.hasType(Progressing))) {
           status.addCondition(new DomainCondition(Progressing).withStatus(TRUE)
@@ -577,6 +582,26 @@ public class DomainStatusUpdater {
             .map(V1Pod::getMetadata)
             .map(V1ObjectMeta::getLabels)
             .orElse(Collections.emptyMap());
+      }
+
+      private boolean allNonStartedServersAreShutdown() {
+        return getNonStartedServersWithState().stream().allMatch(this::isShutDown);
+      }
+
+      private boolean isShutDown(@Nonnull String serverName) {
+        return SHUTDOWN_STATE.equals(getRunningState(serverName));
+      }
+
+      private List<String> getNonStartedServersWithState() {
+        return serverState.keySet().stream().filter(this::isNonStartedServer).collect(Collectors.toList());
+      }
+
+      private boolean isNonStartedServer(String serverName) {
+        return !isStartedServer(serverName);
+      }
+
+      private boolean isStartedServer(String serverName) {
+        return expectedRunningServers.contains(serverName);
       }
 
       private boolean allIntendedServersRunning() {
