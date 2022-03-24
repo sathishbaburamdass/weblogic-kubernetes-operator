@@ -160,7 +160,7 @@ public class DomainStatusUpdater {
       @Override
       List<EventData> createDomainEvents() {
         LOGGER.info("REG-> in StartRollUpdaterContext: "
-              + "domain was" + (getStatus().isRolling() ? "" : " not") + "rolling.");
+              + "domain was" + (getStatus().isRolling() ? "" : " not") + " rolling.");
         final List<EventData> result = new ArrayList<>();
         if (wasNotRolling()) {
           LOGGER.info(DOMAIN_ROLL_START);
@@ -482,6 +482,7 @@ public class DomainStatusUpdater {
       }
       createDomainEvents().stream().map(EventHelper::createEventStep).forEach(result::add);
       Optional.ofNullable(next).ifPresent(result::add);
+      LOGGER.info("REG-> creating steps: " + result);
       return result.isEmpty() ? null : Step.chain(result);
     }
 
