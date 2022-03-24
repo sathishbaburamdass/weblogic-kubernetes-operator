@@ -544,6 +544,7 @@ public class DomainStatusUpdater {
         serverState = packet.getValue(SERVER_STATE_MAP);
         serverHealth = packet.getValue(SERVER_HEALTH_MAP);
         expectedRunningServers = getInfo().getExpectedRunningServers();
+        LOGGER.info("REG-> running status update");
       }
 
       @Override
