@@ -159,6 +159,8 @@ public class DomainStatusUpdater {
       @NotNull
       @Override
       List<EventData> createDomainEvents() {
+        LOGGER.info("REG-> in StartRollUpdaterContext: "
+              + "domain was" + (getStatus().isRolling() ? "" : " not") + "rolling.");
         final List<EventData> result = new ArrayList<>();
         if (wasNotRolling()) {
           LOGGER.info(DOMAIN_ROLL_START);
@@ -426,8 +428,9 @@ public class DomainStatusUpdater {
       return info;
     }
 
+    @NotNull
     DomainStatus getStatus() {
-      return getDomain().getStatus();
+      return getDomain().getOrCreateStatus();
     }
 
     Domain getDomain() {
@@ -443,7 +446,7 @@ public class DomainStatusUpdater {
     }
 
     DomainStatus cloneStatus() {
-      return Optional.ofNullable(getStatus()).map(DomainStatus::new).orElse(new DomainStatus());
+      return Optional.of(getStatus()).map(DomainStatus::new).orElse(new DomainStatus());
     }
 
     private Step createDomainStatusReplaceStep() {
