@@ -9,6 +9,7 @@ import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
@@ -63,11 +64,17 @@ class ItDomainUtilsWLST {
   @BeforeAll
   public static void initAll(@Namespaces(3) List<String> namespaces) {
     try {
-      Process process = Runtime.getRuntime().exec("./deploy_domain.sh");
+      Process process = Runtime.getRuntime().exec("./utils/deploy_domain.sh");
       process.waitFor();
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
     }
 
+  }
+
+  @Test
+  @DisplayName("Create FMW Dynamic Domain in PV")
+  void testFmwDynamicDomainInPV() {
+    System.out.println("sample test");
   }
 }
