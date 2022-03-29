@@ -67,7 +67,7 @@ class ItDomainUtilsWLST {
   public static void initAll(@Namespaces(3) List<String> namespaces) {
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl create ns opt-ns123"))
+                    .command("kubectl create ns inside-INITALL"))
             .execute();
 
   }
@@ -77,11 +77,33 @@ class ItDomainUtilsWLST {
   void testFmwDynamicDomainInPV() {
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl create ns opt-ns123456"))
+                    .command("ls"))
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl create ns opt-saramdas"))
+                    .command("pwd"))
             .execute();
+
+    new Command()
+            .withParams(new CommandParams()
+                    .command("ls /"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("git pull https://github.com/sathishbaburamdass/weblogic-kubernetes-operator.git"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("ls"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("helm version --short"))
+            .execute();
+    try {
+      MINUTES.sleep(300);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }
