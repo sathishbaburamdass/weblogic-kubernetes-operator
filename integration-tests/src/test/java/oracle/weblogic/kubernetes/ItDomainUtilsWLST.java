@@ -79,5 +79,9 @@ class ItDomainUtilsWLST {
             .withParams(new CommandParams()
                     .command("kubectl create ns opt-ns123456"))
             .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl create ns opt-saramdas"))
+            .execute();
   }
 }
