@@ -3,6 +3,8 @@
 
 package oracle.weblogic.kubernetes;
 
+import oracle.weblogic.kubernetes.actions.impl.primitive.Command;
+import oracle.weblogic.kubernetes.actions.impl.primitive.CommandParams;
 import oracle.weblogic.kubernetes.annotations.IntegrationTest;
 import oracle.weblogic.kubernetes.annotations.Namespaces;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
@@ -63,18 +65,19 @@ class ItDomainUtilsWLST {
    */
   @BeforeAll
   public static void initAll(@Namespaces(3) List<String> namespaces) {
-    try {
-      Process process = Runtime.getRuntime().exec("./utils/deploy_domain.sh");
-      process.waitFor();
-    } catch (IOException | InterruptedException e) {
-      e.printStackTrace();
-    }
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl create ns opt-ns123"))
+            .execute();
 
   }
 
   @Test
   @DisplayName("Create FMW Dynamic Domain in PV")
   void testFmwDynamicDomainInPV() {
-    System.out.println("sample test");
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl create ns opt-ns123456"))
+            .execute();
   }
 }
