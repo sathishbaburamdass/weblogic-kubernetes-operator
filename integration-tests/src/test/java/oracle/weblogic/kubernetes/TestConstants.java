@@ -19,6 +19,10 @@ public interface TestConstants {
   public static final String ADMIN_SERVER_NAME_BASE = "admin-server";
   public static final String MANAGED_SERVER_NAME_BASE = "managed-server";
   public static final String WLS_DOMAIN_TYPE = "WLS";
+  public static final String FMW_DOMAIN_TYPE = Optional.ofNullable(System.getenv("FMW_DOMAIN_TYPE"))
+          .orElse("fmw");
+  public static Boolean IS_UPPERSTACK = Boolean.parseBoolean(Optional.ofNullable(System.getenv("IS_UPPERSTACK"))
+          .orElse("false"));
   public static final String WLS_DEFAULT_CHANNEL_NAME = "default";
   public static final String DEFAULT_WLS_IMAGE_TAGS = "12.2.1.3, 12.2.1.4, 14.1.1.0-11";
 

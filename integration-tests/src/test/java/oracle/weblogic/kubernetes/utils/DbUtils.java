@@ -36,6 +36,7 @@ import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import oracle.weblogic.kubernetes.TestConstants;
 import oracle.weblogic.kubernetes.actions.impl.primitive.Command;
 import oracle.weblogic.kubernetes.actions.impl.primitive.CommandParams;
 import oracle.weblogic.kubernetes.actions.impl.primitive.Kubernetes;
@@ -69,7 +70,8 @@ public class DbUtils {
 
   private static final String CREATE_REPOSITORY_SCRIPT = "createRepository.sh";
   private static final String PASSWORD_FILE = "pwd.txt";
-  private static final String RCUTYPE = "fmw";
+  //private static final String RCUTYPE = "fmw";
+  private static final String RCUTYPE = TestConstants.FMW_DOMAIN_TYPE;
   private static final String RCUPODNAME = "rcu";
   private static final String SYSPASSWORD = "Oradoc_db1";
 

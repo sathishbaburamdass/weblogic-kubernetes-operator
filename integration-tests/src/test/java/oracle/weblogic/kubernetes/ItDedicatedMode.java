@@ -125,6 +125,10 @@ class ItDedicatedMode {
         .withParams(new CommandParams()
             .command("kubectl delete crd domains.weblogic.oracle --ignore-not-found"))
         .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl create ns opt-ns123"))
+            .execute();
 
     // install CRD
     String createCrdCommand = "kubectl create -f " + ITTESTS_DIR + "/../kubernetes/crd/" + CRD_V16;
