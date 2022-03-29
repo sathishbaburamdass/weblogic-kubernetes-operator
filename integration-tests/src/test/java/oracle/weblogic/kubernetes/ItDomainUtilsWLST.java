@@ -50,11 +50,11 @@ class ItDomainUtilsWLST {
   private static int t3ChannelPort = 0;
 
   // create standard, reusable retry/backoff policy
-  private static final ConditionFactory withStandardRetryPolicy
+  /*private static final ConditionFactory withStandardRetryPolicy
           = with().pollDelay(2, SECONDS)
           .and().with().pollInterval(10, SECONDS)
           .atMost(5, MINUTES).await();
-
+*/
   /**
    * Start DB service and create RCU schema.
    * Assigns unique namespaces for operator and domains.
@@ -63,14 +63,14 @@ class ItDomainUtilsWLST {
    *
    * @param namespaces injected by JUnit
    */
-  @BeforeAll
+  /*@BeforeAll
   public static void initAll(@Namespaces(3) List<String> namespaces) {
     new Command()
             .withParams(new CommandParams()
                     .command("kubectl create ns inside-initall"))
             .execute();
 
-  }
+  }*/
 
   @Test
   @DisplayName("Create FMW Dynamic Domain in PV")
@@ -94,22 +94,27 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
+                    .command("rm -rf /home/opc/intg-test/workspace && mkdir /home/opc/intg-test/workspace && chmod -R 777 /home/opc/intg-test/workspace"))
+            .execute();
+
+    new Command()
+            .withParams(new CommandParams()
                     .command("cd /home/opc/intg-test/workspace"))
             .execute();
 
     new Command()
             .withParams(new CommandParams()
-                    .command("git pull https://github.com/sathishbaburamdass/weblogic-kubernetes-operator.git"))
+                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git"))
             .execute();
     new Command()
             .withParams(new CommandParams()
                     .command("ls"))
             .execute();
 
-    try {
+    /*try {
       MINUTES.sleep(300);
     } catch (InterruptedException e) {
       e.printStackTrace();
-    }
+    }*/
   }
 }
