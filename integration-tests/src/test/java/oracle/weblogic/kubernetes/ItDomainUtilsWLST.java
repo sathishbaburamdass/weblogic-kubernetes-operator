@@ -90,16 +90,22 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
+                    .command("helm version --short"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("cd /home/opc/intg-test/workspace"))
+            .execute();
+
+    new Command()
+            .withParams(new CommandParams()
                     .command("git pull https://github.com/sathishbaburamdass/weblogic-kubernetes-operator.git"))
             .execute();
     new Command()
             .withParams(new CommandParams()
                     .command("ls"))
             .execute();
-    new Command()
-            .withParams(new CommandParams()
-                    .command("helm version --short"))
-            .execute();
+
     try {
       MINUTES.sleep(300);
     } catch (InterruptedException e) {
