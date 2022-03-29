@@ -67,7 +67,7 @@ class ItDomainUtilsWLST {
   public static void initAll(@Namespaces(3) List<String> namespaces) {
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl create ns inside-INITALL"))
+                    .command("kubectl create ns inside-initall"))
             .execute();
 
   }
