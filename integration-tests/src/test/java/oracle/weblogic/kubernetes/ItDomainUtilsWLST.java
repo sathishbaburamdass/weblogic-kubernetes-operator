@@ -106,17 +106,24 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl delete RoleBinding weblogic-operator-rolebinding-namespace -n opns && kubectl delete crd domains.weblogic.oracle"))
+                    .command("cd /home/opc/intg-test/workspace && mv -f FMW-DockerImages fmwsamples_bkup && mkdir /home/opc/intg-test/workspace/fmwsamples && cd fmwsamples && mkdir -p OracleSOASuite/kubernetes/3.3.0"))
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain && kubectl create serviceaccount -n soa-opns  op-sa"))
+                    .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/charts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/common /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-soa-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/rest /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/scaling OracleSOASuite/kubernetes/3.3.0/"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl delete RoleBinding crb-default-sa-soa-opns -n soa-opns && kubectl delete crd domains.weblogic.oracle && kubectl delete ns soa-opns && kubectl delete ns soa-domain"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain && kubectl create clusterrolebinding crb-default-sa-soa-opns --clusterrole=cluster-admin --serviceaccount=soa-opns:default"))
             .execute();
 
     new Command()
             .withParams(new CommandParams()
-                    .command("helm install weblogic-kubernetes-operator /home/opc/intg-test/workspace/weblogic-kubernetes-operator  --namespace soa-opns  --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0  --set serviceAccount=op-sa --set \"domainNamespaces={}\" --set \"javaLoggingLevel=FINE\" --wait")
-            )
+                    .command("helm install op-intg-test /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/weblogic-operator --namespace soa-opns --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0 --wait"))
             .execute();
 
 
