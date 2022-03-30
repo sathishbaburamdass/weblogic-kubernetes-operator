@@ -94,24 +94,28 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("rm -rf /home/opc/intg-test/workspace && mkdir /home/opc/intg-test/workspace && chmod -R 777 /home/opc/intg-test/workspace"))
+                    .command("rm -rf /home/opc/intg-test/workspace && mkdir -p /home/opc/intg-test/workspace/FMW-DockerImages && mkdir -p /home/opc/intg-test/workspace/weblogic-kubernetes-operator && chmod -R 777 /home/opc/intg-test/workspace"))
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git /home/opc/intg-test/workspace"))
+                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git /home/opc/intg-test/workspace/FMW-DockerImages"))
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace"))
+                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace/weblogic-kubernetes-operator"))
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl delete RoleBinding weblogic-operator-rolebinding-namespace -n opns && kubectl delete crd domains.weblogic.oracle && kubectl create ns soa-opns && kubectl create ns soa-domain"))
+                    .command("kubectl delete RoleBinding weblogic-operator-rolebinding-namespace -n opns && kubectl delete crd domains.weblogic.oracle"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain"))
             .execute();
 
     new Command()
             .withParams(new CommandParams()
-                    .command("helm install /home/opc/intg-test/workspace/weblogic-kubernetes-operator  --namespace soa-opns  --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0  --set serviceAccount=op-sa --set \"domainNamespaces={}\" --set \"javaLoggingLevel=FINE\" --wait")
+                    .command("helm install weblogic-kubernetes-operator /home/opc/intg-test/workspace/weblogic-kubernetes-operator  --namespace soa-opns  --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0  --set serviceAccount=op-sa --set \"domainNamespaces={}\" --set \"javaLoggingLevel=FINE\" --wait")
             )
             .execute();
 
