@@ -61,7 +61,7 @@ class ItDomainUtilsWLST {
    * Pull FMW image and Oracle DB image if running tests in Kind cluster.
    * Installs operator.
    *
-   * @param namespaces injected by JUnit
+   * @param //namespaces injected by JUnit
    */
   /*@BeforeAll
   public static void initAll(@Namespaces(3) List<String> namespaces) {
@@ -99,13 +99,22 @@ class ItDomainUtilsWLST {
 
     new Command()
             .withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace"))
+                    .command("cd /home/opc/intg-test/workspace")
+                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git")
+                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git")
+                    .command("kubectl delete RoleBinding weblogic-operator-rolebinding-namespace -n opns")
+                    .command("git clone kubectl delete crd domains.weblogic.oracle")
+                    .command("kubectl create ns soa-opns")
+                    .command("kubectl create ns soa-domain")
+                    .command("cd weblogic-kubernetes-operator/")
+                    .command("helm install weblogic-kubernetes-operator kubernetes/charts/weblogic-operator  --namespace soa-opns  --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0  --set serviceAccount=op-sa --set \"domainNamespaces={}\" --set \"javaLoggingLevel=FINE\" --wait")
+            )
             .execute();
 
-    new Command()
+    /*new Command()
             .withParams(new CommandParams()
                     .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git"))
-            .execute();
+            .execute();*/
     new Command()
             .withParams(new CommandParams()
                     .command("ls"))
