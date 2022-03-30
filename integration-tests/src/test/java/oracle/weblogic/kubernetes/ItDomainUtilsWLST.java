@@ -110,7 +110,7 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain"))
+                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain && kubectl create serviceaccount -n soa-opns  op-sa"))
             .execute();
 
     new Command()
