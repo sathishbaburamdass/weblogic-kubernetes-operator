@@ -96,28 +96,29 @@ class ItDomainUtilsWLST {
             .withParams(new CommandParams()
                     .command("rm -rf /home/opc/intg-test/workspace && mkdir /home/opc/intg-test/workspace && chmod -R 777 /home/opc/intg-test/workspace"))
             .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git /home/opc/intg-test/workspace"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace"))
+            .execute();
+    new Command()
+            .withParams(new CommandParams()
+                    .command("kubectl delete RoleBinding weblogic-operator-rolebinding-namespace -n opns && kubectl delete crd domains.weblogic.oracle && kubectl create ns soa-opns && kubectl create ns soa-domain"))
+            .execute();
 
     new Command()
             .withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace")
-                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git")
-                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git")
-                    .command("kubectl delete RoleBinding weblogic-operator-rolebinding-namespace -n opns")
-                    .command("git clone kubectl delete crd domains.weblogic.oracle")
-                    .command("kubectl create ns soa-opns")
-                    .command("kubectl create ns soa-domain")
-                    .command("cd weblogic-kubernetes-operator/")
-                    .command("helm install weblogic-kubernetes-operator kubernetes/charts/weblogic-operator  --namespace soa-opns  --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0  --set serviceAccount=op-sa --set \"domainNamespaces={}\" --set \"javaLoggingLevel=FINE\" --wait")
+                    .command("helm install /home/opc/intg-test/workspace/weblogic-kubernetes-operator  --namespace soa-opns  --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0  --set serviceAccount=op-sa --set \"domainNamespaces={}\" --set \"javaLoggingLevel=FINE\" --wait")
             )
             .execute();
 
-    /*new Command()
-            .withParams(new CommandParams()
-                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git"))
-            .execute();*/
+
     new Command()
             .withParams(new CommandParams()
-                    .command("ls"))
+                    .command("kubectl get pods -n soa-opns"))
             .execute();
 
     /*try {
