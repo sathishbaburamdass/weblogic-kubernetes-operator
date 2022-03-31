@@ -135,12 +135,12 @@ class ItDomainUtilsWLST {
             .command("cd /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service/common/ && kubectl apply -f oracle.db.yaml -n soa-domain")).execute();
     //check oracledb-0 pod is up
 
-    checkPodReady("oracledb-0", "oracledb", "soa-domain");
-    /*try {
+    //checkPodReady("oracledb-0", "oracledb", "soa-domain");
+    try {
       MINUTES.sleep(12);
     } catch (InterruptedException e) {
       e.printStackTrace();
-    }*/
+    }
 
     //prepare rcu
     new Command().withParams(new CommandParams()
