@@ -98,7 +98,7 @@ class ItDomainUtilsWLST {
     //clear previous run namespaces
     new Command()
             .withParams(new CommandParams()
-                    .command("kubectl delete clusterrolebinding crb-default-sa-soa-opns -n soa-opns && kubectl delete crd domains.weblogic.oracle && kubectl delete ns soa-opns && kubectl delete ns soa-domain && kubectl delete soainfra-soa-domain-pv"))
+                    .command("kubectl delete clusterrolebinding crb-default-sa-soa-opns -n soa-opns && kubectl delete crd domains.weblogic.oracle && kubectl delete ns soa-opns && kubectl delete ns soa-domain && kubectl delete pv soainfra-soa-domain-pv"))
             .execute();
 
     //create ns & cluster bindings
@@ -235,7 +235,7 @@ class ItDomainUtilsWLST {
             "  name: oracledb\n" +
             "  labels:\n" +
             "    app: oracledb\n" +
-            "  namespace: soainfra-domain-ns-501-02250727\n" +
+            "  namespace: soa-domain\n" +
             "spec:\n" +
             "  ports:\n" +
             "    - port: 1521\n" +
