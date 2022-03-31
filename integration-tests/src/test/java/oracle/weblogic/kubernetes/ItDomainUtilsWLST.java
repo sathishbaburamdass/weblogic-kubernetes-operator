@@ -135,19 +135,19 @@ class ItDomainUtilsWLST {
             .command("cd /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service/common/ && kubectl apply -f oracle.db.yaml -n soa-domain")).execute();
     //check oracledb-0 pod is up
 
-    //checkPodReady("oracledb-0", "soainfra", "soa-domain");
-    try {
+    checkPodReady("oracledb-0", "oracledb", "soa-domain");
+    /*try {
       MINUTES.sleep(12);
     } catch (InterruptedException e) {
       e.printStackTrace();
-    }
+    }*/
 
     //prepare rcu
     new Command().withParams(new CommandParams()
             .command("cd /home/opc/intg-test/workspace/fmwsamples/ && ./OracleSOASuite/kubernetes/3.3.0/create-rcu-schema/create-rcu-schema.sh -s soainfra -t soa -d oracledb.soa-domain:1521/oracledbpdb.us.oracle.com -i fmw-paas-sandbox-cert-docker.dockerhub-phx.oci.oraclecorp.com/oracle/soasuite:12.2.1.4-jdk8-ol7-220216.1814 -n soa-domain -q Oradoc_db1 -r Welcome1 -c SOA_PROFILE_TYPE=SMALL,HEALTHCARE_INTEGRATION=NO -l 2000")).execute();
     //ingress
-    new Command().withParams(new CommandParams()
-                .command("helm install soa-domain-ingress /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/ingress-per-domain --namespace soa-domain --set type=NGINX --set domainType=soa --set wlsDomain.domainType=soa --set wlsDomain.operatorVersion=3.3.0 --set wlsDomain.domainUID=soainfra --set wlsDomain.productID=soa --set wlsDomain.adminServerName=AdminServer --set wlsDomain.soaClusterName=soa_cluster --set wlsDomain.adminServerPort=7001 --set wlsDomain.soaManagedServerPort=8001 --set wlsDomain.adminServerSSLPort= --set wlsDomain.soaManagedServerSSLPort=8002 --set wlsDomain.osbClusterName= --set wlsDomain.osbManagedServerSSLPort= --set wlsDomain.oamClusterName=soa_cluster --set wlsDomain.oamManagedServerPort=8001 --set wlsDomain.oamManagedServerSSLPort=8002 --set wlsDomain.policyClusterName= --set wlsDomain.policyManagedServerPort= --set wlsDomain.policyManagedServerSSLPort=8002 --set wlsDomain.ibrClusterName= --set wlsDomain.ibrManagedServerPort= --set wlsDomain.ibrManagedServerSSLPort=8002 --set wlsDomain.ucmClusterName= --set wlsDomain.ucmManagedServerPort= --set wlsDomain.ucmManagedServerSSLPort=8002 --set wlsDomain.ipmClusterName= --set wlsDomain.ipmManagedServerPort= --set wlsDomain.captureClusterName= --set wlsDomain.captureManagedServerPort= --set wlsDomain.wccadfClusterName= --set wlsDomain.wccadfManagedServerPort= --set wlsDomain.clusterName=soa_cluster --set wlsDomain.managedServerPort=8001 --set wlsDomain.portletClusterName= --set wlsDomain.portletManagedServerPort= --set wlsDomain.templateEnabled= --set wlsDomain.checkIfSamplesIsAccordingToNewStructure=true --set wlsDomain.wcsitesClusterName=soa_cluster --set wlsDomain.wcsitesManagedServerPort=8001 --set sslType=NONSSL --set tls=NONSSL --set nginx.hostname=certautomin.subnet3ad3phx.paasinfratoophx.oraclevcn.com")).execute();
+    //new Command().withParams(new CommandParams()
+    //            .command("helm install soa-domain-ingress /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/ingress-per-domain --namespace soa-domain --set type=NGINX --set domainType=soa --set wlsDomain.domainType=soa --set wlsDomain.operatorVersion=3.3.0 --set wlsDomain.domainUID=soainfra --set wlsDomain.productID=soa --set wlsDomain.adminServerName=AdminServer --set wlsDomain.soaClusterName=soa_cluster --set wlsDomain.adminServerPort=7001 --set wlsDomain.soaManagedServerPort=8001 --set wlsDomain.adminServerSSLPort= --set wlsDomain.soaManagedServerSSLPort=8002 --set wlsDomain.osbClusterName= --set wlsDomain.osbManagedServerSSLPort= --set wlsDomain.oamClusterName=soa_cluster --set wlsDomain.oamManagedServerPort=8001 --set wlsDomain.oamManagedServerSSLPort=8002 --set wlsDomain.policyClusterName= --set wlsDomain.policyManagedServerPort= --set wlsDomain.policyManagedServerSSLPort=8002 --set wlsDomain.ibrClusterName= --set wlsDomain.ibrManagedServerPort= --set wlsDomain.ibrManagedServerSSLPort=8002 --set wlsDomain.ucmClusterName= --set wlsDomain.ucmManagedServerPort= --set wlsDomain.ucmManagedServerSSLPort=8002 --set wlsDomain.ipmClusterName= --set wlsDomain.ipmManagedServerPort= --set wlsDomain.captureClusterName= --set wlsDomain.captureManagedServerPort= --set wlsDomain.wccadfClusterName= --set wlsDomain.wccadfManagedServerPort= --set wlsDomain.clusterName=soa_cluster --set wlsDomain.managedServerPort=8001 --set wlsDomain.portletClusterName= --set wlsDomain.portletManagedServerPort= --set wlsDomain.templateEnabled= --set wlsDomain.checkIfSamplesIsAccordingToNewStructure=true --set wlsDomain.wcsitesClusterName=soa_cluster --set wlsDomain.wcsitesManagedServerPort=8001 --set sslType=NONSSL --set tls=NONSSL --set nginx.hostname=certautomin.subnet3ad3phx.paasinfratoophx.oraclevcn.com")).execute();
 
     //create domain
     new Command().withParams(new CommandParams()
