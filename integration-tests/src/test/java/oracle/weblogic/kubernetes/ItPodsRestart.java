@@ -95,11 +95,11 @@ class ItPodsRestart {
   private static String domainNamespace = null;
 
   // domain constants
-  private static final String domainUid = "domain1";
-  private static final String clusterName = "cluster-1";
-  private static final int replicaCount = 1;
-  private static final String adminServerPodName = domainUid + "-" + ADMIN_SERVER_NAME_BASE;
-  private static final String managedServerPrefix = domainUid + "-" + MANAGED_SERVER_NAME_BASE;
+  private static String domainUid = "domain1";
+  private static String clusterName = "cluster-1";
+  private static int replicaCount = 1;
+  private static String adminServerPodName = domainUid + "-" + ADMIN_SERVER_NAME_BASE;
+  private static String managedServerPrefix = domainUid + "-" + MANAGED_SERVER_NAME_BASE;
   private static LoggingFacade logger = null;
   private Map<String, OffsetDateTime> podsWithTimeStamps = null;
 
@@ -119,20 +119,32 @@ class ItPodsRestart {
   public static void initAll(@Namespaces(2) List<String> namespaces) {
     logger = getLogger();
     // get a unique operator namespace
-    logger.info("Getting a unique namespace for operator");
-    assertNotNull(namespaces.get(0), "Namespace list is null");
-    opNamespace = namespaces.get(0);
+    if(!TestConstants.IS_UPPERSTACK) {
+      logger.info("Getting a unique namespace for operator");
+      assertNotNull(namespaces.get(0), "Namespace list is null");
+      opNamespace = namespaces.get(0);
 
-    // get a unique domain namespace
-    logger.info("Getting a unique namespace for WebLogic domain");
-    assertNotNull(namespaces.get(1), "Namespace list is null");
-    domainNamespace = namespaces.get(1);
+      // get a unique domain namespace
+      logger.info("Getting a unique namespace for WebLogic domain");
+      assertNotNull(namespaces.get(1), "Namespace list is null");
+      domainNamespace = namespaces.get(1);
 
-    // install and verify operator
-    installAndVerifyOperator(opNamespace, domainNamespace);
+      // install and verify operator
+      installAndVerifyOperator(opNamespace, domainNamespace);
 
-    // create a basic model in image domain
-    createAndVerifyMiiDomain();
+      // create a basic model in image domain
+      createAndVerifyMiiDomain();
+    }else{
+      logger.info("Running POD-RESTART TEST CASES on UPPER STACK COMPONENT");
+      domainUid = "soainfra";
+      clusterName = "soa-cluster";
+      replicaCount = 2;
+      opNamespace = "soa-opns";
+      domainNamespace = "soa-domain";
+      adminServerPodName = "";
+      managedServerPrefix = "";
+
+    }
   }
 
   /**
