@@ -135,7 +135,13 @@ class ItDomainUtilsWLST {
             .command("cd /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service/common/ && kubectl apply -f oracle.db.yaml -n soa-domain")).execute();
     //check oracledb-0 pod is up
 
-    checkPodReady("oracledb-0", "soainfra", "soa-domain");
+    //checkPodReady("oracledb-0", "soainfra", "soa-domain");
+    try {
+      MINUTES.sleep(12);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
     //prepare rcu
     new Command().withParams(new CommandParams()
             .command("cd /home/opc/intg-test/workspace/fmwsamples/ && ./OracleSOASuite/kubernetes/3.3.0/create-rcu-schema/create-rcu-schema.sh -s soainfra -t soa -d oracledb.soa-domain:1521/oracledbpdb.us.oracle.com -i fmw-paas-sandbox-cert-docker.dockerhub-phx.oci.oraclecorp.com/oracle/soasuite:12.2.1.4-jdk8-ol7-220216.1814 -n soa-domain -q Oradoc_db1 -r Welcome1 -c SOA_PROFILE_TYPE=SMALL,HEALTHCARE_INTEGRATION=NO -l 2000")).execute();
