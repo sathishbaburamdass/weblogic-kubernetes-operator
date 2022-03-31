@@ -3,6 +3,7 @@
 
 package oracle.weblogic.kubernetes;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -135,14 +136,22 @@ class ItPodsRestart {
       // create a basic model in image domain
       createAndVerifyMiiDomain();
     }else{
+      logger.info("***--- Start Deployment of SOA DOMAIN - Using Samples Script ---***");
+      try {
+        ItDomainUtilsWLST.deployDomainUsingSampleRepo();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      logger.info("***--- End Deployment of SOA DOMAIN - Using Samples Script ---***");
+
       logger.info("Running POD-RESTART TEST CASES on UPPER STACK COMPONENT");
       domainUid = "soainfra";
       clusterName = "soa-cluster";
       replicaCount = 2;
       opNamespace = "soa-opns";
       domainNamespace = "soa-domain";
-      adminServerPodName = "";
-      managedServerPrefix = "";
+      adminServerPodName = "soainfra-adminserver";
+      managedServerPrefix = "soainfra-soa-server";
 
     }
   }
