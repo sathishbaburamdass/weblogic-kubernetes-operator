@@ -58,14 +58,11 @@ class ItDomainUtilsWLST {
    *
    * @param //namespaces injected by JUnit
    */
-  /*@BeforeAll
-  public static void initAll(@Namespaces(3) List<String> namespaces) {
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl create ns inside-initall"))
-            .execute();
-
-  }*/
+  @BeforeAll
+  public static void initAll() {
+    System.out.println("****----Inside Init All domain deployment via Sample Scripts****----");
+    System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
+  }
 
   @Test
   @DisplayName("Create FMW Dynamic Domain in PV")
