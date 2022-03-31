@@ -224,7 +224,6 @@ class ItDomainUtilsWLST {
             "rcuDatabaseURL: oracledb.soa-domain:1521/oracledbpdb.us.oracle.com\n" +
             "rcuCredentialsSecret: soainfra-rcu-credentials\n" +
             "persistentStore: jdbc\n" +
-            "imagePullSecretName: phxregcred\n" +
             "t3PublicAddress: 100.111.151.24\n" +
             "loadBalancerHostName: 100.111.151.24\n" +
             "loadBalancerPortNumber: 32115\n" +
