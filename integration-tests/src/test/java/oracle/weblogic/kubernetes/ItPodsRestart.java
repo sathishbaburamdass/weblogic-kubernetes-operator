@@ -144,7 +144,7 @@ class ItPodsRestart {
       }
       logger.info("***--- End Deployment of SOA DOMAIN - Using Samples Script ---***");
 
-      logger.info("Running POD-RESTART TEST CASES on UPPER STACK COMPONENT");
+      logger.info("Running POD-RESTART TEST CASES on UPPER STACK DOMAIN");
       domainUid = "soainfra";
       clusterName = "soa-cluster";
       replicaCount = 2;
