@@ -137,7 +137,7 @@ class ItDomainUtilsWLST {
 
     //checkPodReady("oracledb-0", "oracledb", "soa-domain");
     try {
-      MINUTES.sleep(12);
+      MINUTES.sleep(8);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
