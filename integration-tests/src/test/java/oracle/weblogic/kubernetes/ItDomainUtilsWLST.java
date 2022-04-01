@@ -22,9 +22,9 @@ import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodReady;
 import static org.awaitility.Awaitility.with;
 
 /**
- * Tests to create JRF domain in persistent volume using WLST.
+ * Util Class to deploy domain using fmw sample repo
  */
-@DisplayName("Verify the WebLogic server pods can run with domain created in persistent volume")
+@DisplayName("Create given domain using sample repo")
 @IntegrationTest
 class ItDomainUtilsWLST {
 
@@ -50,124 +50,9 @@ class ItDomainUtilsWLST {
   private final String rcuSecretName = domainUid + "-rcu-credentials";
   private static int t3ChannelPort = 0;
 
-  /**
-   * Start DB service and create RCU schema.
-   * Assigns unique namespaces for operator and domains.
-   * Pull FMW image and Oracle DB image if running tests in Kind cluster.
-   * Installs operator.
-   *
-   * @param //namespaces injected by JUnit
-   */
-  /*@BeforeAll
-  public static void initAll() {
-    System.out.println("****----Inside Init All domain deployment via Sample Scripts****----");
-    System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
-  }*/
-
-  @Test
-  @DisplayName("Create FMW Dynamic Domain in PV")
-  void testFmwDynamicDomainInPV() throws IOException {
-    System.out.println("****----Inside Init All domain deployment via Sample Scripts****----");
-    System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
-
-    new Command()
-            .withParams(new CommandParams()
-                    .command("rm -rf /home/opc/intg-test/workspace && mkdir -p /home/opc/intg-test/workspace/FMW-DockerImages && mkdir -p /home/opc/intg-test/workspace/weblogic-kubernetes-operator && chmod -R 777 /home/opc/intg-test/workspace && rm -rf /scratch/u01/DockerVolume/domains/soa-domain/*"))
-            .execute();
-    new Command()
-            .withParams(new CommandParams()
-                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:paascicd/FMW-DockerImages.git /home/opc/intg-test/workspace/FMW-DockerImages"))
-            .execute();
-    new Command()
-            .withParams(new CommandParams()
-                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace/weblogic-kubernetes-operator"))
-            .execute();
-    new Command()
-            .withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace && mv -f FMW-DockerImages fmwsamples_bkup && mkdir /home/opc/intg-test/workspace/fmwsamples && cd fmwsamples && mkdir -p OracleSOASuite/kubernetes/3.3.0"))
-            .execute();
-    new Command()
-            .withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/charts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/common /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-soa-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/rest /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/scaling OracleSOASuite/kubernetes/3.3.0/"))
-            .execute();
-    //update create-pv-pvc-inputs.yaml
-    pv_pvc_util();
-
-    //clear previous run namespaces
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl delete clusterrolebinding crb-default-sa-soa-opns -n soa-opns && kubectl delete crd domains.weblogic.oracle && kubectl delete ns soa-opns && kubectl delete ns soa-domain && kubectl delete pv soainfra-soa-domain-pv"))
-            .execute();
-
-    //create ns & cluster bindings
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain && kubectl create clusterrolebinding crb-default-sa-soa-opns --clusterrole=cluster-admin --serviceaccount=soa-opns:default"))
-            .execute();
-
-    //install operator
-    new Command()
-            .withParams(new CommandParams()
-                    .command("helm install op-intg-test /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/weblogic-operator --namespace soa-opns --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0 --wait"))
-            .execute();
-
-
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl get pods -n soa-opns"))
-            .execute();
-    //weblogic / rcu creds
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples/ && OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials/create-weblogic-credentials.sh -u weblogic -p welcome1 -n soa-domain -d soainfra && OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials/create-rcu-credentials.sh -u soainfra -p Welcome1 -a sys -q Oradoc_db1 -d soainfra -n soa-domain")).execute();
-    //prepare pv-pvc yaml file
-
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples/ && ./OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && cp script-output-directory/pv-pvcs/soainfra-soa-domain-pv.yaml . && cp script-output-directory/pv-pvcs/soainfra-soa-domain-pvc.yaml .")).execute();
-    //create pv pvc
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples && kubectl apply -f soainfra-soa-domain-pv.yaml && kubectl apply -f soainfra-soa-domain-pvc.yaml")).execute();
-    //prepare db
-    db_yaml_util();
-
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service/common/ && kubectl apply -f oracle.db.yaml -n soa-domain")).execute();
-    //check oracledb-0 pod is up
-
-    //checkPodReady("oracledb-0", "oracledb", "soa-domain");
-    try {
-      MINUTES.sleep(10);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    //prepare rcu
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples/ && ./OracleSOASuite/kubernetes/3.3.0/create-rcu-schema/create-rcu-schema.sh -s soainfra -t soa -d oracledb.soa-domain:1521/oracledbpdb.us.oracle.com -i fmw-paas-sandbox-cert-docker.dockerhub-phx.oci.oraclecorp.com/oracle/soasuite:12.2.1.4-jdk8-ol7-220216.1814 -n soa-domain -q Oradoc_db1 -r Welcome1 -c SOA_PROFILE_TYPE=SMALL,HEALTHCARE_INTEGRATION=NO -l 1000")).execute();
-    //ingress
-    new Command().withParams(new CommandParams()
-                .command("helm install soa-domain-ingress /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/ingress-per-domain --namespace soa-domain --set type=NGINX --set domainType=soa --set wlsDomain.domainType=soa --set wlsDomain.operatorVersion=3.3.0 --set wlsDomain.domainUID=soainfra --set wlsDomain.productID=soa --set wlsDomain.adminServerName=AdminServer --set wlsDomain.soaClusterName=soa_cluster --set wlsDomain.adminServerPort=7001 --set wlsDomain.soaManagedServerPort=8001 --set wlsDomain.adminServerSSLPort= --set wlsDomain.soaManagedServerSSLPort=8002 --set wlsDomain.osbClusterName= --set wlsDomain.osbManagedServerSSLPort= --set wlsDomain.oamClusterName=soa_cluster --set wlsDomain.oamManagedServerPort=8001 --set wlsDomain.oamManagedServerSSLPort=8002 --set wlsDomain.policyClusterName= --set wlsDomain.policyManagedServerPort= --set wlsDomain.policyManagedServerSSLPort=8002 --set wlsDomain.ibrClusterName= --set wlsDomain.ibrManagedServerPort= --set wlsDomain.ibrManagedServerSSLPort=8002 --set wlsDomain.ucmClusterName= --set wlsDomain.ucmManagedServerPort= --set wlsDomain.ucmManagedServerSSLPort=8002 --set wlsDomain.ipmClusterName= --set wlsDomain.ipmManagedServerPort= --set wlsDomain.captureClusterName= --set wlsDomain.captureManagedServerPort= --set wlsDomain.wccadfClusterName= --set wlsDomain.wccadfManagedServerPort= --set wlsDomain.clusterName=soa_cluster --set wlsDomain.managedServerPort=8001 --set wlsDomain.portletClusterName= --set wlsDomain.portletManagedServerPort= --set wlsDomain.templateEnabled= --set wlsDomain.checkIfSamplesIsAccordingToNewStructure=true --set wlsDomain.wcsitesClusterName=soa_cluster --set wlsDomain.wcsitesManagedServerPort=8001 --set sslType=NONSSL --set tls=NONSSL --set nginx.hostname=certautomin.subnet3ad3phx.paasinfratoophx.oraclevcn.com")).execute();
-
-    //create domain
-    domain_yaml_util();
-    new Command().withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace/fmwsamples/ && ./OracleSOASuite/kubernetes/3.3.0/create-soa-domain/domain-home-on-pv/create-domain.sh -i  OracleSOASuite/kubernetes/3.3.0/create-soa-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
-    new Command().withParams(new CommandParams()
-                    .command("helm upgrade op-intg-test /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/weblogic-operator --namespace soa-opns --reuse-values --set 'domainNamespaces={soa-domain}' --wait")).execute();
-    new Command().withParams(new CommandParams()
-                        .command("cd /home/opc/intg-test/workspace/fmwsamples/script-output-domain-directory/weblogic-domains/soainfra/ && kubectl apply -f domain.yaml -n soa-domain")).execute();
-
-    checkPodReady("soainfra-adminserver", "soainfra", "soa-domain");
-    checkPodReady("soainfra-soa-server1", "soainfra", "soa-domain");
-    checkPodReady("soainfra-soa-server2", "soainfra", "soa-domain");
-
-    try {
-      MINUTES.sleep(1);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-
   public static void deployDomainUsingSampleRepo() throws IOException {
+    String nfs_folder = TestConstants.FMW_DOMAIN_TYPE + "-store-" + System.currentTimeMillis();
+
     System.out.println("****----Inside Init All domain deployment via Sample Scripts****----");
     System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
 
@@ -187,36 +72,27 @@ class ItDomainUtilsWLST {
             .withParams(new CommandParams()
                     .command("cd /home/opc/intg-test/workspace && mv -f FMW-DockerImages fmwsamples_bkup && mkdir /home/opc/intg-test/workspace/fmwsamples && cd fmwsamples && mkdir -p OracleSOASuite/kubernetes/3.3.0"))
             .execute();
-    new Command()
-            .withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/charts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/common /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-soa-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/rest /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/scaling OracleSOASuite/kubernetes/3.3.0/"))
-            .execute();
+    new Command().withParams(new CommandParams()
+            .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/charts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/common /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-soa-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/rest /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/scaling OracleSOASuite/kubernetes/3.3.0/")).execute();
+
     //update create-pv-pvc-inputs.yaml
-    pv_pvc_util();
+    pv_pvc_util(nfs_folder);
 
     //clear previous run namespaces
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl delete clusterrolebinding crb-default-sa-soa-opns -n soa-opns && kubectl delete crd domains.weblogic.oracle && kubectl delete ns soa-opns && kubectl delete ns soa-domain && kubectl delete pv soainfra-soa-domain-pv"))
-            .execute();
+    new Command().withParams(new CommandParams()
+            .command("kubectl delete clusterrolebinding crb-default-sa-soa-opns -n soa-opns && kubectl delete crd domains.weblogic.oracle && kubectl delete ns soa-opns && kubectl delete ns soa-domain && kubectl delete pv soainfra-soa-domain-pv")).execute();
 
     //create ns & cluster bindings
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl create ns soa-opns && kubectl create ns soa-domain && kubectl create clusterrolebinding crb-default-sa-soa-opns --clusterrole=cluster-admin --serviceaccount=soa-opns:default"))
-            .execute();
+    new Command().withParams(new CommandParams()
+            .command("kubectl create ns soa-opns && kubectl create ns soa-domain && kubectl create clusterrolebinding crb-default-sa-soa-opns --clusterrole=cluster-admin --serviceaccount=soa-opns:default")).execute();
 
     //install operator
-    new Command()
-            .withParams(new CommandParams()
-                    .command("helm install op-intg-test /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/weblogic-operator --namespace soa-opns --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0 --wait"))
-            .execute();
+    new Command().withParams(new CommandParams()
+            .command("helm install op-intg-test /home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/charts/weblogic-operator --namespace soa-opns --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:3.3.0 --wait")).execute();
 
+    new Command().withParams(new CommandParams()
+            .command("kubectl get pods -n soa-opns")).execute();
 
-    new Command()
-            .withParams(new CommandParams()
-                    .command("kubectl get pods -n soa-opns"))
-            .execute();
     //weblogic / rcu creds
     new Command().withParams(new CommandParams()
             .command("cd /home/opc/intg-test/workspace/fmwsamples/ && OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials/create-weblogic-credentials.sh -u weblogic -p welcome1 -n soa-domain -d soainfra && OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials/create-rcu-credentials.sh -u soainfra -p Welcome1 -a sys -q Oradoc_db1 -d soainfra -n soa-domain")).execute();
@@ -268,14 +144,19 @@ class ItDomainUtilsWLST {
     }
   }
 
-  public static void pv_pvc_util() throws IOException {
+  public static void pv_pvc_util(String nfs_folder) throws IOException {
+    nfs_folder = "/scratch/u01/DockerVolume/domains/" + nfs_folder;
+    //mkdir in nfs domain share
+    new Command().withParams(new CommandParams()
+            .command("mkdir "+nfs_folder)).execute();
+
     String pv_pvc = "---\n" +
             "version: create-soainfra-pv-pvc-inputs-v1\n" +
             "baseName: soa-domain\n" +
             "domainUID: soainfra\n" +
             "namespace: soa-domain\n" +
             "weblogicDomainStorageType: HOST_PATH\n" +
-            "weblogicDomainStoragePath: /scratch/u01/DockerVolume/domains/soa-domain\n" +
+            "weblogicDomainStoragePath: "+ nfs_folder + "\n" +
             "weblogicDomainStorageReclaimPolicy: Recycle\n" +
             "weblogicDomainStorageSize: 10Gi";
     File file=new File("/home/opc/intg-test/workspace/fmwsamples/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
