@@ -200,7 +200,7 @@ class ItDomainUtilsWLST {
             "adminNodePort: 30701\n" +
             "exposeAdminNodePort: false\n" +
             "namespace: soa-domain\n" +
-            "javaOptions: -Dweblogic.StdoutDebugEnabled=false -Dweblogic.ssl.Enabled=true -Dweblogic.security.SSL.ignoreHostnameVerification=true\n" +
+            "javaOptions: -Dweblogic.StdoutDebugEnabled=false\n" +
             "persistentVolumeClaimName: soainfra-soa-domain-pvc\n" +
             "domainPVMountPath: /u01/oracle/user_projects\n" +
             "createDomainScriptsMountPath: /u01/weblogic\n" +
