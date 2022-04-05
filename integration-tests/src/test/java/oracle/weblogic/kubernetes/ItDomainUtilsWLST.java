@@ -58,7 +58,7 @@ class ItDomainUtilsWLST {
 
     new Command()
             .withParams(new CommandParams()
-                    .command("rm -rf /home/opc/intg-test/workspace && mkdir -p /home/opc/intg-test/workspace/FMW-DockerImages && mkdir -p /home/opc/intg-test/workspace/weblogic-kubernetes-operator && chmod -R 777 /home/opc/intg-test/workspace && rm -rf /scratch/u01/DockerVolume/domains/soa-domain/*"))
+                    .command("rm -rf /home/opc/intg-test/workspace && mkdir -p /home/opc/intg-test/workspace/FMW-DockerImages && mkdir -p /home/opc/intg-test/workspace/weblogic-kubernetes-operator && chmod -R 777 /home/opc/intg-test/workspace && rm -rf /scratch/u01/DockerVolume/domains/soa-domain/* && mkdir /scratch/u01/DockerVolume/domains/"+nfs_folder+" && chmod -R 777 /scratch/u01/DockerVolume/domains/"+nfs_folder))
             .execute();
     new Command()
             .withParams(new CommandParams()
@@ -70,7 +70,7 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("cd /home/opc/intg-test/workspace && mv -f FMW-DockerImages fmwsamples_bkup && mkdir /home/opc/intg-test/workspace/fmwsamples && cd fmwsamples && mkdir -p OracleSOASuite/kubernetes/3.3.0"))
+                    .command("cd /home/opc/intg-test/workspace && mv -f FMW-DockerImages fmwsamples_bkup && mkdir home/opc/intg-test/workspace/fmwsamples && cd fmwsamples && mkdir -p OracleSOASuite/kubernetes/3.3.0"))
             .execute();
     new Command().withParams(new CommandParams()
             .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/charts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/common /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-soa-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/rest /home/opc/intg-test/workspace/fmwsamples_bkup/OracleSOASuite/kubernetes/3.3.0/scaling OracleSOASuite/kubernetes/3.3.0/")).execute();
