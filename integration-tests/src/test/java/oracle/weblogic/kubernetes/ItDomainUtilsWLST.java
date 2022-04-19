@@ -6,12 +6,8 @@ package oracle.weblogic.kubernetes;
 import oracle.weblogic.kubernetes.actions.impl.primitive.Command;
 import oracle.weblogic.kubernetes.actions.impl.primitive.CommandParams;
 import oracle.weblogic.kubernetes.annotations.IntegrationTest;
-import oracle.weblogic.kubernetes.annotations.Namespaces;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
-import org.awaitility.core.ConditionFactory;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -22,17 +18,12 @@ import java.util.regex.Pattern;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodReady;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
-import static org.awaitility.Awaitility.with;
 
 /**
- * Util Class to deploy domain using fmw sample repo
+ * Util Class to deploy given domain using fmw samples repo
  */
 
-//find product
-//customize rcu
-//find product id
 @DisplayName("Create given domain using sample repo")
 @IntegrationTest
 class ItDomainUtilsWLST {
@@ -46,7 +37,6 @@ class ItDomainUtilsWLST {
   private static String dbImage = "";
   private static String productImage = "";
 
-  private static String dbUrl = null;
   private static LoggingFacade logger = null;
 
   private static final String domainUid = TestConstants.FMW_DOMAIN_TYPE + "infra";
@@ -83,7 +73,6 @@ class ItDomainUtilsWLST {
 
     //create domain
     domain_yaml_util();
-
     createDomain();
 
 
@@ -133,7 +122,7 @@ class ItDomainUtilsWLST {
     BufferedReader reader;
     FileWriter writer;
     String content = "";
-    //try{
+
       reader = new BufferedReader(new FileReader(file));
       String line = reader.readLine();
 
@@ -143,16 +132,17 @@ class ItDomainUtilsWLST {
         line = reader.readLine();
       }
 
-      logger.info(content);
+      //logger.info(content);
       //start - find and replace domain yaml values
       List<String> domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
 
       Map<String,String> replaceDomainYamlMap = new HashMap<>();
       replaceDomainYamlMap.put("rcuCredentialsSecret: ","rcuCredentialsSecret: "+rcuSecretName);
       replaceDomainYamlMap.put("weblogicCredentialsSecretName: ","weblogicCredentialsSecretName: "+wlSecretName);
+      replaceDomainYamlMap.put("rcuSchemaPrefix: ","rcuSchemaPrefix: "+domainUid);
       replaceDomainYamlMap.put("namespace: ","namespace: "+domainNS);
       replaceDomainYamlMap.put("initialManagedServerReplicas: ","initialManagedServerReplicas: 2");
-      replaceDomainYamlMap.put("rcuDatabaseURL: ","rcuDatabaseURL: "+dbUrl);
+      replaceDomainYamlMap.put("rcuDatabaseURL: ","rcuDatabaseURL: "+connectionURL);
       replaceDomainYamlMap.put("persistentVolumeClaimName: ","persistentVolumeClaimName: "+domainUid+"-domain-pvc");
       replaceDomainYamlMap.put("image: ","image: "+productImage);
 
@@ -171,15 +161,13 @@ class ItDomainUtilsWLST {
         }
       }
       //end - find and replace domain yaml values
-      logger.info("--End Domain Yaml File Manipulation--");
-      logger.info(content);
+      //logger.info("--End Domain Yaml File Manipulation--");
+      //logger.info(content);
       writer = new FileWriter(file);
       writer.write(content);
       reader.close();
       writer.close();
-//    }catch(IOException e){
-//      e.printStackTrace();
-//    }
+
   }
 
   public static void copyRepos(){
