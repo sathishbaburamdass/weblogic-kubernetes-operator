@@ -136,7 +136,7 @@ class ItDomainUtilsWLST {
   }
 
   public static void domain_yaml_util() throws IOException {
-    File file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
+    File file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
     BufferedReader reader = null;
     FileWriter writer = null;
     String content = "";
@@ -150,10 +150,11 @@ class ItDomainUtilsWLST {
         line = reader.readLine();
       }
       //start - find and replace domain yaml values
-      List<String> domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
+      List<String> domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
 
       Map<String,String> replaceDomainYamlMap = new HashMap<>();
       replaceDomainYamlMap.put("rcuCredentialsSecret: ","rcuCredentialsSecret: "+rcuSecretName);
+      replaceDomainYamlMap.put("weblogicCredentialsSecretName: ","weblogicCredentialsSecretName: "+wlSecretName);
       replaceDomainYamlMap.put("namespace: ","namespace: "+domainNS);
       replaceDomainYamlMap.put("initialManagedServerReplicas: ","initialManagedServerReplicas: 2");
       replaceDomainYamlMap.put("rcuDatabaseURL: ","rcuDatabaseURL: "+dbUrl);
@@ -235,6 +236,7 @@ class ItDomainUtilsWLST {
         line = reader.readLine();
       }
       content = content.replace("%DB_NAME%","oracledb");
+      content = content.replace("%DB_IMAGE%",dbImage);
       content = content.replace("%DB_PASSWORD%","Oradoc_db1");
       content = content.replace("%DB_NAMESPACE%",domainNS);
       content = content.replace("%DB_SECRET%","regcred");
