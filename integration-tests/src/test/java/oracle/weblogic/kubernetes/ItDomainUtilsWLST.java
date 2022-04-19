@@ -97,9 +97,9 @@ class ItDomainUtilsWLST {
             "weblogicDomainStorageSize: 10Gi";
     File file;
     if(listOfDirInProdDir.contains("create-weblogic-domain-pv-pvc")) {
-      file = new File(workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
+       file = new File(workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
     }else {
-      file = new File(workSpaceBasePath + "weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
+       file = new File(workSpaceBasePath + "weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
     }
     DataOutputStream outstream= new DataOutputStream(new FileOutputStream(file,false));
     outstream.write(pv_pvc.getBytes());
@@ -111,16 +111,25 @@ class ItDomainUtilsWLST {
             .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && kubectl apply -f script-output-directory/pv-pvcs/"+pvName+" && kubectl apply -f script-output-directory/pv-pvcs/"+pvcName)).execute();
     else
         new Command().withParams(new CommandParams()
-              .command("cd "+workSpaceBasePath+" && ./weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && kubectl apply -f script-output-directory/pv-pvcs/"+pvName+" && kubectl apply -f script-output-directory/pv-pvcs/"+pvcName)).execute();
+              .command("cd "+workSpaceBasePath+" && ./weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && kubectl apply -f script-output-directory/pv-pvcs/"+pvName+" && kubectl apply -f script-output-directory/pv-pvcs/"+pvcName)).execute();
 
   }
 
   public static void domain_yaml_util() throws IOException{
     logger.info("---Manipulate Domain Yaml File---");
-    File file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
+    File file = null;
+    List<String> domainYamlOrgiValue = null;
     BufferedReader reader;
     FileWriter writer;
     String content = "";
+
+    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")){
+        file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
+        domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
+    }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
+        file=new File(workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/create-wcc-domain/domain-home-on-pv/create-domain-inputs.yaml");
+        domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/create-wcc-domain/domain-home-on-pv/create-domain-inputs.yaml")));
+    }
 
       reader = new BufferedReader(new FileReader(file));
       String line = reader.readLine();
@@ -133,7 +142,7 @@ class ItDomainUtilsWLST {
 
       //logger.info(content);
       //start - find and replace domain yaml values
-      List<String> domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
+
 
       Map<String,String> replaceDomainYamlMap = new HashMap<>();
       replaceDomainYamlMap.put("rcuCredentialsSecret: ","rcuCredentialsSecret: "+rcuSecretName);
@@ -198,6 +207,10 @@ class ItDomainUtilsWLST {
               .command("cd "+workSpacePath+prodDirectory+"/kubernetes/" + OPT_VERSION+" && ls > dirs.txt")).execute();
       listOfDirInProdDir = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/dirs.txt")));
       logger.info("List of Directories in PROD SAMPLES : "+listOfDirInProdDir);
+      if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
+        new Command().withParams(new CommandParams()
+                .command("cd "+workSpacePath+" && cp -rf OracleWebCenterContent/kubernetes/"+OPT_VERSION+"/create-wcc-domain "+workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/")).execute();
+      }
     }
   }
   
@@ -272,7 +285,7 @@ class ItDomainUtilsWLST {
       new Command().withParams(new CommandParams()
               .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-schema/create-rcu-schema.sh -s "+domainUid+" -t "+TestConstants.FMW_DOMAIN_TYPE+" -d "+connectionURL+" -i "+productImage+" -n "+domainNS+" -q Oradoc_db1 -r Welcome1 -l 2000")).execute();
     }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
-      // cd workSpaceBasePath ,  k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml
+      // cd workSpaceBasePath , k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml
       File file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml");
       BufferedReader reader = null;
       FileWriter writer = null;
@@ -334,13 +347,21 @@ class ItDomainUtilsWLST {
   }
 
   public static void createDomain(){
-    new Command().withParams(new CommandParams()
-            .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain.sh -i  "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
-    new Command().withParams(new CommandParams()
-            .command("helm upgrade op-intg-test "+workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/charts/weblogic-operator --namespace "+operatorNS+" --reuse-values --set 'domainNamespaces={"+domainNS+"}' --wait")).execute();
-    new Command().withParams(new CommandParams()
-            .command("cd "+workSpacePath+"script-output-domain-directory/weblogic-domains/"+domainUid+"/ && kubectl apply -f domain.yaml -n "+domainNS)).execute();
-
+    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")) {
+        new Command().withParams(new CommandParams()
+                .command("cd " + workSpacePath + " && ./" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain.sh -i  " + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
+        new Command().withParams(new CommandParams()
+                .command("helm upgrade op-intg-test " + workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts/weblogic-operator --namespace " + operatorNS + " --reuse-values --set 'domainNamespaces={" + domainNS + "}' --wait")).execute();
+        new Command().withParams(new CommandParams()
+                .command("cd " + workSpacePath + "script-output-domain-directory/weblogic-domains/" + domainUid + "/ && kubectl apply -f domain.yaml -n " + domainNS)).execute();
+    }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")) {
+        new Command().withParams(new CommandParams()
+                .command("cd " + workSpaceBasePath + " && ./weblogic-kubernetes-operator/kubernetes/samples/scripts/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain.sh -i  weblogic-kubernetes-operator/kubernetes/samples/scripts/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
+        new Command().withParams(new CommandParams()
+                .command("helm upgrade op-intg-test " + workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts/weblogic-operator --namespace " + operatorNS + " --reuse-values --set 'domainNamespaces={" + domainNS + "}' --wait")).execute();
+        new Command().withParams(new CommandParams()
+              .command("cd " + workSpaceBasePath + "script-output-domain-directory/weblogic-domains/" + domainUid + "/ && kubectl apply -f domain.yaml -n " + domainNS)).execute();
+    }
   }
   public static void checkPods(){
     checkPodReady(adminServerPodName, domainUid, domainNS);
