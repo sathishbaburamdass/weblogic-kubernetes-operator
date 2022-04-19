@@ -135,10 +135,10 @@ class ItDomainUtilsWLST {
 
   }
 
-  public static void domain_yaml_util() throws IOException {
+  public static void domain_yaml_util() {
     File file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
-    BufferedReader reader = null;
-    FileWriter writer = null;
+    BufferedReader reader;
+    FileWriter writer;
     String content = "";
     try{
       reader = new BufferedReader(new FileReader(file));
@@ -149,6 +149,8 @@ class ItDomainUtilsWLST {
         content = content + line + System.lineSeparator();
         line = reader.readLine();
       }
+      logger.info("---Manipulate Domain Yaml File---");
+      logger.info(content);
       //start - find and replace domain yaml values
       List<String> domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
 
@@ -176,7 +178,8 @@ class ItDomainUtilsWLST {
         }
       }
       //end - find and replace domain yaml values
-
+      logger.info("--End Domain Yaml File Manipulation--");
+      logger.info(content);
       writer = new FileWriter(file);
       writer.write(content);
       reader.close();
