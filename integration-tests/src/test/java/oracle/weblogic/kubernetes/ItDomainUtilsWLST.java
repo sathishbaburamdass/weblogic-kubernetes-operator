@@ -191,7 +191,7 @@ class ItDomainUtilsWLST {
     connectionURL = "oracledb."+domainNS+":1521/oracledbpdb.us.oracle.com";
     dbImage = "container-registry.oracle.com/database/enterprise:12.2.0.1-slim";
     productImage = TestConstants.FMWINFRA_IMAGE_NAME+":"+TestConstants.FMWINFRA_IMAGE_TAG;
-    managedServerPrefix = domainUid+FmwMapping.managedServerBaseNames.get(prodID);
+    managedServerPrefix = domainUid+"-"+FmwMapping.managedServerBaseNames.get(prodID);
     adminServerPodName = domainUid + "-adminserver";
     clusterName = FmwMapping.managedServerBaseNames.get(prodID).replace("-","_").replace("server","cluster");
     logger.info("--print domain variables---");
