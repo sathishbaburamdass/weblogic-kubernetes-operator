@@ -52,6 +52,7 @@ class ItDomainUtilsWLST {
   private static final String wlSecretName = domainUid + "-weblogic-credentials";
   private static final String rcuSecretName = domainUid + "-rcu-credentials";
   private static final String workSpacePath = "/home/opc/intg-test/workspace/fmwsamples/";
+  private static final String workSpaceBasePath = "/home/opc/intg-test/workspace/";
   private static final long TIMESTAMP = System.currentTimeMillis();
   private static final String domainNS = TestConstants.FMW_DOMAIN_TYPE + "-ns-" + TIMESTAMP;
   private static final String operatorNS = "opt-ns-" + TIMESTAMP;
@@ -66,6 +67,7 @@ class ItDomainUtilsWLST {
     System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
 
     //create ns & cluster bindings
+    copyRepos();
     prepareENV();
 
     //update create-pv-pvc-inputs.yaml
@@ -219,7 +221,7 @@ class ItDomainUtilsWLST {
 
   public static void prepareDB(){
 
-    File file=new File(workSpacePath+"/k8spipeline/kubernetes/framework/db/oracle-db.yaml");
+    File file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/oracle-db.yaml");
     BufferedReader reader = null;
     FileWriter writer = null;
     String content = "";
@@ -249,7 +251,7 @@ class ItDomainUtilsWLST {
     }
 
     new Command().withParams(new CommandParams()
-            .command("cd "+workSpacePath+"/k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
+            .command("cd "+workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
 
     try {
       MINUTES.sleep(10);
@@ -270,8 +272,8 @@ class ItDomainUtilsWLST {
       new Command().withParams(new CommandParams()
               .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-schema/create-rcu-schema.sh -s "+domainUid+" -t "+TestConstants.FMW_DOMAIN_TYPE+" -d "+connectionURL+" -i "+productImage+" -n "+domainNS+" -q Oradoc_db1 -r Welcome1 -l 2000")).execute();
     }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
-      // cd workspacepath ,  k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml
-      File file=new File(workSpacePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml");
+      // cd workSpaceBasePath ,  k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml
+      File file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml");
       BufferedReader reader = null;
       FileWriter writer = null;
       String content = "";
@@ -297,7 +299,7 @@ class ItDomainUtilsWLST {
         e.printStackTrace();
       }
 
-      file=new File(workSpacePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-pod.yaml");
+      file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-pod.yaml");
       reader = null;
       writer = null;
       content = "";
@@ -322,7 +324,7 @@ class ItDomainUtilsWLST {
       }
 
       new Command().withParams(new CommandParams()
-              .command("cd "+workSpacePath+"/k8spipeline/kubernetes/framework/db/rcu/ && kubectl apply -f fmwk8s-rcu-configmap.yaml -n "+domainNS+" && kubectl apply -f fmwk8s-rcu-pod.yaml -n "+domainNS)).execute();
+              .command("cd "+workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/ && kubectl apply -f fmwk8s-rcu-configmap.yaml -n "+domainNS+" && kubectl apply -f fmwk8s-rcu-pod.yaml -n "+domainNS)).execute();
     }
 
   }
