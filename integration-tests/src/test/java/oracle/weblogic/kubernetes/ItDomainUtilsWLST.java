@@ -124,8 +124,8 @@ class ItDomainUtilsWLST {
     DataOutputStream outstream= new DataOutputStream(new FileOutputStream(file,false));
     outstream.write(pv_pvc.getBytes());
     outstream.close();
-    String pvName = domainUid+"-"+TestConstants.FMW_DOMAIN_TYPE+"-domain-pv.yaml";
-    String pvcName = domainUid+"-"+TestConstants.FMW_DOMAIN_TYPE+"-domain-pvc.yaml";
+    String pvName = domainUid+"-domain-pv.yaml";
+    String pvcName = domainUid+"-domain-pvc.yaml";
 
     new Command().withParams(new CommandParams()
             .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && cp script-output-directory/pv-pvcs/"+pvName+" . && cp script-output-directory/pv-pvcs/"+pvcName+" .")).execute();
