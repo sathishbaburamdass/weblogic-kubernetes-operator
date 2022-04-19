@@ -191,7 +191,7 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("git clone https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace/weblogic-kubernetes-operator"))
+                    .command("git clone --branch release/3.3 https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace/weblogic-kubernetes-operator"))
             .execute();
     new Command()
             .withParams(new CommandParams()
