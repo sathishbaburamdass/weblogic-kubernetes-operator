@@ -165,7 +165,7 @@ class ItDomainUtilsWLST {
         for(String domainYamlByLine : domainYamlOrgiValue){
           matcher = pattern.matcher(domainYamlByLine);
           if(matcher.find()){
-            content.replace(domainYamlByLine,e.getValue());
+            content = content.replace(domainYamlByLine,e.getValue());
           }
 
         }
