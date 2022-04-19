@@ -145,13 +145,13 @@ class ItPodsRestart {
       logger.info("***--- End Deployment of SOA DOMAIN - Using Samples Script ---***");
 
       logger.info("Running POD-RESTART TEST CASES on UPPER STACK DOMAIN");
-      domainUid = "soainfra";
-      clusterName = "soa-cluster";
-      replicaCount = 2;
-      opNamespace = "soa-opns";
-      domainNamespace = "soa-domain";
-      adminServerPodName = "soainfra-adminserver";
-      managedServerPrefix = "soainfra-soa-server";
+      domainUid = ItDomainUtilsWLST.domainUid;
+      clusterName = ItDomainUtilsWLST.clusterName;
+      replicaCount = ItDomainUtilsWLST.managedServerReplicaCount;
+      opNamespace = ItDomainUtilsWLST.operatorNS;
+      domainNamespace = ItDomainUtilsWLST.domainNS;
+      adminServerPodName = ItDomainUtilsWLST.adminServerPodName;
+      managedServerPrefix = ItDomainUtilsWLST.managedServerPrefix;
 
     }
   }

@@ -8,16 +8,13 @@ import oracle.weblogic.kubernetes.actions.impl.primitive.CommandParams;
 import oracle.weblogic.kubernetes.annotations.IntegrationTest;
 import oracle.weblogic.kubernetes.logging.LoggingFacade;
 import org.junit.jupiter.api.DisplayName;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodReady;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 
 /**
@@ -28,28 +25,28 @@ import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 @IntegrationTest
 class ItDomainUtilsWLST {
 
-  private static final String RCUSCHEMAPREFIX = TestConstants.FMW_DOMAIN_TYPE + "domainpv";
-  private static final String RCUSYSUSERNAME = "sys";
-  private static final String RCUSYSPASSWORD = "Oradoc_db1";
-  private static final String RCUSCHEMAUSERNAME = "myrcuuser";
-  private static final String RCUSCHEMAPASSWORD = "Oradoc_db1";
   private static String connectionURL = "";
   private static String dbImage = "";
   private static String productImage = "";
 
   private static LoggingFacade logger = null;
 
-  private static final String domainUid = TestConstants.FMW_DOMAIN_TYPE + "infra";
+  private static final long TIMESTAMP = System.currentTimeMillis();
+  public static final String domainUid = TestConstants.FMW_DOMAIN_TYPE + "infra";
+  public static final String domainNS = TestConstants.FMW_DOMAIN_TYPE + "-ns-" + TIMESTAMP;
+  public static final String operatorNS = "opt-ns-" + TIMESTAMP;
+  public static String managedServerPrefix = "";
+  public static String adminServerPodName = "";
+  public static String clusterName = "";
+  public static final int managedServerReplicaCount = 2;
   private static final String wlSecretName = domainUid + "-weblogic-credentials";
   private static final String rcuSecretName = domainUid + "-rcu-credentials";
   private static final String workSpacePath = "/home/opc/intg-test/workspace/fmwsamples/";
   private static final String workSpaceBasePath = "/home/opc/intg-test/workspace/";
-  private static final long TIMESTAMP = System.currentTimeMillis();
-  private static final String domainNS = TestConstants.FMW_DOMAIN_TYPE + "-ns-" + TIMESTAMP;
-  private static final String operatorNS = "opt-ns-" + TIMESTAMP;
   private static final String OPT_VERSION = TestConstants.OPERATOR_VERSION;
-  public static final String prodID = FmwMapping.getProdName(FmwMapping.productIdMap,TestConstants.FMW_DOMAIN_TYPE);
+  private static final String prodID = FmwMapping.getProdName(FmwMapping.productIdMap,TestConstants.FMW_DOMAIN_TYPE);
   private static final String prodDirectory = FmwMapping.productDirectoryMap.get(prodID);
+
 
 
   public static void deployDomainUsingSampleRepo() throws IOException {
@@ -74,13 +71,8 @@ class ItDomainUtilsWLST {
     //create domain
     domain_yaml_util();
     createDomain();
+    checkPods();
 
-
-    try {
-      MINUTES.sleep(100);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
   }
 
   public static void pv_pvc_util() throws IOException {
@@ -141,7 +133,7 @@ class ItDomainUtilsWLST {
       replaceDomainYamlMap.put("weblogicCredentialsSecretName: ","weblogicCredentialsSecretName: "+wlSecretName);
       replaceDomainYamlMap.put("rcuSchemaPrefix: ","rcuSchemaPrefix: "+domainUid);
       replaceDomainYamlMap.put("namespace: ","namespace: "+domainNS);
-      replaceDomainYamlMap.put("initialManagedServerReplicas: ","initialManagedServerReplicas: 2");
+      replaceDomainYamlMap.put("initialManagedServerReplicas: ","initialManagedServerReplicas: "+managedServerReplicaCount);
       replaceDomainYamlMap.put("rcuDatabaseURL: ","rcuDatabaseURL: "+connectionURL);
       replaceDomainYamlMap.put("persistentVolumeClaimName: ","persistentVolumeClaimName: "+domainUid+"-domain-pvc");
       replaceDomainYamlMap.put("image: ","image: "+productImage);
@@ -160,9 +152,6 @@ class ItDomainUtilsWLST {
 
         }
       }
-      //end - find and replace domain yaml values
-      //logger.info("--End Domain Yaml File Manipulation--");
-      //logger.info(content);
       writer = new FileWriter(file);
       writer.write(content);
       reader.close();
@@ -202,6 +191,13 @@ class ItDomainUtilsWLST {
     connectionURL = "oracledb."+domainNS+":1521/oracledbpdb.us.oracle.com";
     dbImage = "container-registry.oracle.com/database/enterprise:12.2.0.1-slim";
     productImage = TestConstants.FMWINFRA_IMAGE_NAME+":"+TestConstants.FMWINFRA_IMAGE_TAG;
+    managedServerPrefix = domainUid+FmwMapping.managedServerBaseNames.get(prodID);
+    adminServerPodName = domainUid + "-adminserver";
+    clusterName = FmwMapping.managedServerBaseNames.get(prodID).replace("-","_").replace("server","cluster");
+    logger.info("--print domain variables---");
+    logger.info(managedServerPrefix);
+    logger.info(adminServerPodName);
+    logger.info(clusterName);
   }
 
   public static void prepareDB(){
@@ -241,11 +237,6 @@ class ItDomainUtilsWLST {
     new Command().withParams(new CommandParams()
             .command("while [[ $(kubectl get pods oracledb-0 -n "+domainNS+" -o 'jsonpath={..status.conditions[?(@.type==\"Ready\")].status}') != \"True\" ]]; do echo \"waiting for DB pod to be ready\" && sleep 10; done")).execute();
 
-    try {
-      SECONDS.sleep(10);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
   }
 
   public static void prepareRCU(){
@@ -288,8 +279,6 @@ class ItDomainUtilsWLST {
       }
 
       file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-pod.yaml");
-      reader = null;
-      writer = null;
       content = "";
       try{
         reader = new BufferedReader(new FileReader(file));
@@ -317,9 +306,6 @@ class ItDomainUtilsWLST {
 
   }
 
-  public static void findOperatorVerFromYaml(){
-
-  }
   public static void installOperator(){
     new Command().withParams(new CommandParams()
             .command("helm install op-intg-test "+workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/charts/weblogic-operator --namespace "+operatorNS+" --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:"+OPT_VERSION+" --wait")).execute();
@@ -334,5 +320,11 @@ class ItDomainUtilsWLST {
     new Command().withParams(new CommandParams()
             .command("cd "+workSpacePath+"script-output-domain-directory/weblogic-domains/"+domainUid+"/ && kubectl apply -f domain.yaml -n "+domainNS)).execute();
 
+  }
+  public static void checkPods(){
+    checkPodReady(adminServerPodName, domainUid, domainNS);
+    for(int i=1;i<=managedServerReplicaCount;i++){
+      checkPodReady(managedServerPrefix+i, domainUid, domainNS);
+    }
   }
 }

@@ -14,7 +14,7 @@ public class FmwMapping {
     /** Maps added to track products whether they are operator compliant or non operator compliant */
     static Map<String, String> operatorCompliantProductMap = new HashMap<>();
     static Map<String, String> nonOperatorCompliantProductMap = new HashMap<>();
-
+    static Map<String, String> managedServerBaseNames = new HashMap<>();
     static {
         productDirectoryMap.put("WLS", "OracleWebLogic");
         productDirectoryMap.put("WLS-GENERIC", "OracleWebLogic");
@@ -86,6 +86,9 @@ public class FmwMapping {
         nonOperatorCompliantProductMap.put("OUD", "oud");
         nonOperatorCompliantProductMap.put("OUDSM", "oudsm");
         nonOperatorCompliantProductMap.put("OID", "oid");
+
+        managedServerBaseNames.put("SOA", "soa-server");
+        managedServerBaseNames.put("WCC", "ucm-server");
     }
     public static <K,V> K getProdName(Map<K,V> map,V val){
         return map.entrySet().stream()
