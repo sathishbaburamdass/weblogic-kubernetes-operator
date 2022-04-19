@@ -341,9 +341,13 @@ class ItDomainUtilsWLST {
   }
 
   public static void installOperator(){
-    new Command().withParams(new CommandParams()
-            .command("helm install op-intg-test "+workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/charts/weblogic-operator --namespace "+operatorNS+" --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:"+OPT_VERSION+" --wait")).execute();
-
+    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")) {
+      new Command().withParams(new CommandParams()
+              .command("helm install op-intg-test " + workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts/weblogic-operator --namespace " + operatorNS + " --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:" + OPT_VERSION + " --wait")).execute();
+    }else  if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")) {
+      new Command().withParams(new CommandParams()
+              .command("helm install op-intg-test " + workSpaceBasePath + "weblogic-kubernetes-operator/kubernetes/charts/weblogic-operator --namespace " + operatorNS + " --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:" + OPT_VERSION + " --wait")).execute();
+    }
   }
 
   public static void createDomain(){
@@ -358,7 +362,7 @@ class ItDomainUtilsWLST {
         new Command().withParams(new CommandParams()
                 .command("cd " + workSpaceBasePath + " && ./weblogic-kubernetes-operator/kubernetes/samples/scripts/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain.sh -i  weblogic-kubernetes-operator/kubernetes/samples/scripts/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
         new Command().withParams(new CommandParams()
-                .command("helm upgrade op-intg-test " + workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts/weblogic-operator --namespace " + operatorNS + " --reuse-values --set 'domainNamespaces={" + domainNS + "}' --wait")).execute();
+                .command("helm upgrade op-intg-test " + workSpaceBasePath + "weblogic-kubernetes-operator/kubernetes/charts/weblogic-operator --namespace " + operatorNS + " --reuse-values --set 'domainNamespaces={" + domainNS + "}' --wait")).execute();
         new Command().withParams(new CommandParams()
               .command("cd " + workSpaceBasePath + "script-output-domain-directory/weblogic-domains/" + domainUid + "/ && kubectl apply -f domain.yaml -n " + domainNS)).execute();
     }
