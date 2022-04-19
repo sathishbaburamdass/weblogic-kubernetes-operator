@@ -84,11 +84,6 @@ class ItDomainUtilsWLST {
     prepareDB();
     prepareRCU();
 
-    try {
-      MINUTES.sleep(10);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
 
     //prepare rcu
 
@@ -256,6 +251,11 @@ class ItDomainUtilsWLST {
     new Command().withParams(new CommandParams()
             .command("cd "+workSpacePath+"/k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
 
+    try {
+      MINUTES.sleep(10);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   public static void prepareRCU(){
