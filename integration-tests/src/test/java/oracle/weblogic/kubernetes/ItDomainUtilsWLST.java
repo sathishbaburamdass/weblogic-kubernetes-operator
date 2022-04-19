@@ -95,18 +95,22 @@ class ItDomainUtilsWLST {
             "weblogicDomainStoragePath: "+ nfs_folder + "\n" +
             "weblogicDomainStorageReclaimPolicy: Recycle\n" +
             "weblogicDomainStorageSize: 10Gi";
-    File file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
+    File file;
+    if(listOfDirInProdDir.contains("create-weblogic-domain-pv-pvc"))
+      file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
+    else
+      file=new File(workSpaceBasePath+ "weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml");
     DataOutputStream outstream= new DataOutputStream(new FileOutputStream(file,false));
     outstream.write(pv_pvc.getBytes());
     outstream.close();
     String pvName = domainUid+"-domain-pv.yaml";
     String pvcName = domainUid+"-domain-pvc.yaml";
-
-    new Command().withParams(new CommandParams()
-            .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && cp script-output-directory/pv-pvcs/"+pvName+" . && cp script-output-directory/pv-pvcs/"+pvcName+" .")).execute();
-
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples && kubectl apply -f "+pvName+" && kubectl apply -f "+pvcName)).execute();
+    if(listOfDirInProdDir.contains("create-weblogic-domain-pv-pvc"))
+      new Command().withParams(new CommandParams()
+            .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && kubectl apply -f script-output-directory/pv-pvcs/"+pvName+" && kubectl apply -f script-output-directory/pv-pvcs/"+pvcName)).execute();
+    else
+      new Command().withParams(new CommandParams()
+              .command("cd "+workSpaceBasePath+" && ./weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && kubectl apply -f script-output-directory/pv-pvcs/"+pvName+" && kubectl apply -f script-output-directory/pv-pvcs/"+pvcName)).execute();
 
   }
 
