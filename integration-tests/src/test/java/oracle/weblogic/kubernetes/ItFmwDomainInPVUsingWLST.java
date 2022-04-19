@@ -5,6 +5,7 @@ package oracle.weblogic.kubernetes;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -110,37 +111,37 @@ class ItFmwDomainInPVUsingWLST {
    */
   @BeforeAll
   public static void initAll(@Namespaces(3) List<String> namespaces) {
+    if(!TestConstants.IS_UPPERSTACK) {
+      logger = getLogger();
+      logger.info("Assign a unique namespace for DB and RCU");
+      assertNotNull(namespaces.get(0), "Namespace is null");
+      dbNamespace = namespaces.get(0);
+      final int dbListenerPort = getNextFreePort();
+      ORACLEDBSUFFIX = ".svc.cluster.local:" + dbListenerPort + "/devpdb.k8s";
+      dbUrl = ORACLEDBURLPREFIX + dbNamespace + ORACLEDBSUFFIX;
 
-    logger = getLogger();
-    logger.info("Assign a unique namespace for DB and RCU");
-    assertNotNull(namespaces.get(0), "Namespace is null");
-    dbNamespace = namespaces.get(0);
-    final int dbListenerPort = getNextFreePort();
-    ORACLEDBSUFFIX = ".svc.cluster.local:" + dbListenerPort + "/devpdb.k8s";
-    dbUrl = ORACLEDBURLPREFIX + dbNamespace + ORACLEDBSUFFIX;
+      logger.info("Assign a unique namespace for operator");
+      assertNotNull(namespaces.get(1), "Namespace is null");
+      opNamespace = namespaces.get(1);
 
-    logger.info("Assign a unique namespace for operator");
-    assertNotNull(namespaces.get(1), "Namespace is null");
-    opNamespace = namespaces.get(1);
+      logger.info("Assign a unique namespace for JRF domain");
+      assertNotNull(namespaces.get(2), "Namespace is null");
+      jrfDomainNamespace = namespaces.get(2);
 
-    logger.info("Assign a unique namespace for JRF domain");
-    assertNotNull(namespaces.get(2), "Namespace is null");
-    jrfDomainNamespace = namespaces.get(2);
+      logger.info("Start DB and create RCU schema for namespace: {0}, dbListenerPort: {1}, RCU prefix: {2}, "
+                      + "dbUrl: {3}, dbImage: {4},  fmwImage: {5} ", dbNamespace, dbListenerPort, RCUSCHEMAPREFIX, dbUrl,
+              DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC);
+      assertDoesNotThrow(() -> setupDBandRCUschema(DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC,
+              RCUSCHEMAPREFIX, dbNamespace, getNextFreePort(), dbUrl, dbListenerPort),
+              String.format("Failed to create RCU schema for prefix %s in the namespace %s with "
+                      + "dbUrl %s, dbListenerPost $s", RCUSCHEMAPREFIX, dbNamespace, dbUrl, dbListenerPort));
 
-    logger.info("Start DB and create RCU schema for namespace: {0}, dbListenerPort: {1}, RCU prefix: {2}, "
-         + "dbUrl: {3}, dbImage: {4},  fmwImage: {5} ", dbNamespace, dbListenerPort, RCUSCHEMAPREFIX, dbUrl,
-        DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC);
-    assertDoesNotThrow(() -> setupDBandRCUschema(DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC,
-        RCUSCHEMAPREFIX, dbNamespace, getNextFreePort(), dbUrl, dbListenerPort),
-        String.format("Failed to create RCU schema for prefix %s in the namespace %s with "
-        + "dbUrl %s, dbListenerPost $s", RCUSCHEMAPREFIX, dbNamespace, dbUrl, dbListenerPort));
+      // install operator and verify its running in ready state
+      installAndVerifyOperator(opNamespace, jrfDomainNamespace);
 
-    // install operator and verify its running in ready state
-    installAndVerifyOperator(opNamespace, jrfDomainNamespace);
-
-    logger.info("For ItFmwDomainInPV using DB image: {0}, FMW image {1}",
-        DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC);
-
+      logger.info("For ItFmwDomainInPV using DB image: {0}, FMW image {1}",
+              DB_IMAGE_TO_USE_IN_SPEC, FMWINFRA_IMAGE_TO_USE_IN_SPEC);
+    }
   }
 
   /**
@@ -151,159 +152,167 @@ class ItFmwDomainInPVUsingWLST {
   @Test
   @DisplayName("Create JRF domain in PV using WLST script")
   void testFmwDomainInPvUsingWlst() {
-    final String clusterName = "cluster-jrfdomain-inpv";
-    final String adminServerName = "wlst-admin-server";
-    final String adminServerPodName = domainUid + "-" + adminServerName;
-    final String managedServerNameBase = "wlst-ms-";
-    final int managedServerPort = 8001;
-    final String managedServerPodNamePrefix = domainUid + "-" + managedServerNameBase;
-    final int replicaCount = 2;
-    final int t3ChannelPort = getNextFreePort();
+    if(!TestConstants.IS_UPPERSTACK) {
+      final String clusterName = "cluster-jrfdomain-inpv";
+      final String adminServerName = "wlst-admin-server";
+      final String adminServerPodName = domainUid + "-" + adminServerName;
+      final String managedServerNameBase = "wlst-ms-";
+      final int managedServerPort = 8001;
+      final String managedServerPodNamePrefix = domainUid + "-" + managedServerNameBase;
+      final int replicaCount = 2;
+      final int t3ChannelPort = getNextFreePort();
 
-    final String pvName = getUniquePvOrPvcName(domainUid + "-pv-");
-    final String pvcName = getUniquePvOrPvcName(domainUid + "-pvc-");
+      final String pvName = getUniquePvOrPvcName(domainUid + "-pv-");
+      final String pvcName = getUniquePvOrPvcName(domainUid + "-pvc-");
 
-    // create pull secrets for jrfDomainNamespace when running in non Kind Kubernetes cluster
-    // this secret is used only for non-kind cluster
-    createSecretForBaseImages(jrfDomainNamespace);
+      // create pull secrets for jrfDomainNamespace when running in non Kind Kubernetes cluster
+      // this secret is used only for non-kind cluster
+      createSecretForBaseImages(jrfDomainNamespace);
 
 
-    // create JRF domain credential secret
-    createSecretWithUsernamePassword(wlSecretName, jrfDomainNamespace,
-        ADMIN_USERNAME_DEFAULT, ADMIN_PASSWORD_DEFAULT);
+      // create JRF domain credential secret
+      createSecretWithUsernamePassword(wlSecretName, jrfDomainNamespace,
+              ADMIN_USERNAME_DEFAULT, ADMIN_PASSWORD_DEFAULT);
 
-    // create RCU credential secret
-    createRcuSecretWithUsernamePassword(rcuSecretName, jrfDomainNamespace,
-        RCUSCHEMAUSERNAME, RCUSCHEMAPASSWORD, RCUSYSUSERNAME, RCUSYSPASSWORD);
+      // create RCU credential secret
+      createRcuSecretWithUsernamePassword(rcuSecretName, jrfDomainNamespace,
+              RCUSCHEMAUSERNAME, RCUSCHEMAPASSWORD, RCUSYSUSERNAME, RCUSYSPASSWORD);
 
-    // create persistent volume and persistent volume claim for domain
-    createPV(pvName, domainUid, this.getClass().getSimpleName());
-    createPVC(pvName, pvcName, domainUid, jrfDomainNamespace);
+      // create persistent volume and persistent volume claim for domain
+      createPV(pvName, domainUid, this.getClass().getSimpleName());
+      createPVC(pvName, pvcName, domainUid, jrfDomainNamespace);
 
-    // create a temporary WebLogic domain property file
-    File domainPropertiesFile = assertDoesNotThrow(() ->
-            File.createTempFile("domain", "properties"),
-        "Failed to create domain properties file");
+      // create a temporary WebLogic domain property file
+      File domainPropertiesFile = assertDoesNotThrow(() ->
+                      File.createTempFile("domain", "properties"),
+              "Failed to create domain properties file");
 
-    //get ENV variable from the image
-    assertNotNull(getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "ORACLE_HOME"),
-        "envVar ORACLE_HOME from image is null");
-    oracle_home = getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "ORACLE_HOME");
-    logger.info("ORACLE_HOME in image {0} is: {1}", FMWINFRA_IMAGE_TO_USE_IN_SPEC, oracle_home);
-    assertNotNull(getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "JAVA_HOME"),
-        "envVar JAVA_HOME from image is null");
-    java_home = getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "JAVA_HOME");
-    logger.info("JAVA_HOME in image {0} is: {1}", FMWINFRA_IMAGE_TO_USE_IN_SPEC, java_home);
+      //get ENV variable from the image
+      assertNotNull(getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "ORACLE_HOME"),
+              "envVar ORACLE_HOME from image is null");
+      oracle_home = getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "ORACLE_HOME");
+      logger.info("ORACLE_HOME in image {0} is: {1}", FMWINFRA_IMAGE_TO_USE_IN_SPEC, oracle_home);
+      assertNotNull(getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "JAVA_HOME"),
+              "envVar JAVA_HOME from image is null");
+      java_home = getImageEnvVar(FMWINFRA_IMAGE_TO_USE_IN_SPEC, "JAVA_HOME");
+      logger.info("JAVA_HOME in image {0} is: {1}", FMWINFRA_IMAGE_TO_USE_IN_SPEC, java_home);
 
-    Properties p = new Properties();
-    p.setProperty("oracleHome", oracle_home); //default $ORACLE_HOME
-    p.setProperty("javaHome", java_home); //default $JAVA_HOME
-    p.setProperty("domainParentDir", "/shared/domains/");
-    p.setProperty("domainName", domainUid);
-    p.setProperty("domainUser", ADMIN_USERNAME_DEFAULT);
-    p.setProperty("domainPassword", ADMIN_PASSWORD_DEFAULT);
-    p.setProperty("rcuDb", dbUrl);
-    p.setProperty("rcuSchemaPrefix", RCUSCHEMAPREFIX);
-    p.setProperty("rcuSchemaPassword", RCUSCHEMAPASSWORD);
-    p.setProperty("adminListenPort", "7001");
-    p.setProperty("adminName", adminServerName);
-    p.setProperty("managedNameBase", managedServerNameBase);
-    p.setProperty("managedServerPort",Integer.toString(managedServerPort));
-    p.setProperty("prodMode", "true");
-    p.setProperty("managedCount", "4");
-    p.setProperty("clusterName", clusterName);
-    p.setProperty("t3ChannelPublicAddress", K8S_NODEPORT_HOST);
-    p.setProperty("t3ChannelPort", Integer.toString(t3ChannelPort));
-    p.setProperty("exposeAdminT3Channel", "true");
+      Properties p = new Properties();
+      p.setProperty("oracleHome", oracle_home); //default $ORACLE_HOME
+      p.setProperty("javaHome", java_home); //default $JAVA_HOME
+      p.setProperty("domainParentDir", "/shared/domains/");
+      p.setProperty("domainName", domainUid);
+      p.setProperty("domainUser", ADMIN_USERNAME_DEFAULT);
+      p.setProperty("domainPassword", ADMIN_PASSWORD_DEFAULT);
+      p.setProperty("rcuDb", dbUrl);
+      p.setProperty("rcuSchemaPrefix", RCUSCHEMAPREFIX);
+      p.setProperty("rcuSchemaPassword", RCUSCHEMAPASSWORD);
+      p.setProperty("adminListenPort", "7001");
+      p.setProperty("adminName", adminServerName);
+      p.setProperty("managedNameBase", managedServerNameBase);
+      p.setProperty("managedServerPort", Integer.toString(managedServerPort));
+      p.setProperty("prodMode", "true");
+      p.setProperty("managedCount", "4");
+      p.setProperty("clusterName", clusterName);
+      p.setProperty("t3ChannelPublicAddress", K8S_NODEPORT_HOST);
+      p.setProperty("t3ChannelPort", Integer.toString(t3ChannelPort));
+      p.setProperty("exposeAdminT3Channel", "true");
 
-    assertDoesNotThrow(() ->
-            p.store(new FileOutputStream(domainPropertiesFile), "jrf wlst properties file"),
-        "Failed to write domain properties file");
+      assertDoesNotThrow(() ->
+                      p.store(new FileOutputStream(domainPropertiesFile), "jrf wlst properties file"),
+              "Failed to write domain properties file");
 
-    // WLST script for creating domain
-    Path wlstScript = Paths.get(RESOURCE_DIR, "python-scripts", "jrf-wlst-create-domain-onpv.py");
+      // WLST script for creating domain
+      Path wlstScript = Paths.get(RESOURCE_DIR, "python-scripts", "jrf-wlst-create-domain-onpv.py");
 
-    // create configmap and domain on persistent volume using the WLST script and property file
-    createDomainOnPVUsingWlst(wlstScript, domainPropertiesFile.toPath(),
-        pvName, pvcName, jrfDomainNamespace);
+      // create configmap and domain on persistent volume using the WLST script and property file
+      createDomainOnPVUsingWlst(wlstScript, domainPropertiesFile.toPath(),
+              pvName, pvcName, jrfDomainNamespace);
 
-    // create a domain custom resource configuration object
-    logger.info("Creating domain custom resource");
-    Domain domain = new Domain()
-        .apiVersion(DOMAIN_API_VERSION)
-        .kind("Domain")
-        .metadata(new V1ObjectMeta()
-            .name(domainUid)
-            .namespace(jrfDomainNamespace))
-        .spec(new DomainSpec()
-            .domainUid(domainUid)
-            .domainHome("/shared/domains/" + domainUid)  // point to domain home in pv
-            .domainHomeSourceType("PersistentVolume") // set the domain home source type as pv
-            .image(FMWINFRA_IMAGE_TO_USE_IN_SPEC)
-            .imagePullPolicy("IfNotPresent")
-            .imagePullSecrets(Arrays.asList(
-                new V1LocalObjectReference()
-                    .name(BASE_IMAGES_REPO_SECRET)))
-            .webLogicCredentialsSecret(new V1SecretReference()
-                .name(wlSecretName)
-                .namespace(jrfDomainNamespace))
-            .includeServerOutInPodLog(true)
-            .logHomeEnabled(Boolean.TRUE)
-            .logHome("/shared/logs/" + domainUid)
-            .dataHome("")
-            .serverStartPolicy("IF_NEEDED")
-            .serverPod(new ServerPod() //serverpod
-                .addEnvItem(new V1EnvVar()
-                    .name("JAVA_OPTIONS")
-                    .value("-Dweblogic.StdoutDebugEnabled=false"))
-                .addEnvItem(new V1EnvVar()
-                    .name("USER_MEM_ARGS")
-                    .value("-Djava.security.egd=file:/dev/./urandom "))
-                .addVolumesItem(new V1Volume()
-                    .name(pvName)
-                    .persistentVolumeClaim(new V1PersistentVolumeClaimVolumeSource()
-                        .claimName(pvcName)))
-                .addVolumeMountsItem(new V1VolumeMount()
-                    .mountPath("/shared")
-                    .name(pvName)))
-            .adminServer(new AdminServer() //admin server
-                .serverStartState("RUNNING")
-                .adminService(new AdminService()
-                    .addChannelsItem(new Channel()
-                        .channelName("default")
-                        .nodePort(getNextFreePort()))
-                    .addChannelsItem(new Channel()
-                        .channelName("T3Channel")
-                        .nodePort(t3ChannelPort))))
-            .addClustersItem(new Cluster() //cluster
-                .clusterName(clusterName)
-                .replicas(replicaCount)
-                .serverStartState("RUNNING")
-                ));
+      // create a domain custom resource configuration object
+      logger.info("Creating domain custom resource");
+      Domain domain = new Domain()
+              .apiVersion(DOMAIN_API_VERSION)
+              .kind("Domain")
+              .metadata(new V1ObjectMeta()
+                      .name(domainUid)
+                      .namespace(jrfDomainNamespace))
+              .spec(new DomainSpec()
+                      .domainUid(domainUid)
+                      .domainHome("/shared/domains/" + domainUid)  // point to domain home in pv
+                      .domainHomeSourceType("PersistentVolume") // set the domain home source type as pv
+                      .image(FMWINFRA_IMAGE_TO_USE_IN_SPEC)
+                      .imagePullPolicy("IfNotPresent")
+                      .imagePullSecrets(Arrays.asList(
+                              new V1LocalObjectReference()
+                                      .name(BASE_IMAGES_REPO_SECRET)))
+                      .webLogicCredentialsSecret(new V1SecretReference()
+                              .name(wlSecretName)
+                              .namespace(jrfDomainNamespace))
+                      .includeServerOutInPodLog(true)
+                      .logHomeEnabled(Boolean.TRUE)
+                      .logHome("/shared/logs/" + domainUid)
+                      .dataHome("")
+                      .serverStartPolicy("IF_NEEDED")
+                      .serverPod(new ServerPod() //serverpod
+                              .addEnvItem(new V1EnvVar()
+                                      .name("JAVA_OPTIONS")
+                                      .value("-Dweblogic.StdoutDebugEnabled=false"))
+                              .addEnvItem(new V1EnvVar()
+                                      .name("USER_MEM_ARGS")
+                                      .value("-Djava.security.egd=file:/dev/./urandom "))
+                              .addVolumesItem(new V1Volume()
+                                      .name(pvName)
+                                      .persistentVolumeClaim(new V1PersistentVolumeClaimVolumeSource()
+                                              .claimName(pvcName)))
+                              .addVolumeMountsItem(new V1VolumeMount()
+                                      .mountPath("/shared")
+                                      .name(pvName)))
+                      .adminServer(new AdminServer() //admin server
+                              .serverStartState("RUNNING")
+                              .adminService(new AdminService()
+                                      .addChannelsItem(new Channel()
+                                              .channelName("default")
+                                              .nodePort(getNextFreePort()))
+                                      .addChannelsItem(new Channel()
+                                              .channelName("T3Channel")
+                                              .nodePort(t3ChannelPort))))
+                      .addClustersItem(new Cluster() //cluster
+                              .clusterName(clusterName)
+                              .replicas(replicaCount)
+                              .serverStartState("RUNNING")
+                      ));
 
-    setPodAntiAffinity(domain);
+      setPodAntiAffinity(domain);
 
-    // verify the domain custom resource is created
-    createDomainAndVerify(domain, jrfDomainNamespace);
+      // verify the domain custom resource is created
+      createDomainAndVerify(domain, jrfDomainNamespace);
 
-    // verify the admin server service created
-    checkServiceExists(adminServerPodName, jrfDomainNamespace);
+      // verify the admin server service created
+      checkServiceExists(adminServerPodName, jrfDomainNamespace);
 
-    // verify admin server pod is ready
-    checkPodReady(adminServerPodName, domainUid, jrfDomainNamespace);
+      // verify admin server pod is ready
+      checkPodReady(adminServerPodName, domainUid, jrfDomainNamespace);
 
-    // verify managed server services created
-    for (int i = 1; i <= replicaCount; i++) {
-      logger.info("Checking managed server service {0} is created in namespace {1}",
-          managedServerPodNamePrefix + i, jrfDomainNamespace);
-      checkServiceExists(managedServerPodNamePrefix + i, jrfDomainNamespace);
-    }
+      // verify managed server services created
+      for (int i = 1; i <= replicaCount; i++) {
+        logger.info("Checking managed server service {0} is created in namespace {1}",
+                managedServerPodNamePrefix + i, jrfDomainNamespace);
+        checkServiceExists(managedServerPodNamePrefix + i, jrfDomainNamespace);
+      }
 
-    // verify managed server pods are ready
-    for (int i = 1; i <= replicaCount; i++) {
-      logger.info("Waiting for managed server pod {0} to be ready in namespace {1}",
-          managedServerPodNamePrefix + i, jrfDomainNamespace);
-      checkPodReady(managedServerPodNamePrefix + i, domainUid, jrfDomainNamespace);
+      // verify managed server pods are ready
+      for (int i = 1; i <= replicaCount; i++) {
+        logger.info("Waiting for managed server pod {0} to be ready in namespace {1}",
+                managedServerPodNamePrefix + i, jrfDomainNamespace);
+        checkPodReady(managedServerPodNamePrefix + i, domainUid, jrfDomainNamespace);
+      }
+    }else{
+      try {
+        ItDomainUtilsWLST.deployDomainUsingSampleRepo();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
 
   }
