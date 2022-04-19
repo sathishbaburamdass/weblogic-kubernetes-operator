@@ -38,6 +38,7 @@ class ItDomainUtilsWLST {
   public static String managedServerPrefix = "";
   public static String adminServerPodName = "";
   public static String clusterName = "";
+  public static Boolean IS_DOMAIN_DEPLOYED = false;
   public static final int managedServerReplicaCount = 2;
   private static final String wlSecretName = domainUid + "-weblogic-credentials";
   private static final String rcuSecretName = domainUid + "-rcu-credentials";
@@ -46,7 +47,7 @@ class ItDomainUtilsWLST {
   private static final String OPT_VERSION = TestConstants.OPERATOR_VERSION;
   private static final String prodID = FmwMapping.getProdName(FmwMapping.productIdMap,TestConstants.FMW_DOMAIN_TYPE);
   private static final String prodDirectory = FmwMapping.productDirectoryMap.get(prodID);
-
+  private static List<String> listOfDirInProdDir;
 
 
   public static void deployDomainUsingSampleRepo() throws IOException {
@@ -55,8 +56,9 @@ class ItDomainUtilsWLST {
     System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
 
     //create ns & cluster bindings
-    copyRepos();
     prepareENV();
+    copyRepos();
+
 
     //update create-pv-pvc-inputs.yaml
     pv_pvc_util();
@@ -159,7 +161,7 @@ class ItDomainUtilsWLST {
 
   }
 
-  public static void copyRepos(){
+  public static void copyRepos() throws IOException {
     new Command()
             .withParams(new CommandParams()
                     .command("rm -rf /home/opc/intg-test/workspace && mkdir -p /home/opc/intg-test/workspace/FMW-DockerImages && mkdir -p /home/opc/intg-test/workspace/weblogic-kubernetes-operator && mkdir -p /home/opc/intg-test/workspace/k8spipeline && chmod -R 777 /home/opc/intg-test/workspace"))
@@ -181,8 +183,17 @@ class ItDomainUtilsWLST {
             .withParams(new CommandParams()
                     .command("cd /home/opc/intg-test/workspace && mv -f FMW-DockerImages fmwsamples_bkup && mkdir /home/opc/intg-test/workspace/fmwsamples && cd fmwsamples && mkdir -p "+prodDirectory+"/kubernetes/"+OPT_VERSION+""))
             .execute();
-    new Command().withParams(new CommandParams()
-            .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/charts /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/common /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/rest /home/opc/intg-test/workspace/fmwsamples_bkup/"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/scaling "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/")).execute();
+    try {
+      new Command().withParams(new CommandParams()
+              .command("cd /home/opc/intg-test/workspace/fmwsamples && cp -rf /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/README.md /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/common /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-kubernetes-secrets /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-oracle-db-service /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-rcu-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-rcu-schema /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-weblogic-domain-credentials /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-weblogic-domain-pv-pvc /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/delete-domain /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/domain-lifecycle /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/elasticsearch-and-kibana /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/imagetool-scripts /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/logging-services /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/monitoring-service /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/rest /home/opc/intg-test/workspace/fmwsamples_bkup/" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/scaling " + prodDirectory + "/kubernetes/" + OPT_VERSION + "/")).execute();
+    }catch (Exception e){
+      logger.info(e.getMessage());
+    }finally {
+      new Command().withParams(new CommandParams()
+              .command("cd "+workSpacePath+prodDirectory+"/kubernetes/" + OPT_VERSION+" && ls > dirs.txt")).execute();
+      listOfDirInProdDir = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/dirs.txt")));
+      logger.info("List of Directories in PROD SAMPLES : "+listOfDirInProdDir);
+    }
   }
   
   public static void prepareENV(){
@@ -240,9 +251,14 @@ class ItDomainUtilsWLST {
   }
 
   public static void prepareRCU(){
+    if(listOfDirInProdDir.contains("create-weblogic-domain-credentials") && listOfDirInProdDir.contains("create-rcu-credentials")){
+      new Command().withParams(new CommandParams()
+              .command("cd "+workSpacePath+" && "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-credentials/create-weblogic-credentials.sh -u weblogic -p welcome1 -n "+domainNS+" -d "+domainUid+" && "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-credentials/create-rcu-credentials.sh -u "+domainUid+" -p Welcome1 -a sys -q Oradoc_db1 -d "+domainUid+" -n "+domainNS)).execute();
+    }else{
+      new Command().withParams(new CommandParams()
+              .command("cd "+workSpaceBasePath+ " && weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain-credentials/create-weblogic-credentials.sh -u weblogic -p welcome1 -n "+domainNS+" -d "+domainUid+" && weblogic-kubernetes-operator/kubernetes/samples/scripts/create-rcu-credentials/create-rcu-credentials.sh -u "+domainUid+" -p Welcome1 -a sys -q Oradoc_db1 -d "+domainUid+" -n "+domainNS)).execute();
+    }
     //create weblogic & rcu creds
-    new Command().withParams(new CommandParams()
-            .command("cd "+workSpacePath+" && "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-credentials/create-weblogic-credentials.sh -u weblogic -p welcome1 -n "+domainNS+" -d "+domainUid+" && "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-credentials/create-rcu-credentials.sh -u "+domainUid+" -p Welcome1 -a sys -q Oradoc_db1 -d "+domainUid+" -n "+domainNS)).execute();
     //prepare rcu based on the product
     if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")){
       new Command().withParams(new CommandParams()
@@ -326,5 +342,6 @@ class ItDomainUtilsWLST {
     for(int i=1;i<=managedServerReplicaCount;i++){
       checkPodReady(managedServerPrefix+i, domainUid, domainNS);
     }
+    IS_DOMAIN_DEPLOYED = true;
   }
 }
