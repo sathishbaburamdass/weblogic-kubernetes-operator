@@ -77,18 +77,9 @@ class ItDomainUtilsWLST {
     //install operator
     installOperator();
 
-    //weblogic / rcu creds
-
-    //prepare pv-pvc yaml file
-
-    //create pv pvc
-
     //prepare db
     prepareDB();
     prepareRCU();
-
-
-    //prepare rcu
 
     //create domain
     domain_yaml_util();
@@ -136,12 +127,13 @@ class ItDomainUtilsWLST {
 
   }
 
-  public static void domain_yaml_util() {
+  public static void domain_yaml_util() throws IOException{
+    logger.info("---Manipulate Domain Yaml File---");
     File file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
     BufferedReader reader;
     FileWriter writer;
     String content = "";
-    try{
+    //try{
       reader = new BufferedReader(new FileReader(file));
       String line = reader.readLine();
 
@@ -150,7 +142,7 @@ class ItDomainUtilsWLST {
         content = content + line + System.lineSeparator();
         line = reader.readLine();
       }
-      logger.info("---Manipulate Domain Yaml File---");
+
       logger.info(content);
       //start - find and replace domain yaml values
       List<String> domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
@@ -185,9 +177,9 @@ class ItDomainUtilsWLST {
       writer.write(content);
       reader.close();
       writer.close();
-    }catch(IOException e){
-      e.printStackTrace();
-    }
+//    }catch(IOException e){
+//      e.printStackTrace();
+//    }
   }
 
   public static void copyRepos(){
@@ -258,9 +250,11 @@ class ItDomainUtilsWLST {
 
     new Command().withParams(new CommandParams()
             .command("cd "+workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
+    new Command().withParams(new CommandParams()
+            .command("while [[ $(kubectl get pods oracledb-0 -n "+domainNS+" -o 'jsonpath={..status.conditions[?(@.type==\"Ready\")].status}') != \"True\" ]]; do echo \"waiting for DB pod to be ready\" && sleep 10; done")).execute();
 
     try {
-      MINUTES.sleep(10);
+      SECONDS.sleep(10);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
