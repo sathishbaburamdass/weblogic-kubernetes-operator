@@ -127,8 +127,8 @@ class ItDomainUtilsWLST {
     DataOutputStream outstream= new DataOutputStream(new FileOutputStream(file,false));
     outstream.write(pv_pvc.getBytes());
     outstream.close();
-    String pvName = domainUid+domainNS+"-pv.yaml";
-    String pvcName = domainUid+domainNS+"-pvc.yaml";
+    String pvName = domainUid+"-"+TestConstants.FMW_DOMAIN_TYPE+"-domain-pv.yaml";
+    String pvcName = domainUid+"-"+TestConstants.FMW_DOMAIN_TYPE+"-domain-pvc.yaml";
 
     new Command().withParams(new CommandParams()
             .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc.sh -i "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-weblogic-domain-pv-pvc/create-pv-pvc-inputs.yaml -o script-output-directory && cp script-output-directory/pv-pvcs/"+pvName+" . && cp script-output-directory/pv-pvcs/"+pvcName+" .")).execute();
@@ -219,12 +219,12 @@ class ItDomainUtilsWLST {
             .command("kubectl create ns "+operatorNS+" && kubectl create ns "+domainNS+" && kubectl create clusterrolebinding crb-default-sa-"+operatorNS+" --clusterrole=cluster-admin --serviceaccount="+operatorNS+":default")).execute();
     connectionURL = "oracledb."+domainNS+":1521/oracledbpdb.us.oracle.com";
     dbImage = "container-registry.oracle.com/database/enterprise:12.2.0.1-slim";
-    productImage = TestConstants.BASE_IMAGES_REPO+TestConstants.FMWINFRA_IMAGE_NAME+TestConstants.FMWINFRA_IMAGE_TAG;
+    productImage = TestConstants.FMWINFRA_IMAGE_NAME+":"+TestConstants.FMWINFRA_IMAGE_TAG;
   }
 
   public static void prepareDB(){
 
-    File file=new File(workSpacePath+prodDirectory+"k8spipeline/kubernetes/framework/db/oracle-db.yaml");
+    File file=new File(workSpacePath+prodDirectory+"/k8spipeline/kubernetes/framework/db/oracle-db.yaml");
     BufferedReader reader = null;
     FileWriter writer = null;
     String content = "";
@@ -254,7 +254,7 @@ class ItDomainUtilsWLST {
     }
 
     new Command().withParams(new CommandParams()
-            .command("cd "+workSpacePath+prodDirectory+"k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
+            .command("cd "+workSpacePath+prodDirectory+"/k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
 
   }
 
@@ -271,7 +271,7 @@ class ItDomainUtilsWLST {
               .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-schema/create-rcu-schema.sh -s "+domainUid+" -t "+TestConstants.FMW_DOMAIN_TYPE+" -d "+connectionURL+" -i "+productImage+" -n "+domainNS+" -q Oradoc_db1 -r Welcome1 -l 2000")).execute();
     }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
       // cd workspacepath ,  k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml
-      File file=new File(workSpacePath+prodDirectory+"k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml");
+      File file=new File(workSpacePath+prodDirectory+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml");
       BufferedReader reader = null;
       FileWriter writer = null;
       String content = "";
@@ -297,7 +297,7 @@ class ItDomainUtilsWLST {
         e.printStackTrace();
       }
 
-      file=new File(workSpacePath+prodDirectory+"k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-pod.yaml");
+      file=new File(workSpacePath+prodDirectory+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-pod.yaml");
       reader = null;
       writer = null;
       content = "";
@@ -322,7 +322,7 @@ class ItDomainUtilsWLST {
       }
 
       new Command().withParams(new CommandParams()
-              .command("cd "+workSpacePath+prodDirectory+"k8spipeline/kubernetes/framework/db/rcu/ && kubectl apply -f fmwk8s-rcu-configmap.yaml -n "+domainNS+" && kubectl apply -f fmwk8s-rcu-pod.yaml -n "+domainNS)).execute();
+              .command("cd "+workSpacePath+prodDirectory+"/k8spipeline/kubernetes/framework/db/rcu/ && kubectl apply -f fmwk8s-rcu-configmap.yaml -n "+domainNS+" && kubectl apply -f fmwk8s-rcu-pod.yaml -n "+domainNS)).execute();
     }
 
   }
