@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodReady;
+import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 import static org.awaitility.Awaitility.with;
 
 /**
@@ -62,7 +63,7 @@ class ItDomainUtilsWLST {
 
 
   public static void deployDomainUsingSampleRepo() throws IOException {
-
+    logger = getLogger();
     System.out.println("****----Inside Init All : Domain deployment via Sample Scripts****----");
     System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
 
