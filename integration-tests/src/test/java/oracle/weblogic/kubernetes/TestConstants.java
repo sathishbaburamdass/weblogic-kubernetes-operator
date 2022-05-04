@@ -23,6 +23,8 @@ public interface TestConstants {
           .orElse("fmw");
   public static final String OPERATOR_VERSION = Optional.ofNullable(System.getenv("OPERATOR_VERSION"))
           .orElse("3.3.0");
+  public static final String PRODUCT_RELEASE_VERSION = "release/" + Optional.ofNullable(System.getenv("PRODUCT_RELEASE_VERSION"))
+          .orElse("21.3.2");
   public static Boolean IS_UPPERSTACK = Optional.ofNullable(System.getenv("FMW_DOMAIN_TYPE")).isPresent();
   public static final String WLS_DEFAULT_CHANNEL_NAME = "default";
   public static final String DEFAULT_WLS_IMAGE_TAGS = "12.2.1.3, 12.2.1.4, 14.1.1.0-11";

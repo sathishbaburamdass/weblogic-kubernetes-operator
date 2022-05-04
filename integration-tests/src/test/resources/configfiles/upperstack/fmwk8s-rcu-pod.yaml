@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fmwk8s-rcu
+spec:
+  imagePullSecrets:
+    - name: %DB_SECRET%
+  restartPolicy: Never
+  volumes:
+    - name: fmwk8s-rcu-configmap
+      configMap:
+        name: fmwk8s-rcu-configmap
+        defaultMode: 0777
+  containers:
+    - name: fmwk8s-rcu
+      imagePullPolicy: IfNotPresent
+      image: %PRODUCT_IMAGE%
+      command: ["/bin/sh"]
+      args: ["-c", "/u01/oracle/run-rcu.sh"]
+      volumeMounts:
+        - name: fmwk8s-rcu-configmap
+          mountPath: /u01/oracle/run-rcu.sh
+          subPath: run-rcu.sh
+---

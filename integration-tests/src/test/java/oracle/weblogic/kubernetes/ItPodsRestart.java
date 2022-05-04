@@ -152,7 +152,6 @@ class ItPodsRestart {
       domainNamespace = ItDomainUtilsWLST.domainNS;
       adminServerPodName = ItDomainUtilsWLST.adminServerPodName;
       managedServerPrefix = ItDomainUtilsWLST.managedServerPrefix;
-
     }
   }
 

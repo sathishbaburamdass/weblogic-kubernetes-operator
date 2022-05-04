@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: %DB_NAME%
+  labels:
+    app: %DB_NAME%
+  namespace: %DB_NAMESPACE%
+spec:
+  ports:
+    - port: 1521
+      name: server-port
+    - port: 5500
+      name: em-port
+  clusterIP: None
+  selector:
+    app: %DB_NAME%
+---
+#apiVersion: apps/v1beta1
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: %DB_NAME%
+  namespace: %DB_NAMESPACE%
+spec:
+  selector:
+    matchLabels:
+      app: %DB_NAME%
+  serviceName: "%DB_NAME%"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: %DB_NAME%
+    spec:
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+        - name: %DB_SECRET%
+      containers:
+        - name: %DB_NAME%
+          image: %DB_IMAGE%
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 1521
+              name: server-port
+            - containerPort: 5500
+              name: em-port
+          env:
+            - name: DB_SID
+              value: %DB_NAME%
+            - name: DB_PASSWD
+              value: %DB_PASSWORD%
+            - name: DB_PDB
+              value: %DB_NAME%pdb
+            - name: DB_DOMAIN
+              value: us.oracle.com
+            - name: DB_BUNDLE
+              value: basic
+          readinessProbe:
+            exec:
+              command:
+                - grep
+                - "Done ! The database is ready for use ."
+                - "/home/oracle/setup/log/setupDB.log"
+            initialDelaySeconds: 300
+            periodSeconds: 5

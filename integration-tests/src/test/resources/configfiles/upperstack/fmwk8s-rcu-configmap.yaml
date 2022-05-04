@@ -1,0 +1,114 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fmwk8s-rcu-configmap
+data:
+  run-rcu.sh: |-
+    #!/bin/bash
+
+    export CONNECTION_STRING=%CONNECTION_STRING%
+    export RCUPREFIX=%RCUPREFIX%
+
+    echo -e %SYS_PASSWORD%"\n"%PASSWORD% > /tmp/pwd.txt
+
+    if [ "%PRODUCT_ID%" == "fmw-infrastructure" ]
+    then
+
+      /u01/oracle/oracle_common/bin/rcu -silent -createRepository -databaseType ORACLE -connectString $CONNECTION_STRING -dbUser sys -dbRole sysdba \
+      -useSamePasswordForAllSchemaUsers true -selectDependentsForComponents true \
+      -schemaPrefix $RCUPREFIX \
+      -component MDS \
+      -component IAU \
+      -component IAU_APPEND \
+      -component IAU_VIEWER \
+      -component OPSS  \
+      -component WLS  \
+      -component STB -f < /tmp/pwd.txt
+
+    elif [ "%PRODUCT_ID%" == "soa" ]
+    then
+
+      /u01/oracle/oracle_common/bin/rcu -silent -createRepository -databaseType ORACLE -connectString $CONNECTION_STRING -dbUser sys -dbRole sysdba \
+      -useSamePasswordForAllSchemaUsers true -selectDependentsForComponents true \
+      -variables SOA_PROFILE_TYPE=SMALL,HEALTHCARE_INTEGRATION=NO \
+      -schemaPrefix $RCUPREFIX \
+      -component MDS \
+      -component IAU \
+      -component IAU_APPEND \
+      -component IAU_VIEWER \
+      -component OPSS \
+      -component WLS \
+      -component STB \
+      -component ESS \
+      -component SOAINFRA -f < /tmp/pwd.txt
+
+    elif [ "%PRODUCT_ID%" == "wcp" ]
+    then
+
+      /u01/oracle/oracle_common/bin/rcu -silent -createRepository -databaseType ORACLE -connectString $CONNECTION_STRING -dbUser sys -dbRole sysdba \
+      -useSamePasswordForAllSchemaUsers true -selectDependentsForComponents true \
+      -schemaPrefix $RCUPREFIX \
+      -component MDS \
+      -component IAU \
+      -component IAU_APPEND \
+      -component IAU_VIEWER \
+      -component OPSS \
+      -component WLS \
+      -component STB \
+      -component WEBCENTER \
+      -tablespace USERS \
+      -tempTablespace TEMP -f < /tmp/pwd.txt
+
+    elif [ "%PRODUCT_ID%" == "wcsites" ]
+    then
+      echo "RCU config for wcsites is part of create-domain. Hence skipping..."
+      sleep 10
+
+    elif [ "%PRODUCT_ID%" == "oim" ]
+    then
+
+      /u01/oracle/oracle_common/bin/rcu -silent -createRepository -databaseType ORACLE -connectString $CONNECTION_STRING -dbUser sys -dbRole sysdba \
+      -useSamePasswordForAllSchemaUsers true -selectDependentsForComponents true \
+      -schemaPrefix $RCUPREFIX \
+      -component OIM \
+      -component MDS \
+      -component SOAINFRA \
+      -component OPSS -f < /tmp/pwd.txt
+
+    elif [ "%PRODUCT_ID%" == "access" ]
+    then
+
+    /u01/oracle/oracle_common/bin/rcu -silent -createRepository -databaseType ORACLE -connectString $CONNECTION_STRING -dbUser sys -dbRole sysdba \
+    -useSamePasswordForAllSchemaUsers true -selectDependentsForComponents true \
+    -schemaPrefix $RCUPREFIX \
+    -component MDS \
+    -component IAU \
+    -component IAU_APPEND \
+    -component IAU_VIEWER \
+    -component OPSS \
+    -component WLS \
+    -component STB \
+    -component OAM -f < /tmp/pwd.txt
+    sleep 60
+
+    elif [ "%PRODUCT_ID%" == "wcc" ]
+    then
+
+    /u01/oracle/oracle_common/bin/rcu -silent -createRepository -databaseType ORACLE -connectString $CONNECTION_STRING -dbUser sys -dbRole sysdba \
+    -useSamePasswordForAllSchemaUsers true -selectDependentsForComponents true \
+    -schemaPrefix $RCUPREFIX \
+    -component OPSS \
+    -component IAU_VIEWER \
+    -component CONTENT \
+    -component MDS \
+    -component IAU_APPEND \
+    -component STB \
+    -component IAU \
+    -component WLS \
+    -tablespace USERS \
+    -tempTablespace TEMP -f < /tmp/pwd.txt
+    sleep 60
+
+    fi
+---

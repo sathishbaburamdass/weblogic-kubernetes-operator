@@ -24,6 +24,31 @@ import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 @DisplayName("Create given domain using sample repo")
 @IntegrationTest
 class ItDomainUtilsWLST {
+  static Map<String, String> productIdMap = new HashMap<>();
+  static Map<String, String> productDirectoryMap = new HashMap<>();
+  static Map<String, String> managedServerBaseNames = new HashMap<>();
+  static{
+    productDirectoryMap.put("SOA", "OracleSOASuite");
+    productDirectoryMap.put("WCP", "OracleWebCenterPortal");
+    productDirectoryMap.put("WC-SITES", "OracleWebCenterSites");
+    productDirectoryMap.put("OIG", "OracleIdentityGovernance");
+    productDirectoryMap.put("OAM", "OracleAccessManagement");
+    productDirectoryMap.put("WCC", "OracleWebCenterContent");
+
+    productIdMap.put("SOA", "soa");
+    productIdMap.put("WCP", "wcp");
+    productIdMap.put("WC-SITES", "wcsites");
+    productIdMap.put("OIG", "oim");
+    productIdMap.put("OAM", "access");
+    productIdMap.put("WCC", "wcc");
+
+    managedServerBaseNames.put("SOA", "soa-server");
+    managedServerBaseNames.put("WCC", "ucm-server");
+    managedServerBaseNames.put("OAM", "oam-server");
+    managedServerBaseNames.put("OIG", "oim-server");
+    managedServerBaseNames.put("WCP", "wcpserver");
+    managedServerBaseNames.put("WC-SITES", "wcsites-server");
+  }
 
   private static String connectionURL = "";
   private static String dbImage = "";
@@ -44,10 +69,12 @@ class ItDomainUtilsWLST {
   private static final String rcuSecretName = domainUid + "-rcu-credentials";
   private static final String workSpacePath = "/home/opc/intg-test/workspace/fmwsamples/";
   private static final String workSpaceBasePath = "/home/opc/intg-test/workspace/";
+  private static final String projectDir = System.getProperty("user.dir");
   private static final String OPT_VERSION = TestConstants.OPERATOR_VERSION;
-  private static final String prodID = FmwMapping.getProdName(FmwMapping.productIdMap,TestConstants.FMW_DOMAIN_TYPE);
-  private static final String prodDirectory = FmwMapping.productDirectoryMap.get(prodID);
+  private static final String prodID = getProdName(productIdMap,TestConstants.FMW_DOMAIN_TYPE);
+  private static final String prodDirectory = productDirectoryMap.get(prodID);
   private static List<String> listOfDirInProdDir;
+  private static List<String> operatorDir;
 
 
   public static void deployDomainUsingSampleRepo() throws IOException {
@@ -123,12 +150,12 @@ class ItDomainUtilsWLST {
     FileWriter writer;
     String content = "";
 
-    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")){
+    if(operatorDir.contains("weblogic-operator")){
         file=new File(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
         domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
-    }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
-        file=new File(workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/create-wcc-domain/domain-home-on-pv/create-domain-inputs.yaml");
-        domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/create-wcc-domain/domain-home-on-pv/create-domain-inputs.yaml")));
+    }else {
+        file=new File(workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml");
+        domainYamlOrgiValue = Files.readAllLines((Paths.get(workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain/domain-home-on-pv/create-domain-inputs.yaml")));
     }
 
       reader = new BufferedReader(new FileReader(file));
@@ -187,10 +214,6 @@ class ItDomainUtilsWLST {
             .execute();
     new Command()
             .withParams(new CommandParams()
-                    .command("GIT_SSH_COMMAND='ssh -i /home/opc/intg-test/id_rsa_github -o IdentitiesOnly=yes' git clone git@orahub.oci.oraclecorp.com:fmw-platform-qa/fmw-k8s-pipeline.git /home/opc/intg-test/workspace/k8spipeline"))
-            .execute();
-    new Command()
-            .withParams(new CommandParams()
                     .command("git clone --branch release/3.3 https://github.com/oracle/weblogic-kubernetes-operator.git /home/opc/intg-test/workspace/weblogic-kubernetes-operator"))
             .execute();
     new Command()
@@ -204,12 +227,13 @@ class ItDomainUtilsWLST {
       logger.info(e.getMessage());
     }finally {
       new Command().withParams(new CommandParams()
-              .command("cd "+workSpacePath+prodDirectory+"/kubernetes/" + OPT_VERSION+" && ls > dirs.txt")).execute();
+              .command("cd "+workSpacePath+prodDirectory+"/kubernetes/" + OPT_VERSION+" && ls > dirs.txt && ls charts/ > optDir.txt")).execute();
       listOfDirInProdDir = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/dirs.txt")));
+      operatorDir = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/optDir.txt")));
       logger.info("List of Directories in PROD SAMPLES : "+listOfDirInProdDir);
-      if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
+      if(!operatorDir.contains("weblogic-operator")){
         new Command().withParams(new CommandParams()
-                .command("cd "+workSpacePath+" && cp -rf OracleWebCenterContent/kubernetes/"+OPT_VERSION+"/create-wcc-domain "+workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/")).execute();
+                .command("cd "+workSpacePath+" && cp -rf "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain "+workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/")).execute();
       }
     }
   }
@@ -220,9 +244,9 @@ class ItDomainUtilsWLST {
     connectionURL = "oracledb."+domainNS+":1521/oracledbpdb.us.oracle.com";
     dbImage = "container-registry.oracle.com/database/enterprise:12.2.0.1-slim";
     productImage = TestConstants.FMWINFRA_IMAGE_NAME+":"+TestConstants.FMWINFRA_IMAGE_TAG;
-    managedServerPrefix = domainUid+"-"+FmwMapping.managedServerBaseNames.get(prodID);
+    managedServerPrefix = domainUid+"-"+managedServerBaseNames.get(prodID);
     adminServerPodName = domainUid + "-adminserver";
-    clusterName = FmwMapping.managedServerBaseNames.get(prodID).replace("-","_").replace("server","cluster");
+    clusterName = managedServerBaseNames.get(prodID).replace("-","_").replace("server","cluster");
     logger.info("--print domain variables---");
     logger.info(managedServerPrefix);
     logger.info(adminServerPodName);
@@ -231,7 +255,7 @@ class ItDomainUtilsWLST {
 
   public static void prepareDB(){
 
-    File file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/oracle-db.yaml");
+    File file=new File(projectDir+"/integration-tests/src/resources/configfiles/upperstack/oracle-db.yaml");
     BufferedReader reader = null;
     FileWriter writer = null;
     String content = "";
@@ -262,7 +286,7 @@ class ItDomainUtilsWLST {
     }
 
     new Command().withParams(new CommandParams()
-            .command("cd "+workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
+            .command("cd "+projectDir+"/integration-tests/src/resources/configfiles/upperstack/ && kubectl apply -f oracle-db.yaml -n "+domainNS)).execute();
     new Command().withParams(new CommandParams()
             .command("while [[ $(kubectl get pods oracledb-0 -n "+domainNS+" -o 'jsonpath={..status.conditions[?(@.type==\"Ready\")].status}') != \"True\" ]]; do echo \"waiting for DB pod to be ready\" && sleep 10; done")).execute();
 
@@ -278,15 +302,14 @@ class ItDomainUtilsWLST {
     }
     //create weblogic & rcu creds
     //prepare rcu based on the product
-    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")){
+    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa") && listOfDirInProdDir.contains("create-rcu-schema")){
       new Command().withParams(new CommandParams()
               .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-schema/create-rcu-schema.sh -s "+domainUid+" -t "+TestConstants.FMW_DOMAIN_TYPE+" -d "+connectionURL+" -i "+productImage+" -n "+domainNS+" -q Oradoc_db1 -r Welcome1 -c SOA_PROFILE_TYPE=SMALL,HEALTHCARE_INTEGRATION=NO -l 1000")).execute();
-    }if(TestConstants.FMW_DOMAIN_TYPE.matches("oig|wcp|oam")){
+    }else if(listOfDirInProdDir.contains("create-rcu-schema")){
       new Command().withParams(new CommandParams()
               .command("cd "+workSpacePath+" && ./"+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-rcu-schema/create-rcu-schema.sh -s "+domainUid+" -t "+TestConstants.FMW_DOMAIN_TYPE+" -d "+connectionURL+" -i "+productImage+" -n "+domainNS+" -q Oradoc_db1 -r Welcome1 -l 2000")).execute();
-    }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")){
-      // cd workSpaceBasePath , k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml
-      File file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-configmap.yaml");
+    }else {
+      File file=new File(projectDir+"/integration-tests/src/resources/configfiles/upperstack/fmwk8s-rcu-configmap.yaml");
       BufferedReader reader = null;
       FileWriter writer = null;
       String content = "";
@@ -312,7 +335,7 @@ class ItDomainUtilsWLST {
         e.printStackTrace();
       }
 
-      file=new File(workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/fmwk8s-rcu-pod.yaml");
+      file=new File(projectDir+"/integration-tests/src/resources/configfiles/upperstack/fmwk8s-rcu-pod.yaml");
       content = "";
       try{
         reader = new BufferedReader(new FileReader(file));
@@ -335,30 +358,30 @@ class ItDomainUtilsWLST {
       }
 
       new Command().withParams(new CommandParams()
-              .command("cd "+workSpaceBasePath+"/k8spipeline/kubernetes/framework/db/rcu/ && kubectl apply -f fmwk8s-rcu-configmap.yaml -n "+domainNS+" && kubectl apply -f fmwk8s-rcu-pod.yaml -n "+domainNS)).execute();
+              .command("cd "+projectDir+"/integration-tests/src/resources/configfiles/upperstack/ && kubectl apply -f fmwk8s-rcu-configmap.yaml -n "+domainNS+" && kubectl apply -f fmwk8s-rcu-pod.yaml -n "+domainNS)).execute();
     }
 
   }
 
   public static void installOperator(){
-    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")) {
+    if(operatorDir.contains("weblogic-operator")) {
       new Command().withParams(new CommandParams()
               .command("helm install op-intg-test " + workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts/weblogic-operator --namespace " + operatorNS + " --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:" + OPT_VERSION + " --wait")).execute();
-    }else  if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")) {
+    }else {
       new Command().withParams(new CommandParams()
               .command("helm install op-intg-test " + workSpaceBasePath + "weblogic-kubernetes-operator/kubernetes/charts/weblogic-operator --namespace " + operatorNS + " --set serviceAccount=default --set 'domainNamespaces={}' --set image=ghcr.io/oracle/weblogic-kubernetes-operator:" + OPT_VERSION + " --wait")).execute();
     }
   }
 
   public static void createDomain(){
-    if(TestConstants.FMW_DOMAIN_TYPE.matches("soa")) {
+    if(operatorDir.contains("weblogic-operator")) {
         new Command().withParams(new CommandParams()
                 .command("cd " + workSpacePath + " && ./" + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain.sh -i  " + prodDirectory + "/kubernetes/" + OPT_VERSION + "/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
         new Command().withParams(new CommandParams()
                 .command("helm upgrade op-intg-test " + workSpacePath + prodDirectory + "/kubernetes/" + OPT_VERSION + "/charts/weblogic-operator --namespace " + operatorNS + " --reuse-values --set 'domainNamespaces={" + domainNS + "}' --wait")).execute();
         new Command().withParams(new CommandParams()
                 .command("cd " + workSpacePath + "script-output-domain-directory/weblogic-domains/" + domainUid + "/ && kubectl apply -f domain.yaml -n " + domainNS)).execute();
-    }else if(TestConstants.FMW_DOMAIN_TYPE.matches("wcc")) {
+    }else {
         new Command().withParams(new CommandParams()
                 .command("cd " + workSpaceBasePath + " && ./weblogic-kubernetes-operator/kubernetes/samples/scripts/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain.sh -i  weblogic-kubernetes-operator/kubernetes/samples/scripts/create-" + TestConstants.FMW_DOMAIN_TYPE + "-domain/domain-home-on-pv/create-domain-inputs.yaml -o script-output-domain-directory")).execute();
         new Command().withParams(new CommandParams()
@@ -372,6 +395,12 @@ class ItDomainUtilsWLST {
     for(int i=1;i<=managedServerReplicaCount;i++){
       checkPodReady(managedServerPrefix+i, domainUid, domainNS);
     }
-    IS_DOMAIN_DEPLOYED = true;
+  }
+
+  public static <K,V> K getProdName(Map<K,V> map,V val){
+    return map.entrySet().stream()
+            .filter(entry->val.equals(entry.getValue()))
+            .findFirst().map(Map.Entry::getKey)
+            .orElse(null);
   }
 }
