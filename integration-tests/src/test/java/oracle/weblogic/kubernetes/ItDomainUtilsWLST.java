@@ -18,7 +18,7 @@ import static oracle.weblogic.kubernetes.utils.PodUtils.checkPodReady;
 import static oracle.weblogic.kubernetes.utils.ThreadSafeLogger.getLogger;
 
 /**
- * Util Class to deploy given domain using fmw samples repo
+ * Util Class to deploy selected domain using fmw samples repo
  */
 
 @DisplayName("Create given domain using sample repo")
@@ -63,7 +63,6 @@ class ItDomainUtilsWLST {
   public static String managedServerPrefix = "";
   public static String adminServerPodName = "";
   public static String clusterName = "";
-  public static Boolean IS_DOMAIN_DEPLOYED = false;
   public static final int managedServerReplicaCount = 2;
   private static final String wlSecretName = domainUid + "-weblogic-credentials";
   private static final String rcuSecretName = domainUid + "-rcu-credentials";
@@ -79,8 +78,7 @@ class ItDomainUtilsWLST {
 
   public static void deployDomainUsingSampleRepo() throws IOException {
     logger = getLogger();
-    System.out.println("****----Inside Init All : Domain deployment via Sample Scripts****----");
-    System.out.println("IS UPPERSTACK : "+ TestConstants.IS_UPPERSTACK);
+    System.out.println("Domain deployment via Sample Scripts");
 
     //create ns & cluster bindings
     prepareENV();
@@ -143,7 +141,7 @@ class ItDomainUtilsWLST {
   }
 
   public static void domain_yaml_util() throws IOException{
-    logger.info("---Manipulate Domain Yaml File---");
+    logger.info("---Replace params in Domain yaml file---");
     File file = null;
     List<String> domainYamlOrgiValue = null;
     BufferedReader reader;
@@ -166,9 +164,6 @@ class ItDomainUtilsWLST {
         content = content + line + System.lineSeparator();
         line = reader.readLine();
       }
-
-      //logger.info(content);
-      //start - find and replace domain yaml values
 
 
       Map<String,String> replaceDomainYamlMap = new HashMap<>();
@@ -231,6 +226,7 @@ class ItDomainUtilsWLST {
       listOfDirInProdDir = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/dirs.txt")));
       operatorDir = Files.readAllLines((Paths.get(workSpacePath+prodDirectory+"/kubernetes/"+OPT_VERSION+"/optDir.txt")));
       logger.info("List of Directories in PROD SAMPLES : "+listOfDirInProdDir);
+      logger.info("List of Directories in CHARTS DIR : "+operatorDir);
       if(!operatorDir.contains("weblogic-operator")){
         new Command().withParams(new CommandParams()
                 .command("cd "+workSpacePath+" && cp -rf "+prodDirectory+"/kubernetes/"+OPT_VERSION+"/create-"+TestConstants.FMW_DOMAIN_TYPE+"-domain "+workSpaceBasePath+"weblogic-kubernetes-operator/kubernetes/samples/scripts/")).execute();
